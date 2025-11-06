@@ -164,9 +164,6 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
 
-      - name: Install dependencies
-        run: npm install
-
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -176,6 +173,9 @@ jobs:
       - name: List packages
         run: ls -R .
         shell: bash
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Test bindings
         run: npm test
