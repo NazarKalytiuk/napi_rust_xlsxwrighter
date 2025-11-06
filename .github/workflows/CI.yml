@@ -36,18 +36,12 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             build: npm run build -- --target x86_64-unknown-linux-gnu --use-napi-cross
-          - host: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            build: npm run build -- --target x86_64-unknown-linux-musl --use-napi-cross
           - host: macos-latest
             target: aarch64-apple-darwin
             build: npm run build -- --target aarch64-apple-darwin
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             build: npm run build -- --target aarch64-unknown-linux-gnu --use-napi-cross
-          - host: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-            build: npm run build -- --target aarch64-unknown-linux-musl --use-napi-cross
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: npm run build -- --target aarch64-pc-windows-msvc
@@ -100,10 +94,42 @@ jobs:
           path: ${{ env.APP_NAME }}.*.node
           if-no-files-found: error
 
+  build-musl:
+    name: stable - x86_64-unknown-linux-musl - node@20
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Alpine Linux
+        uses: jirutka/setup-alpine@v1
+        with:
+          branch: v3.20
+
+      - name: Install dependencies
+        run: |
+          apk add nodejs npm
+          apk add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main cargo rust
+        shell: alpine.sh --root {0}
+
+      - name: Build
+        run: |
+          npm install
+          npm run build -- --target x86_64-unknown-linux-musl
+        shell: alpine.sh --root {0}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-x86_64-unknown-linux-musl
+          path: ${{ env.APP_NAME }}.*.node
+          if-no-files-found: error
+
   test-binding:
     name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
     needs:
       - build
+      - build-musl
     strategy:
       fail-fast: false
       matrix:
