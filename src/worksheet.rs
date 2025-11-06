@@ -21,7 +21,7 @@ use crate::protection::RuscProtectionOptions;
 use crate::richtext::RuscRichText;
 use crate::shape::RuscShape;
 use crate::sparkline::RuscSparkline;
-use crate::table::{RuscTable, RuscTableColumn};
+use crate::table::RuscTable;
 use crate::utils::parse_color;
 use crate::validation::RuscDataValidation;
 

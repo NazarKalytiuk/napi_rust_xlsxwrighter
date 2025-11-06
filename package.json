@@ -13,7 +13,6 @@
     "triples": {
       "defaults": true,
       "additional": [
-        "x86_64-unknown-linux-musl",
         "aarch64-unknown-linux-gnu"
       ]
     }

@@ -1,5 +1,4 @@
 // Properties module for document metadata
-use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use rust_xlsxwriter::DocProperties;
 
