@@ -1,11 +1,11 @@
 [package]
 name = "rusc-xlsx"
-version = "0.1.0"
-authors = ["Your Name <your.email@example.com>"]
+version = "1.0.0"
+authors = ["Nazarii Kalytiuk <nazarkwork@gmail.com>"]
 edition = "2021"
 license = "MIT"
 description = "Node.js bindings for rust_xlsxwriter using NAPI-RS"
-repository = "https://github.com/yourusername/rusc-xlsx"
+repository = "https://github.com/NazarKalytiuk/napi_rust_xlsxwrighter"
 
 [lib]
 crate-type = ["cdylib"]

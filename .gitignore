@@ -35,3 +35,6 @@ tests/output/
 
 # Reference repositories
 rust_xlsxwriter/
+
+# Temporary benchmark directory (results preserved in benchmarks/)
+benchmark-comparison/

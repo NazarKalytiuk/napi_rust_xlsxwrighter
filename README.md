@@ -6,17 +6,6 @@
 
 Fast, feature-complete Excel XLSX library for Node.js powered by [rust_xlsxwriter](https://github.com/jmcnamara/rust_xlsxwriter) and NAPI-RS.
 
-## Status
-
-**Version**: 1.1.0
-**Test Coverage**: ✅ **577/577 tests passing (100%)**
-**Feature Parity**: ✅ **100% coverage of rust_xlsxwriter 0.90.2**
-**Build Status**: ✅ STABLE
-
-> **🎯 MILESTONE: TRUE 100% Feature Coverage Achieved!**
->
-> All 287 features from rust_xlsxwriter are fully implemented and tested, including VBA macros, form controls, document metadata, and all advanced features.
-
 ## Features
 
 ### Core Excel Features
@@ -252,6 +241,15 @@ node examples/basic.js
 
 ## Performance
 
+### Fast Native Performance
+
+Built with Rust and NAPI-RS for native-level performance:
+- **Fast execution**: Native Rust performance via NAPI bindings
+- **Low memory usage**: Optimized memory footprint across all modes
+- **Test performance**: All 577 tests complete in < 1 second
+
+### Memory Modes
+
 **Memory Efficiency** (50% strings / 50% numbers):
 
 | Rows | Standard | Low Memory | Constant Memory |
@@ -260,7 +258,11 @@ node examples/basic.js
 | 1M | 216.8 MB | 41.7 MB | 0.0215 MB |
 | 10M | ~2.2 GB | ~420 MB | 0.0215 MB |
 
-**Test Performance**: All 577 tests complete in < 1 second
+**Mode Recommendations:**
+- **< 1K rows**: Default mode (fastest)
+- **1K-100K rows**: Low memory mode (best balance)
+- **> 100K rows**: Constant memory mode (minimal footprint)
+- **Serverless/Cloud**: Low or constant memory modes
 
 ## Limitations
 

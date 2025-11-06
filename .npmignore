@@ -1,0 +1,83 @@
+# Rust source files
+src/
+Cargo.toml
+Cargo.lock
+build.rs
+target/
+**/*.rs.bk
+
+# Development files
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test files
+tests/
+test-*.js
+test-*.xlsx
+jest.config.js
+coverage/
+
+# Example files (outputs)
+example.js
+example-output.xlsx
+examples/
+
+# Documentation (development)
+AUDIT_FINDINGS.md
+AUDIT_SUMMARY.md
+BUILD_INSTRUCTIONS.md
+BUILD_SUCCESS.md
+DATETIME_IMPLEMENTATION.md
+FEATURES.md
+FEATURE_VERIFICATION_CHECKLIST.md
+FINAL_VERIFICATION_SUMMARY.md
+IMAGES_IMPLEMENTATION.md
+IMPLEMENTATION_COMPLETE.md
+IMPLEMENTATION_PLAN.md
+IMPLEMENTATION_STATUS.md
+MIGRATION_TO_NAPI_RS.md
+PHASES_QUICK_REF.md
+PROGRESS_TRACKER.md
+PROTECTION_RICHTEXT_IMPLEMENTATION.md
+SESSION_SUMMARY.md
+SETUP_COMPLETE.md
+TABLES_SPARKLINES_100PERCENT.md
+TEST_COVERAGE_100_PERCENT.md
+TRUE_100_PERCENT_COVERAGE.md
+v0.7.0-RELEASE-NOTES.md
+v0.8.0-RELEASE-NOTES.md
+claude.md
+*.backup
+
+# Benchmarks
+benchmark-comparison/
+benchmark-large-dataset.js
+benchmark-*.xlsx
+
+# Generated test files
+*.xlsx
+!index.js
+!index.d.ts
+!wrapper.js
+!wrapper.d.ts
+
+# Reference repositories
+rust_xlsxwriter/
+
+# Node development
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+package-lock.json
+
+# TypeScript build artifacts
+*.tsbuildinfo

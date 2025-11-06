@@ -1,9 +1,13 @@
 {
   "name": "rusc-xlsx",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Fast Excel XLSX library for Node.js powered by rust_xlsxwriter",
   "main": "wrapper.js",
   "types": "wrapper.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NazarKalytiuk/napi_rust_xlsxwrighter.git"
+  },
   "napi": {
     "name": "rusc_xlsx",
     "triples": {
@@ -33,7 +37,7 @@
     "napi-rs",
     "napi"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "Nazarii Kalytiuk <nazarkwork@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0",
