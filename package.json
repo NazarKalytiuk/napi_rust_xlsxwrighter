@@ -39,6 +39,14 @@
   ],
   "author": "Nazarii Kalytiuk <nazarkwork@gmail.com>",
   "license": "MIT",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "wrapper.js",
+    "wrapper.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0",
     "@types/jest": "^29.5.12",
