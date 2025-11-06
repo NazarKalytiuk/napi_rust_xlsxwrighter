@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook, Format } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('Format', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -15,11 +16,7 @@ describe('Format', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   test('should create a new format', () => {
     const format = new Format();

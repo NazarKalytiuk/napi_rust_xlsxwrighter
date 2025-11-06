@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook, Format } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('100% Coverage - Conditional Formatting (Advanced)', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -17,11 +18,7 @@ describe('100% Coverage - Conditional Formatting (Advanced)', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   describe('Average Conditional Formatting', () => {
     test('should add above average conditional formatting', () => {
@@ -463,11 +460,7 @@ describe('100% Coverage - Page Setup (Advanced)', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   describe('Print Fit to Pages', () => {
     test('should fit to 1 page wide', () => {

@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook, Format } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('Hyperlinks, Autofilter, and Freeze Panes', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -15,11 +16,7 @@ describe('Hyperlinks, Autofilter, and Freeze Panes', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   describe('Hyperlinks', () => {
     test('should write external URL', () => {

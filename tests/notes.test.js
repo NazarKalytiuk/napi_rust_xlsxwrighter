@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook, Note } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('Notes (Comments)', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -15,11 +16,7 @@ describe('Notes (Comments)', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   describe('Note Creation', () => {
     test('should create a new note', () => {

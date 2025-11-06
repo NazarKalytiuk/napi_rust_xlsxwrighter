@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook, Format, Chart, Table, Sparkline } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('Complete Coverage - Edge Cases and Enum Variations', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -15,11 +16,7 @@ describe('Complete Coverage - Edge Cases and Enum Variations', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   describe('Format - All BorderStyle Values', () => {
     test('should accept dashDot border style on individual borders', () => {

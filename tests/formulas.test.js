@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook, Formula, Format } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('Formulas', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -15,11 +16,7 @@ describe('Formulas', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   describe('Formula Creation', () => {
     test('should create a new formula', () => {

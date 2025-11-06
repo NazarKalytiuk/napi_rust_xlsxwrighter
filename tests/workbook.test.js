@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('Workbook', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -16,12 +17,7 @@ describe('Workbook', () => {
     }
   });
 
-  afterAll(() => {
-    // Clean up test files
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   test('should create a new workbook', () => {
     const workbook = new Workbook();

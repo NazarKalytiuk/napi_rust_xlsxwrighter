@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook, Format } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('Conditional Formatting', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -15,11 +16,7 @@ describe('Conditional Formatting', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   describe('2-Color Scale', () => {
     test('should add 2-color scale conditional formatting', () => {
@@ -493,11 +490,7 @@ describe('Page Setup', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   describe('Page Orientation', () => {
     test('should set portrait orientation', () => {

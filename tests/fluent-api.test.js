@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook, Format, Note } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('Fluent API and Method Chaining', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -15,11 +16,7 @@ describe('Fluent API and Method Chaining', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   describe('Format - Individual Method Calls', () => {
     test('should support calling methods individually', () => {

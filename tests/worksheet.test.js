@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { Workbook } = require('../wrapper');
+const { cleanupTestOutput } = require('./test-helpers');
 
 describe('Worksheet', () => {
   const testOutputDir = path.join(__dirname, 'output');
@@ -15,11 +16,7 @@ describe('Worksheet', () => {
     }
   });
 
-  afterAll(() => {
-    if (fs.existsSync(testOutputDir)) {
-      fs.rmSync(testOutputDir, { recursive: true, force: true });
-    }
-  });
+  afterAll(() => cleanupTestOutput(testOutputDir));
 
   test('should write string values', () => {
     const workbook = new Workbook();
