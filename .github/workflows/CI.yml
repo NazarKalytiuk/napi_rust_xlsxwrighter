@@ -38,10 +38,7 @@ jobs:
             build: npm run build -- --target x86_64-unknown-linux-gnu --use-napi-cross
           - host: ubuntu-latest
             target: x86_64-unknown-linux-musl
-            build: npm run build -- --target x86_64-unknown-linux-musl --use-zig
-            setup: |
-              sudo apt-get update
-              sudo snap install zig --classic --beta
+            build: npm run build -- --target x86_64-unknown-linux-musl --use-napi-cross
           - host: macos-latest
             target: aarch64-apple-darwin
             build: npm run build -- --target aarch64-apple-darwin
@@ -50,10 +47,7 @@ jobs:
             build: npm run build -- --target aarch64-unknown-linux-gnu --use-napi-cross
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
-            build: npm run build -- --target aarch64-unknown-linux-musl --use-zig
-            setup: |
-              sudo apt-get update
-              sudo snap install zig --classic --beta
+            build: npm run build -- --target aarch64-unknown-linux-musl --use-napi-cross
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: npm run build -- --target aarch64-pc-windows-msvc
