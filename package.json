@@ -1,0 +1,49 @@
+{
+  "name": "rusc-xlsx",
+  "version": "0.1.0",
+  "description": "Fast Excel XLSX library for Node.js powered by rust_xlsxwriter",
+  "main": "wrapper.js",
+  "types": "wrapper.d.ts",
+  "napi": {
+    "name": "rusc_xlsx",
+    "triples": {
+      "defaults": true,
+      "additional": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-gnu"
+      ]
+    }
+  },
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "prepublishOnly": "napi prepublish -t npm",
+    "test": "jest",
+    "universal": "napi universal",
+    "version": "napi version",
+    "clean": "cargo clean && rm -rf *.node"
+  },
+  "keywords": [
+    "xlsx",
+    "excel",
+    "spreadsheet",
+    "workbook",
+    "rust",
+    "napi-rs",
+    "napi"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@napi-rs/cli": "^3.0.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.19",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
