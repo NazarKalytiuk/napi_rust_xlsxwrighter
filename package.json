@@ -9,8 +9,8 @@
     "url": "https://github.com/NazarKalytiuk/napi_rust_xlsxwrighter.git"
   },
   "napi": {
-    "name": "rusc_xlsx",
-    "triples": {
+    "binaryName": "rusc_xlsx",
+    "targets": {
       "defaults": true,
       "additional": [
         "x86_64-unknown-linux-musl",
@@ -24,7 +24,7 @@
     "build:debug": "napi build --platform",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "jest",
-    "universal": "napi universal",
+    "universal": "napi universalize",
     "version": "napi version",
     "clean": "cargo clean && rm -rf *.node"
   },

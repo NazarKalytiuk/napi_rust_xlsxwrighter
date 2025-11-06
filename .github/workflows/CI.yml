@@ -108,7 +108,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          apk add nodejs npm curl bash
+          apk add nodejs npm curl bash build-base
         shell: alpine.sh --root {0}
 
       - name: Setup Rust via rustup
