@@ -109,11 +109,19 @@ jobs:
       - name: Install dependencies
         run: |
           apk add nodejs npm
-          apk add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main cargo rust
+          apk add --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main cargo rust rust-stdlib rustup
+        shell: alpine.sh --root {0}
+
+      - name: Setup Rust target
+        run: |
+          rustup-init -y --default-toolchain stable --profile minimal
+          source $HOME/.cargo/env
+          rustup target add x86_64-unknown-linux-musl
         shell: alpine.sh --root {0}
 
       - name: Build
         run: |
+          source $HOME/.cargo/env
           npm install
           npm run build -- --target x86_64-unknown-linux-musl
         shell: alpine.sh --root {0}
