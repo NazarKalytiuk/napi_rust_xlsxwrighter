@@ -200,7 +200,7 @@ jobs:
           path: artifacts
 
       - name: Create npm package directories
-        run: npm run prepublishOnly
+        run: npx napi create-npm-dirs
 
       - name: Move artifacts
         run: npm run artifacts
