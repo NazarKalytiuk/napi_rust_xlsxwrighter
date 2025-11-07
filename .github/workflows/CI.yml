@@ -160,6 +160,11 @@ jobs:
           name: bindings-aarch64-apple-darwin
           path: artifacts
 
+      - name: Move artifacts to root
+        run: |
+          find artifacts -name '*.node' -exec cp {} . \;
+          ls -la *.node
+
       - name: Combine binaries
         run: npm run universal
 
