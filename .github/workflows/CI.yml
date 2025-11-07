@@ -182,6 +182,7 @@ jobs:
       - build
       - build-musl
       - universal-macOS
+    environment: npm
     steps:
       - uses: actions/checkout@v4
 
@@ -190,6 +191,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          registry-url: 'https://registry.npmjs.org/'
 
       - name: Install dependencies
         run: npm install
@@ -209,11 +211,6 @@ jobs:
         run: ls -R ./npm
         shell: bash
 
-      - name: Setup npm authentication
-        run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Publish
         run: |
           npm config set provenance true
@@ -230,4 +227,4 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
