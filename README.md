@@ -1,7 +1,7 @@
 # rusc-xlsx
 
 [![Test](https://github.com/NazarKalytiuk/napi_rust_xlsxwrighter/actions/workflows/test.yml/badge.svg)](https://github.com/NazarKalytiuk/napi_rust_xlsxwrighter/actions/workflows/test.yml)
-[![npm version](https://img.shields.io/npm/v/rusc-xlsx.svg)](https://www.npmjs.com/package/rusc-xlsx)
+[![npm version](https://img.shields.io/npm/v/@nazarkalytiuk/rusc-xlsx.svg)]([https://www.npmjs.com/package/rusc-xlsx](https://www.npmjs.com/package/@nazarkalytiuk/rusc-xlsx))
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Fast, feature-complete Excel XLSX library for Node.js powered by [rust_xlsxwriter](https://github.com/jmcnamara/rust_xlsxwriter) and NAPI-RS.
