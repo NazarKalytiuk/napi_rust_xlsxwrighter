@@ -13,7 +13,7 @@
  * - File sizes are larger (strings stored inline, not shared)
  */
 
-const { Workbook, Format } = require('../index');
+const { Workbook, Format } = require('..');
 
 console.log('Creating large Excel file with constant memory mode...');
 console.log('This will write 100,000 rows with minimal memory usage.\n');

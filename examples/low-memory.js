@@ -18,7 +18,7 @@
  * - Best for: Data with repeated strings (categories, status values, etc.)
  */
 
-const { Workbook, Format } = require('../index');
+const { Workbook, Format } = require('..');
 
 console.log('Creating large Excel file with low memory mode...');
 console.log('This dataset has many repeated strings, demonstrating the benefit of shared string table.\n');
