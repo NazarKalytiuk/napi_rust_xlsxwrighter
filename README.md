@@ -62,7 +62,7 @@ Fast, feature-complete Excel XLSX library for Node.js powered by [rust_xlsxwrite
 ## Installation
 
 ```bash
-npm install rusc-xlsx
+npm install @nazarkalytiuk/rusc-xlsx
 ```
 
 ### Requirements
@@ -73,7 +73,7 @@ npm install rusc-xlsx
 ## Quick Start
 
 ```javascript
-const { Workbook, Format } = require('rusc-xlsx');
+const { Workbook, Format } = require('@nazarkalytiuk/rusc-xlsx');
 
 // Create workbook and worksheet
 const workbook = new Workbook();
@@ -144,7 +144,7 @@ const worksheet = workbook.addWorksheetWithLowMemory('Sales');
 Full TypeScript definitions included:
 
 ```typescript
-import { Workbook, Format } from 'rusc-xlsx';
+import { Workbook, Format } from '@nazarkalytiuk/rusc-xlsx';
 
 const workbook = new Workbook();
 const worksheet = workbook.addWorksheet('Data');
