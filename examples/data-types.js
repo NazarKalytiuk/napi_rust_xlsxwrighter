@@ -2,7 +2,7 @@
  * Example demonstrating different data types
  */
 
-const { Workbook, Format } = require('../index');
+const { Workbook, Format } = require('@nazarkalytiuk/rusc-xlsx');
 
 // Create a new workbook
 const workbook = new Workbook();

@@ -2,7 +2,7 @@
  * Example showing how to work with multiple worksheets
  */
 
-const { Workbook, Format } = require('../index');
+const { Workbook, Format } = require('@nazarkalytiuk/rusc-xlsx');
 
 // Create a new workbook
 const workbook = new Workbook();

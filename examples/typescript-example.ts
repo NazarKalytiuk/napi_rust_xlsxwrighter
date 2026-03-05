@@ -9,7 +9,7 @@ import {
   BorderStyle,
   UnderlineStyle,
   FillPattern
-} from '../wrapper';
+} from '@nazarkalytiuk/rusc-xlsx';
 
 // Type-safe example demonstrating IntelliSense support with fluent API
 

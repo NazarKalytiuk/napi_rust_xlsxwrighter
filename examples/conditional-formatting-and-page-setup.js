@@ -1,5 +1,5 @@
 // Comprehensive example of conditional formatting and page setup features
-const { Workbook, Format } = require('../wrapper.js');
+const { Workbook, Format } = require('@nazarkalytiuk/rusc-xlsx');
 
 const workbook = new Workbook();
 

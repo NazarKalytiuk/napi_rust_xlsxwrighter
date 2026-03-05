@@ -9,7 +9,7 @@
  * - Freeze Panes
  */
 
-const { Workbook, Format, Formula, DataValidation } = require('../wrapper');
+const { Workbook, Format, Formula, DataValidation } = require('@nazarkalytiuk/rusc-xlsx');
 
 const workbook = new Workbook();
 

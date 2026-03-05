@@ -2,7 +2,7 @@
  * Basic example showing how to create a workbook and write data
  */
 
-const { Workbook } = require('../index');
+const { Workbook } = require('@nazarkalytiuk/rusc-xlsx');
 
 // Create a new workbook
 const workbook = new Workbook();

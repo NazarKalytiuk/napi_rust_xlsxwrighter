@@ -5,7 +5,7 @@
  * proper type checking and IntelliSense support.
  */
 
-import { Workbook, Format, Note, Color, BorderStyle, HorizontalAlign } from '../wrapper';
+import { Workbook, Format, Note, Color, BorderStyle, HorizontalAlign } from '@nazarkalytiuk/rusc-xlsx';
 
 // ✅ VALID CODE - These should compile without errors
 

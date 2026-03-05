@@ -213,11 +213,26 @@ workbook.save('output.xlsx');
 
 See the `examples/` directory for complete examples:
 - `basic.js` - Simple workbook creation
-- `formatting.js` - Cell formatting
-- `advanced-features.js` - Charts, images, tables
-- `conditional-formatting-and-page-setup.js` - Conditional formatting
-- `constant-memory.js` - Large datasets
-- `typescript-example.ts` - TypeScript usage
+- `formatting.js` - Cell formatting and number formats
+- `data-types.js` - All supported data types
+- `datetime.js` - Date/time writing methods and formats
+- `multiple-sheets.js` - Working with multiple worksheets
+- `advanced-styling.js` - Fonts, borders, patterns, fills
+- `advanced-features.js` - Formulas, data validation, hyperlinks, freeze panes
+- `charts.js` - Column, line, pie, bar, and scatter charts
+- `tables.js` - Excel tables with totals, formulas, and styles
+- `images.js` - Inserting images from buffers with scaling and links
+- `sparklines.js` - Line, column, and win/lose sparklines
+- `rich-text.js` - Multi-format text within cells
+- `notes.js` - Cell comments with custom styling
+- `conditional-formatting-and-page-setup.js` - Conditional formatting and print setup
+- `protection.js` - Worksheet protection with granular permissions
+- `doc-properties.js` - Document metadata (author, title, etc.)
+- `constant-memory.js` - Large datasets with constant memory mode
+- `low-memory.js` - Large datasets with low memory mode
+- `save-to-buffer.js` - Saving to Buffer for HTTP responses
+- `typescript-example.ts` - Full TypeScript usage
+- `type-safety-demo.ts` - TypeScript type safety features
 
 ## Building from Source
 
