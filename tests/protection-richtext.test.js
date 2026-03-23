@@ -313,13 +313,14 @@ describe('Rich Text Strings', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should reject empty segments', () => {
+    it('should silently skip empty segments', () => {
       const format = new Format().setBold();
       const richText = new RichText().addSegment('', format);
 
+      // Empty segments are silently filtered out (no-op), not rejected
       expect(() => {
         worksheet.writeRichString(0, 0, richText);
-      }).toThrow('cannot be blank');
+      }).not.toThrow();
     });
 
     it('should handle long text with formatting', () => {
