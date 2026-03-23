@@ -1263,6 +1263,25 @@ class Workbook {
     return this._native.saveToBuffer()
   }
 
+  saveToStream(writable) {
+    const os = require('os')
+    const path = require('path')
+    const fs = require('fs')
+    const crypto = require('crypto')
+
+    const tmpFile = path.join(os.tmpdir(), `rusc-xlsx-${crypto.randomBytes(8).toString('hex')}.xlsx`)
+    this._native.save(tmpFile)
+
+    const readable = fs.createReadStream(tmpFile)
+    readable.on('end', () => {
+      fs.unlink(tmpFile, () => {})
+    })
+    readable.on('error', () => {
+      fs.unlink(tmpFile, () => {})
+    })
+    readable.pipe(writable)
+  }
+
   defineName(name, formula) {
     return this._native.defineName(name, formula)
   }

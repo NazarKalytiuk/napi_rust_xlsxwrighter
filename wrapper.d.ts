@@ -2243,6 +2243,26 @@ export declare class Workbook {
   saveToBuffer(): Buffer;
 
   /**
+   * Save the workbook to a Writable stream
+   *
+   * Streams XLSX data directly to the writable without buffering the entire
+   * file in memory. Combines the speed of `saveToBuffer()` with the low
+   * memory footprint of `save(filename)`.
+   *
+   * @param writable - A Node.js Writable stream (e.g., fs.createWriteStream, HTTP response)
+   * @example
+   * const fs = require('fs');
+   * const stream = fs.createWriteStream('output.xlsx');
+   * workbook.saveToStream(stream);
+   *
+   * @example
+   * // HTTP response
+   * res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+   * workbook.saveToStream(res);
+   */
+  saveToStream(writable: import('stream').Writable): void;
+
+  /**
    * Define a named range or formula
    * @param name - Name for the range (e.g., 'Sales' or 'Sheet1!Sales' for local names)
    * @param formula - Formula or range (e.g., '=Sheet1!$A$1:$A$10' or '=SUM(A1:A10)')

@@ -175,8 +175,8 @@ impl RuscTableColumn {
 
     /// Set the total function for the column
     #[napi]
-    pub fn set_total_function(&mut self, function: String) -> Result<&Self> {
-        let func = match function.as_str() {
+    pub fn set_total_function(&mut self, func: String) -> Result<&Self> {
+        let table_func = match func.as_str() {
             "average" => TableFunction::Average,
             "count" => TableFunction::Count,
             "countNumbers" | "countNums" => TableFunction::CountNumbers,
@@ -185,9 +185,9 @@ impl RuscTableColumn {
             "stdDev" | "standardDeviation" => TableFunction::StdDev,
             "sum" => TableFunction::Sum,
             "var" | "variance" => TableFunction::Var,
-            _ => return Err(Error::new(Status::InvalidArg, format!("Invalid table function: {}. Use 'average', 'count', 'countNumbers', 'max', 'min', 'stdDev', 'sum', or 'var'", function))),
+            _ => return Err(Error::new(Status::InvalidArg, format!("Invalid table function: {}. Use 'average', 'count', 'countNumbers', 'max', 'min', 'stdDev', 'sum', or 'var'", func))),
         };
-        self.column = self.column.clone().set_total_function(func);
+        self.column = self.column.clone().set_total_function(table_func);
         Ok(self)
     }
 

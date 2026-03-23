@@ -116,6 +116,8 @@ const worksheet = workbook.addWorksheetWithConstantMemory('Large');
 - **Memory**: Constant ~0.02 MB (regardless of size!)
 - **Limitations**: Sequential row writing only, no tables
 
+> **Important:** For large exports, use `addWorksheetWithConstantMemory()` with `save(filename)` — not `saveToBuffer()`. The constant memory mode flushes rows to temp files as they're written, but `saveToBuffer()` would load the entire result back into memory, defeating the purpose. Use `saveToStream()` if you need to pipe the output without disk I/O overhead.
+
 **Example: 1 million rows**
 ```javascript
 const workbook = new Workbook();
@@ -126,7 +128,7 @@ for (let row = 0; row < 1000000; row++) {
   worksheet.write(row, 1, row * 100);
 }
 
-workbook.save('large.xlsx');
+workbook.save('large.xlsx'); // Use save(), not saveToBuffer()
 ```
 
 ### Low Memory Mode

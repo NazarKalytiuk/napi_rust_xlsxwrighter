@@ -380,7 +380,7 @@ export declare class RuscTableColumn {
   /** Set the header name for the column */
   setHeader(header: string): this
   /** Set the total function for the column */
-  setTotalFunction(function: string): this
+  setTotalFunction(func: string): this
   /** Set a custom total label for the column */
   setTotalLabel(label: string): this
   /** Set a custom formula for the column */

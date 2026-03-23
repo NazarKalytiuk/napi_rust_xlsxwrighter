@@ -116,20 +116,19 @@ impl RuscWorksheet {
         let ws = wb.worksheet_from_index(self.index)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
 
-        // Build the segments array for rust_xlsxwriter
+        // Build the segments array for rust_xlsxwriter, filtering out empty strings
         let segments = rich_text.get_segments();
-        if segments.is_empty() {
-            return Err(Error::new(
-                Status::GenericFailure,
-                "Rich text must have at least one segment".to_string(),
-            ));
-        }
-
-        // Convert segments to rust_xlsxwriter format
         let mut xlsxwriter_segments: Vec<(Format, String)> = Vec::new();
         for (text, format) in segments {
-            let fmt = format.to_format();
-            xlsxwriter_segments.push((fmt, text.clone()));
+            if !text.is_empty() {
+                let fmt = format.to_format();
+                xlsxwriter_segments.push((fmt, text.clone()));
+            }
+        }
+
+        // If all segments were blank, silently skip (no-op)
+        if xlsxwriter_segments.is_empty() {
+            return Ok(());
         }
 
         // Convert to slice of references as required by rust_xlsxwriter
@@ -157,20 +156,22 @@ impl RuscWorksheet {
         let ws = wb.worksheet_from_index(self.index)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
 
-        // Build the segments array
+        // Build the segments array, filtering out empty strings
         let segments = rich_text.get_segments();
-        if segments.is_empty() {
-            return Err(Error::new(
-                Status::GenericFailure,
-                "Rich text must have at least one segment".to_string(),
-            ));
-        }
-
-        // Convert segments to rust_xlsxwriter format
         let mut xlsxwriter_segments: Vec<(Format, String)> = Vec::new();
         for (text, format) in segments {
-            let fmt = format.to_format();
-            xlsxwriter_segments.push((fmt, text.clone()));
+            if !text.is_empty() {
+                let fmt = format.to_format();
+                xlsxwriter_segments.push((fmt, text.clone()));
+            }
+        }
+
+        // If all segments were blank, write a blank cell with the cell format instead
+        if xlsxwriter_segments.is_empty() {
+            let format = cell_format.to_format();
+            ws.write_blank(row, col, &format)
+                .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write blank cell: {}", e)))?;
+            return Ok(());
         }
 
         // Convert to slice of references
