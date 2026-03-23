@@ -496,6 +496,36 @@ class Worksheet {
     return this._native.write(row, col, value, format ? format._native : undefined)
   }
 
+  writeRow(row, startCol, values, format) {
+    const fmt = format ? format._native : undefined
+    const clean = values.filter(v => v !== null && v !== undefined)
+    if (clean.length === values.length) {
+      return this._native.writeRow(row, startCol, clean, fmt)
+    }
+    for (let i = 0; i < values.length; i++) {
+      if (values[i] !== null && values[i] !== undefined) {
+        this._native.write(row, startCol + i, values[i], fmt)
+      }
+    }
+  }
+
+  writeRows(startRow, startCol, rows, format) {
+    const fmt = format ? format._native : undefined
+    for (let r = 0; r < rows.length; r++) {
+      const values = rows[r]
+      const clean = values.filter(v => v !== null && v !== undefined)
+      if (clean.length === values.length) {
+        this._native.writeRow(startRow + r, startCol, clean, fmt)
+      } else {
+        for (let i = 0; i < values.length; i++) {
+          if (values[i] !== null && values[i] !== undefined) {
+            this._native.write(startRow + r, startCol + i, values[i], fmt)
+          }
+        }
+      }
+    }
+  }
+
   writeString(row, col, value) {
     return this._native.writeString(row, col, value)
   }

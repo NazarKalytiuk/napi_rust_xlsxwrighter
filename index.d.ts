@@ -436,6 +436,16 @@ export declare class RuscWorkbook {
 export declare class RuscWorksheet {
   /** Write a value to a cell (auto-detects type) */
   write(row: number, col: number, value: string | number | boolean, format?: RuscFormat | undefined | null): void
+  /**
+   * Write an array of values as a row starting at the given column.
+   * Batches all writes into a single NAPI call with one lock acquisition.
+   */
+  writeRow(row: number, startCol: number, values: Array<string | number | boolean>, format?: RuscFormat | undefined | null): void
+  /**
+   * Write a 2D array of values starting at the given position.
+   * Batches all writes into a single NAPI call with one lock acquisition.
+   */
+  writeRows(startRow: number, startCol: number, rows: Array<Array<string | number | boolean>>, format?: RuscFormat | undefined | null): void
   /** Write a string to a cell */
   writeString(row: number, col: number, value: string): void
   /** Write a number to a cell */

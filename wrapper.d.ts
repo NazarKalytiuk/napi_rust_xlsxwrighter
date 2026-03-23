@@ -672,6 +672,39 @@ export declare class Worksheet {
   write(row: number, col: number, value: string | number | boolean, format?: Format): void;
 
   /**
+   * Write an array of values as a row starting at the given column.
+   * Batches all writes into a single native call — much faster than calling write() in a loop.
+   * Null/undefined values are skipped (the cell is left empty).
+   *
+   * @param row - Row number (0-indexed)
+   * @param startCol - Starting column number (0-indexed)
+   * @param values - Array of values to write
+   * @param format - Optional format to apply to all cells in the row
+   * @example
+   * worksheet.writeRow(0, 0, ['Name', 'Age', 'Active'], headerFormat);
+   * worksheet.writeRow(1, 0, ['Alice', 30, true]);
+   */
+  writeRow(row: number, startCol: number, values: (string | number | boolean | null)[], format?: Format): void;
+
+  /**
+   * Write a 2D array of values starting at the given position.
+   * Batches all writes — much faster than nested write() loops.
+   * Null/undefined values are skipped (the cell is left empty).
+   *
+   * @param startRow - Starting row number (0-indexed)
+   * @param startCol - Starting column number (0-indexed)
+   * @param rows - 2D array of values to write
+   * @param format - Optional format to apply to all cells
+   * @example
+   * worksheet.writeRows(0, 0, [
+   *   ['Name', 'Age', 'Active'],
+   *   ['Alice', 30, true],
+   *   ['Bob', 25, false],
+   * ]);
+   */
+  writeRows(startRow: number, startCol: number, rows: (string | number | boolean | null)[][], format?: Format): void;
+
+  /**
    * Write a string to a cell
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
