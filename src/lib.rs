@@ -1,5 +1,6 @@
 // Module declarations
 mod utils;
+mod memory;
 mod workbook;
 mod worksheet;
 mod format;
@@ -32,3 +33,18 @@ pub use sparkline::RuscSparkline;
 pub use properties::RuscDocProperties;
 pub use button::RuscButton;
 pub use shape::RuscShape;
+
+use napi_derive::napi;
+
+/// Returns [currentBytes, peakBytes] of Rust allocator usage
+#[napi]
+pub fn rust_memory_stats() -> Vec<f64> {
+    let (current, peak) = memory::get_stats();
+    vec![current as f64, peak as f64]
+}
+
+/// Resets peak memory tracking to current usage
+#[napi]
+pub fn rust_memory_reset_peak() {
+    memory::reset_peak();
+}

@@ -1342,4 +1342,7 @@ module.exports = {
   RuscDocProperties: nativeBinding.RuscDocProperties,
   RuscButton: nativeBinding.RuscButton,
   RuscShape: nativeBinding.RuscShape,
+  // Memory tracking
+  rustMemoryStats: nativeBinding.rustMemoryStats,
+  rustMemoryResetPeak: nativeBinding.rustMemoryResetPeak,
 }

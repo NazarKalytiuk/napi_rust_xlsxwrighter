@@ -2332,5 +2332,26 @@ export declare class Workbook {
   setProperties(properties: DocProperties): void;
 }
 
+/**
+ * Returns [currentBytes, peakBytes] of Rust allocator usage.
+ * Useful for profiling memory consumption of the native layer.
+ *
+ * @example
+ * const [current, peak] = rustMemoryStats();
+ * console.log(`Rust heap: ${(current / 1024 / 1024).toFixed(2)} MB (peak: ${(peak / 1024 / 1024).toFixed(2)} MB)`);
+ */
+export declare function rustMemoryStats(): [number, number];
+
+/**
+ * Resets peak memory tracking to the current allocation level.
+ * Call before a section you want to measure.
+ *
+ * @example
+ * rustMemoryResetPeak();
+ * // ... do work ...
+ * const [current, peak] = rustMemoryStats();
+ */
+export declare function rustMemoryResetPeak(): void;
+
 // Re-export native bindings for advanced use
 export { RuscFormat, RuscNote, RuscFormula, RuscDataValidation, RuscChart, RuscWorkbook, RuscWorksheet, RuscProtectionOptions, RuscRichText, RuscImage, RuscTable, RuscTableColumn, RuscSparkline, RuscDocProperties, RuscButton, RuscShape } from './index';
