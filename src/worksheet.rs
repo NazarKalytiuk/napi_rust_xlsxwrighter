@@ -62,64 +62,88 @@ impl RuscWorksheet {
     }
 
     /// Write an array of values as a row starting at the given column.
-    /// Batches all writes into a single NAPI call with one lock acquisition.
+    /// Uses lazy Array iteration — reads one cell at a time from the JS array
+    /// instead of deserializing the entire row into Rust memory.
+    /// Null/undefined values are skipped (preserving column positions).
     #[napi]
-    pub fn write_row(&self, row: u32, start_col: u16, values: Vec<Either3<String, f64, bool>>, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_row(&self, row: u32, start_col: u16, values: Array, format: Option<&RuscFormat>) -> Result<()> {
         let mut wb = self.workbook.lock().unwrap();
         let ws = wb.worksheet_from_index(self.index)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
 
         let fmt = format.map(|f| f.to_format());
 
-        for (i, value) in values.iter().enumerate() {
+        for i in 0..values.len() {
             let col = start_col + i as u16;
-            if let Some(ref f) = fmt {
-                match value {
-                    Either3::A(s) => ws.write_string_with_format(row, col, s, f),
-                    Either3::B(n) => ws.write_number_with_format(row, col, *n, f),
-                    Either3::C(b) => ws.write_boolean_with_format(row, col, *b, f),
+            if let Ok(Some(n)) = values.get::<f64>(i) {
+                if let Some(ref f) = fmt {
+                    ws.write_number_with_format(row, col, n, f)
+                } else {
+                    ws.write_number(row, col, n)
                 }
-            } else {
-                match value {
-                    Either3::A(s) => ws.write_string(row, col, s),
-                    Either3::B(n) => ws.write_number(row, col, *n),
-                    Either3::C(b) => ws.write_boolean(row, col, *b),
+                .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
+            } else if let Ok(Some(s)) = values.get::<String>(i) {
+                if let Some(ref f) = fmt {
+                    ws.write_string_with_format(row, col, &s, f)
+                } else {
+                    ws.write_string(row, col, &s)
                 }
+                .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
+            } else if let Ok(Some(b)) = values.get::<bool>(i) {
+                if let Some(ref f) = fmt {
+                    ws.write_boolean_with_format(row, col, b, f)
+                } else {
+                    ws.write_boolean(row, col, b)
+                }
+                .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
             }
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
+            // null/undefined — skip, preserving column position
         }
 
         Ok(())
     }
 
     /// Write a 2D array of values starting at the given position.
-    /// Batches all writes into a single NAPI call with one lock acquisition.
+    /// Uses lazy Array iteration — reads one row/cell at a time from JS,
+    /// never materializing the entire grid in Rust memory.
+    /// Null/undefined values are skipped (preserving column positions).
     #[napi]
-    pub fn write_rows(&self, start_row: u32, start_col: u16, rows: Vec<Vec<Either3<String, f64, bool>>>, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_rows(&self, start_row: u32, start_col: u16, rows: Array, format: Option<&RuscFormat>) -> Result<()> {
         let mut wb = self.workbook.lock().unwrap();
         let ws = wb.worksheet_from_index(self.index)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
 
         let fmt = format.map(|f| f.to_format());
 
-        for (r, row_values) in rows.iter().enumerate() {
-            let row = start_row + r as u32;
-            for (c, value) in row_values.iter().enumerate() {
-                let col = start_col + c as u16;
-                if let Some(ref f) = fmt {
-                    match value {
-                        Either3::A(s) => ws.write_string_with_format(row, col, s, f),
-                        Either3::B(n) => ws.write_number_with_format(row, col, *n, f),
-                        Either3::C(b) => ws.write_boolean_with_format(row, col, *b, f),
+        for r in 0..rows.len() {
+            let row = start_row + r;
+            let values: Array = rows.get(r)?
+                .ok_or_else(|| Error::new(Status::GenericFailure, format!("Missing row at index {}", r)))?;
+
+            for i in 0..values.len() {
+                let col = start_col + i as u16;
+                if let Ok(Some(n)) = values.get::<f64>(i) {
+                    if let Some(ref f) = fmt {
+                        ws.write_number_with_format(row, col, n, f)
+                    } else {
+                        ws.write_number(row, col, n)
                     }
-                } else {
-                    match value {
-                        Either3::A(s) => ws.write_string(row, col, s),
-                        Either3::B(n) => ws.write_number(row, col, *n),
-                        Either3::C(b) => ws.write_boolean(row, col, *b),
+                    .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
+                } else if let Ok(Some(s)) = values.get::<String>(i) {
+                    if let Some(ref f) = fmt {
+                        ws.write_string_with_format(row, col, &s, f)
+                    } else {
+                        ws.write_string(row, col, &s)
                     }
+                    .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
+                } else if let Ok(Some(b)) = values.get::<bool>(i) {
+                    if let Some(ref f) = fmt {
+                        ws.write_boolean_with_format(row, col, b, f)
+                    } else {
+                        ws.write_boolean(row, col, b)
+                    }
+                    .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
                 }
-                .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
             }
         }
 

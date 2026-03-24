@@ -438,14 +438,14 @@ export declare class RuscWorksheet {
   write(row: number, col: number, value: string | number | boolean, format?: RuscFormat | undefined | null): void
   /**
    * Write an array of values as a row starting at the given column.
-   * Batches all writes into a single NAPI call with one lock acquisition.
+   * Uses lazy iteration — reads one cell at a time from JS, null/undefined skipped.
    */
-  writeRow(row: number, startCol: number, values: Array<string | number | boolean>, format?: RuscFormat | undefined | null): void
+  writeRow(row: number, startCol: number, values: Array<string | number | boolean | null | undefined>, format?: RuscFormat | undefined | null): void
   /**
    * Write a 2D array of values starting at the given position.
-   * Batches all writes into a single NAPI call with one lock acquisition.
+   * Uses lazy iteration — never materializes the entire grid in Rust memory.
    */
-  writeRows(startRow: number, startCol: number, rows: Array<Array<string | number | boolean>>, format?: RuscFormat | undefined | null): void
+  writeRows(startRow: number, startCol: number, rows: Array<Array<string | number | boolean | null | undefined>>, format?: RuscFormat | undefined | null): void
   /** Write a string to a cell */
   writeString(row: number, col: number, value: string): void
   /** Write a number to a cell */
