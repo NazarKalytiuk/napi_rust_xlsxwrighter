@@ -577,6 +577,10 @@ class Worksheet {
     return this._native.setRowHeight(row, height)
   }
 
+  setDefaultRowHeight(height) {
+    return this._native.setDefaultRowHeight(height)
+  }
+
   setName(name) {
     return this._native.setName(name)
   }
@@ -1271,23 +1275,40 @@ class Workbook {
     return this._native.saveToBuffer()
   }
 
-  saveToStream(writable) {
+  async saveToStream(writable) {
     const os = require('os')
     const path = require('path')
     const fs = require('fs')
     const crypto = require('crypto')
+    const { pipeline } = require('stream/promises')
 
     const tmpFile = path.join(os.tmpdir(), `rusc-xlsx-${crypto.randomBytes(8).toString('hex')}.xlsx`)
-    this._native.save(tmpFile)
+    let operationError
 
-    const readable = fs.createReadStream(tmpFile)
-    readable.on('end', () => {
-      fs.unlink(tmpFile, () => {})
-    })
-    readable.on('error', () => {
-      fs.unlink(tmpFile, () => {})
-    })
-    readable.pipe(writable)
+    try {
+      this._native.save(tmpFile)
+      await pipeline(fs.createReadStream(tmpFile), writable)
+    } catch (error) {
+      operationError = error
+    }
+
+    try {
+      await fs.promises.unlink(tmpFile)
+    } catch (cleanupError) {
+      if (cleanupError.code !== 'ENOENT') {
+        if (operationError) {
+          throw new AggregateError(
+            [operationError, cleanupError],
+            'Failed to save workbook to stream and remove the temporary file'
+          )
+        }
+        throw cleanupError
+      }
+    }
+
+    if (operationError) {
+      throw operationError
+    }
   }
 
   defineName(name, formula) {

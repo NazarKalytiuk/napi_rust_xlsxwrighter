@@ -1,6 +1,8 @@
 // TypeScript definitions for wrapper.js
 // These provide the fluent API with method chaining
 
+import type { Writable } from 'stream';
+
 /** Color value - can be a named color or hex code */
 export type Color =
   | 'black' | 'blue' | 'brown' | 'cyan' | 'gray' | 'green'
@@ -843,6 +845,12 @@ export declare class Worksheet {
    * @param height - Height in points
    */
   setRowHeight(row: number, height: number): void;
+
+  /**
+   * Set the default height for all worksheet rows without per-row metadata
+   * @param height - Height in points
+   */
+  setDefaultRowHeight(height: number): void;
 
   /**
    * Set the worksheet name
@@ -2278,22 +2286,24 @@ export declare class Workbook {
   /**
    * Save the workbook to a Writable stream
    *
-   * Streams XLSX data directly to the writable without buffering the entire
-   * file in memory. Combines the speed of `saveToBuffer()` with the low
-   * memory footprint of `save(filename)`.
+   * Saves the workbook to a temporary file, then pipes that file into the
+   * writable without buffering the entire XLSX file in JavaScript memory.
+   * The temporary file is removed after the pipeline succeeds or fails.
+   * The promise rejects on native save, read, writable, pipeline, or cleanup errors.
    *
    * @param writable - A Node.js Writable stream (e.g., fs.createWriteStream, HTTP response)
+   * @returns A promise that settles after streaming and temporary-file cleanup complete
    * @example
    * const fs = require('fs');
    * const stream = fs.createWriteStream('output.xlsx');
-   * workbook.saveToStream(stream);
+   * await workbook.saveToStream(stream);
    *
    * @example
    * // HTTP response
    * res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-   * workbook.saveToStream(res);
+   * await workbook.saveToStream(res);
    */
-  saveToStream(writable: import('stream').Writable): void;
+  saveToStream(writable: Writable): Promise<void>;
 
   /**
    * Define a named range or formula

@@ -1,7 +1,8 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use rust_xlsxwriter::Workbook;
-use std::sync::{Arc, Mutex};
+use parking_lot::Mutex;
+use std::sync::Arc;
 
 use crate::properties::RuscDocProperties;
 use crate::worksheet::RuscWorksheet;
@@ -27,7 +28,7 @@ impl RuscWorkbook {
     pub fn add_worksheet(&self, name: Option<String>) -> Result<RuscWorksheet> {
         let workbook = Arc::clone(&self.workbook);
         let index = {
-            let mut wb = workbook.lock().unwrap();
+            let mut wb = workbook.lock();
             let worksheet = wb.add_worksheet();
 
             if let Some(n) = name {
@@ -49,7 +50,7 @@ impl RuscWorkbook {
     pub fn add_worksheet_with_constant_memory(&self, name: Option<String>) -> Result<RuscWorksheet> {
         let workbook = Arc::clone(&self.workbook);
         let index = {
-            let mut wb = workbook.lock().unwrap();
+            let mut wb = workbook.lock();
             let worksheet = wb.add_worksheet_with_constant_memory();
 
             if let Some(n) = name {
@@ -71,7 +72,7 @@ impl RuscWorkbook {
     pub fn add_worksheet_with_low_memory(&self, name: Option<String>) -> Result<RuscWorksheet> {
         let workbook = Arc::clone(&self.workbook);
         let index = {
-            let mut wb = workbook.lock().unwrap();
+            let mut wb = workbook.lock();
             let worksheet = wb.add_worksheet_with_low_memory();
 
             if let Some(n) = name {
@@ -91,7 +92,7 @@ impl RuscWorkbook {
     /// Set a custom temporary directory for constant memory mode
     #[napi]
     pub fn set_tempdir(&self, dir: String) -> Result<()> {
-        let mut wb = self.workbook.lock().unwrap();
+        let mut wb = self.workbook.lock();
         wb.set_tempdir(&dir)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set tempdir: {}", e)))?;
         Ok(())
@@ -100,7 +101,7 @@ impl RuscWorkbook {
     /// Save the workbook to a file
     #[napi]
     pub fn save(&self, filename: String) -> Result<()> {
-        let mut wb = self.workbook.lock().unwrap();
+        let mut wb = self.workbook.lock();
         wb.save(&filename)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to save workbook: {}", e)))?;
         Ok(())
@@ -109,7 +110,7 @@ impl RuscWorkbook {
     /// Save the workbook to a buffer
     #[napi]
     pub fn save_to_buffer(&self) -> Result<Buffer> {
-        let mut wb = self.workbook.lock().unwrap();
+        let mut wb = self.workbook.lock();
         let buffer = wb.save_to_buffer()
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to save to buffer: {}", e)))?;
 
@@ -124,7 +125,7 @@ impl RuscWorkbook {
     /// * `formula` - The formula or range (e.g., "=Sheet1!$A$1:$A$10" or "=SUM(A1:A10)")
     #[napi]
     pub fn define_name(&self, name: String, formula: String) -> Result<()> {
-        let mut wb = self.workbook.lock().unwrap();
+        let mut wb = self.workbook.lock();
         wb.define_name(&name, &formula)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to define name: {}", e)))?;
         Ok(())
@@ -133,7 +134,7 @@ impl RuscWorkbook {
     /// Set the workbook to be opened in read-only recommended mode
     #[napi]
     pub fn read_only_recommended(&self) -> Result<()> {
-        let mut wb = self.workbook.lock().unwrap();
+        let mut wb = self.workbook.lock();
         wb.read_only_recommended();
         Ok(())
     }
@@ -145,7 +146,7 @@ impl RuscWorkbook {
     /// * `path` - Path to the vbaProject.bin file
     #[napi]
     pub fn add_vba_project(&self, path: String) -> Result<()> {
-        let mut wb = self.workbook.lock().unwrap();
+        let mut wb = self.workbook.lock();
         wb.add_vba_project(&path)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add VBA project: {}", e)))?;
         Ok(())
@@ -158,7 +159,7 @@ impl RuscWorkbook {
     /// * `properties` - DocProperties object with metadata
     #[napi]
     pub fn set_properties(&self, properties: &RuscDocProperties) -> Result<()> {
-        let mut wb = self.workbook.lock().unwrap();
+        let mut wb = self.workbook.lock();
         wb.set_properties(properties.get_properties());
         Ok(())
     }

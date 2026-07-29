@@ -438,14 +438,18 @@ export declare class RuscWorksheet {
   write(row: number, col: number, value: string | number | boolean, format?: RuscFormat | undefined | null): void
   /**
    * Write an array of values as a row starting at the given column.
-   * Uses lazy iteration — reads one cell at a time from JS, null/undefined skipped.
+   * Uses lazy Array iteration — reads one cell at a time from the JS array
+   * instead of deserializing the entire row into Rust memory.
+   * Null/undefined values are skipped (preserving column positions).
    */
-  writeRow(row: number, startCol: number, values: Array<string | number | boolean | null | undefined>, format?: RuscFormat | undefined | null): void
+  writeRow(row: number, startCol: number, values: unknown[], format?: RuscFormat | undefined | null): void
   /**
    * Write a 2D array of values starting at the given position.
-   * Uses lazy iteration — never materializes the entire grid in Rust memory.
+   * Uses lazy Array iteration — reads one row/cell at a time from JS,
+   * never materializing the entire grid in Rust memory.
+   * Null/undefined values are skipped (preserving column positions).
    */
-  writeRows(startRow: number, startCol: number, rows: Array<Array<string | number | boolean | null | undefined>>, format?: RuscFormat | undefined | null): void
+  writeRows(startRow: number, startCol: number, rows: unknown[], format?: RuscFormat | undefined | null): void
   /** Write a string to a cell */
   writeString(row: number, col: number, value: string): void
   /** Write a number to a cell */
@@ -472,6 +476,8 @@ export declare class RuscWorksheet {
   setColumnWidth(col: number, width: number): void
   /** Set the height of a row */
   setRowHeight(row: number, height: number): void
+  /** Set the default height for all worksheet rows efficiently */
+  setDefaultRowHeight(height: number): void
   /** Set the name of the worksheet */
   setName(name: string): void
   /** Merge a range of cells */
@@ -607,3 +613,9 @@ export declare class RuscWorksheet {
   /** Insert a shape (textbox) at the specified cell position with pixel offsets */
   insertShapeWithOffset(row: number, col: number, shape: RuscShape, xOffset: number, yOffset: number): void
 }
+
+/** Resets peak memory tracking to current usage */
+export declare function rustMemoryResetPeak(): void
+
+/** Returns [currentBytes, peakBytes] of Rust allocator usage */
+export declare function rustMemoryStats(): Array<number>

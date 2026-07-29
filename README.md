@@ -116,12 +116,13 @@ const worksheet = workbook.addWorksheetWithConstantMemory('Large');
 - **Memory**: Constant ~0.02 MB (regardless of size!)
 - **Limitations**: Sequential row writing only, no tables
 
-> **Important:** For large exports, use `addWorksheetWithConstantMemory()` with `save(filename)` — not `saveToBuffer()`. The constant memory mode flushes rows to temp files as they're written, but `saveToBuffer()` would load the entire result back into memory, defeating the purpose. Use `saveToStream()` if you need to pipe the output without disk I/O overhead.
+> **Important:** For large exports, use `save(filename)` or `await saveToStream(writable)` instead of `saveToBuffer()`. `saveToStream()` is temp-file-backed: it saves to the operating system's temporary directory, pipes the file into the writable, waits for completion, and removes the temporary file. It avoids buffering the entire XLSX file in JavaScript memory, but it does use temporary disk I/O.
 
 **Example: 1 million rows**
 ```javascript
 const workbook = new Workbook();
 const worksheet = workbook.addWorksheetWithConstantMemory('Data');
+worksheet.setDefaultRowHeight(15.001); // Set once instead of once per row
 
 for (let row = 0; row < 1000000; row++) {
   worksheet.write(row, 0, `Row ${row}`);
@@ -170,16 +171,17 @@ workbook.save('output.xlsx');
 - `setTempdir(path)` - Set temp directory for memory modes
 - `save(filename)` - Save to file
 - `saveToBuffer()` - Save to Buffer
+- `saveToStream(writable)` - Save through a temp file and await stream completion
 - `defineName(name, formula)` - Define named range
 - `readOnlyRecommended()` - Mark as read-only recommended
 - `addVbaProject(path)` - Add VBA macros
 - `setProperties(props)` - Set document metadata
 
-### Worksheet (96 methods)
+### Worksheet
 - **Writing**: `write()`, `writeString()`, `writeNumber()`, `writeBoolean()`, `writeBlank()`
 - **DateTime**: `writeDatetime()`, `writeDatetimeFromTimestamp()`, `writeDatetimeFromYmd()`, etc.
 - **Formulas**: `writeFormula()`, `writeArrayFormula()`, `writeDynamicFormula()`
-- **Layout**: `setColumnWidth()`, `setRowHeight()`, `mergeRange()`, `setName()`
+- **Layout**: `setColumnWidth()`, `setRowHeight()`, `setDefaultRowHeight()`, `mergeRange()`, `setName()`
 - **Features**: `insertNote()`, `addDataValidation()`, `insertChart()`, `insertImage()`, `addTable()`, `insertButton()`, `insertShape()`
 - **Conditional Formatting**: 14 methods for all rule types
 - **Page Setup**: 26 methods for printing, margins, headers, etc.

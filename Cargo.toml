@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 [dependencies]
 napi = { version = "3.3.0", features = ["async", "tokio_rt", "napi6"] }
 napi-derive = "3.3.0"
+parking_lot = "0.12"
 rust_xlsxwriter = { version = "0.90.2", features = ["constant_memory"] }
 
 [build-dependencies]
