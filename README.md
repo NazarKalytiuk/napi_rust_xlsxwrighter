@@ -283,6 +283,58 @@ Built with Rust and NAPI-RS for native-level performance:
 - **> 100K rows**: Constant memory mode (minimal footprint)
 - **Serverless/Cloud**: Low or constant memory modes
 
+### Pure Rust vs Node.js Benchmark
+
+Run an apples-to-apples comparison between direct `rust_xlsxwriter` calls and
+this package through N-API:
+
+```bash
+npm run benchmark
+```
+
+The default workload generates exactly 200,000 rows × 20 columns (4 million
+cells), split evenly between strings and numbers, in constant-memory mode. It
+builds both implementations in release mode, alternates their execution order
+across three runs, reports median throughput and peak RSS, and verifies that
+both worksheets have identical XML size and CRC.
+
+Override the workload or reuse existing release builds:
+
+```bash
+npm run benchmark -- --rows 100000 --columns 20 --runs 5
+npm run benchmark -- --skip-build
+```
+
+The default comparison uses `worksheet.write()` once per cell. To measure the
+lower-overhead bulk APIs, use row-by-row or bounded batches:
+
+```bash
+npm run benchmark -- --node-write-mode row
+npm run benchmark -- --node-write-mode batch --batch-rows 1000
+```
+
+`writeRows()` in bounded batches is the fastest option for large datasets.
+Larger batches reduce JavaScript-to-Rust calls but temporarily retain more
+JavaScript values, so tune `--batch-rows` for the available memory.
+
+For database cursors and other row-by-row streams, use `writeRow()` so each
+cursor item crosses the JavaScript-to-Rust boundary once:
+
+```javascript
+let rowIndex = 0
+for await (const item of cursor) {
+  worksheet.writeRow(rowIndex++, 0, [
+    item.id,
+    item.name,
+    item.amount,
+    item.status,
+  ])
+}
+```
+
+This keeps memory bounded to the current cursor item while retaining
+constant-memory worksheet generation.
+
 ## Limitations
 
 - ❌ **Read-only**: Cannot read existing Excel files (rust_xlsxwriter is write-only)

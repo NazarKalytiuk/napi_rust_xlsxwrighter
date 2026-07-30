@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const AdmZip = require('adm-zip');
 const { Workbook } = require('../wrapper');
 
 describe('Memory Modes', () => {
@@ -77,6 +78,28 @@ describe('Memory Modes', () => {
       const filename = path.join(testOutputDir, 'test-constant-memory.xlsx');
       workbook.save(filename);
       expect(fs.existsSync(filename)).toBe(true);
+    });
+
+    test('should write mixed rows and preserve null column positions', () => {
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheetWithConstantMemory();
+
+      worksheet.writeRow(0, 0, ['Alice', 30, true, null, 'ready']);
+      worksheet.writeRows(1, 0, [
+        ['Bob', 25, false, null, 'done'],
+      ]);
+
+      const archive = new AdmZip(workbook.saveToBuffer());
+      const xml = archive.readAsText('xl/worksheets/sheet1.xml');
+      const cell = address => xml.match(
+        new RegExp(`<c r="${address}"[^>]*>[\\s\\S]*?</c>`),
+      )?.[0];
+
+      expect(cell('A1')).toContain('<t>Alice</t>');
+      expect(cell('B1')).toContain('<v>30</v>');
+      expect(cell('C1')).toContain('<v>1</v>');
+      expect(cell('D1')).toBeUndefined();
+      expect(cell('E2')).toContain('<t>done</t>');
     });
 
     test('should handle large dataset in constant memory mode', () => {

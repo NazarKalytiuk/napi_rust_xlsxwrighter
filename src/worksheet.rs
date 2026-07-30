@@ -34,6 +34,61 @@ pub struct RuscWorksheet {
     pub(crate) index: usize,
 }
 
+fn write_array_values(
+    worksheet: &mut rust_xlsxwriter::Worksheet,
+    row: u32,
+    start_col: u16,
+    values: &Array<'_>,
+    format: Option<&Format>,
+) -> Result<()> {
+    for index in 0..values.len() {
+        let Some(value) = values.get::<Unknown<'_>>(index)? else {
+            continue;
+        };
+        let column = start_col + index as u16;
+
+        let write_result = match value.get_type()? {
+            ValueType::Number => {
+                // SAFETY: `get_type()` established that this is a JavaScript number.
+                let number = unsafe { value.cast::<f64>()? };
+                if let Some(format) = format {
+                    worksheet.write_number_with_format(row, column, number, format)
+                } else {
+                    worksheet.write_number(row, column, number)
+                }
+            }
+            ValueType::String => {
+                // SAFETY: `get_type()` established that this is a JavaScript string.
+                let string = unsafe { value.cast::<String>()? };
+                if let Some(format) = format {
+                    worksheet.write_string_with_format(row, column, &string, format)
+                } else {
+                    worksheet.write_string(row, column, &string)
+                }
+            }
+            ValueType::Boolean => {
+                // SAFETY: `get_type()` established that this is a JavaScript boolean.
+                let boolean = unsafe { value.cast::<bool>()? };
+                if let Some(format) = format {
+                    worksheet.write_boolean_with_format(row, column, boolean, format)
+                } else {
+                    worksheet.write_boolean(row, column, boolean)
+                }
+            }
+            _ => continue,
+        };
+
+        write_result.map_err(|error| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write at row {row}, col {column}: {error}"),
+            )
+        })?;
+    }
+
+    Ok(())
+}
+
 #[napi]
 impl RuscWorksheet {
     /// Write a value to a cell (auto-detects type)
@@ -71,37 +126,9 @@ impl RuscWorksheet {
         let mut wb = self.workbook.lock();
         let ws = wb.worksheet_from_index(self.index)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let format = format.map(|value| value.to_format());
 
-        let fmt = format.map(|f| f.to_format());
-
-        for i in 0..values.len() {
-            let col = start_col + i as u16;
-            if let Ok(Some(n)) = values.get::<f64>(i) {
-                if let Some(ref f) = fmt {
-                    ws.write_number_with_format(row, col, n, f)
-                } else {
-                    ws.write_number(row, col, n)
-                }
-                .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
-            } else if let Ok(Some(s)) = values.get::<String>(i) {
-                if let Some(ref f) = fmt {
-                    ws.write_string_with_format(row, col, &s, f)
-                } else {
-                    ws.write_string(row, col, &s)
-                }
-                .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
-            } else if let Ok(Some(b)) = values.get::<bool>(i) {
-                if let Some(ref f) = fmt {
-                    ws.write_boolean_with_format(row, col, b, f)
-                } else {
-                    ws.write_boolean(row, col, b)
-                }
-                .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
-            }
-            // null/undefined — skip, preserving column position
-        }
-
-        Ok(())
+        write_array_values(ws, row, start_col, &values, format.as_ref())
     }
 
     /// Write a 2D array of values starting at the given position.
@@ -113,39 +140,13 @@ impl RuscWorksheet {
         let mut wb = self.workbook.lock();
         let ws = wb.worksheet_from_index(self.index)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let format = format.map(|value| value.to_format());
 
-        let fmt = format.map(|f| f.to_format());
-
-        for r in 0..rows.len() {
-            let row = start_row + r;
-            let values: Array = rows.get(r)?
-                .ok_or_else(|| Error::new(Status::GenericFailure, format!("Missing row at index {}", r)))?;
-
-            for i in 0..values.len() {
-                let col = start_col + i as u16;
-                if let Ok(Some(n)) = values.get::<f64>(i) {
-                    if let Some(ref f) = fmt {
-                        ws.write_number_with_format(row, col, n, f)
-                    } else {
-                        ws.write_number(row, col, n)
-                    }
-                    .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
-                } else if let Ok(Some(s)) = values.get::<String>(i) {
-                    if let Some(ref f) = fmt {
-                        ws.write_string_with_format(row, col, &s, f)
-                    } else {
-                        ws.write_string(row, col, &s)
-                    }
-                    .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
-                } else if let Ok(Some(b)) = values.get::<bool>(i) {
-                    if let Some(ref f) = fmt {
-                        ws.write_boolean_with_format(row, col, b, f)
-                    } else {
-                        ws.write_boolean(row, col, b)
-                    }
-                    .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write at row {}, col {}: {}", row, col, e)))?;
-                }
-            }
+        for row_offset in 0..rows.len() {
+            let row = start_row + row_offset;
+            let values: Array = rows.get(row_offset)?
+                .ok_or_else(|| Error::new(Status::GenericFailure, format!("Missing row at index {}", row_offset)))?;
+            write_array_values(ws, row, start_col, &values, format.as_ref())?;
         }
 
         Ok(())

@@ -493,7 +493,20 @@ class Worksheet {
   }
 
   write(row, col, value, format) {
-    return this._native.write(row, col, value, format ? format._native : undefined)
+    if (format) {
+      return this._native.write(row, col, value, format._native)
+    }
+
+    switch (typeof value) {
+      case 'string':
+        return this._native.writeString(row, col, value)
+      case 'number':
+        return this._native.writeNumber(row, col, value)
+      case 'boolean':
+        return this._native.writeBoolean(row, col, value)
+      default:
+        return this._native.write(row, col, value)
+    }
   }
 
   writeRow(row, startCol, values, format) {

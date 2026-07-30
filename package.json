@@ -1,6 +1,6 @@
 {
   "name": "@nazarkalytiuk/rusc-xlsx",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Fast Excel XLSX library for Node.js powered by rust_xlsxwriter",
   "main": "wrapper.js",
   "types": "wrapper.d.ts",
@@ -32,6 +32,7 @@
     "artifacts": "napi artifacts",
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
+    "benchmark": "node benchmarks/compare-generation.js",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "jest",
     "universal": "napi universalize",
