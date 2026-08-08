@@ -1,7 +1,5 @@
 use napi::bindgen_prelude::*;
-use rust_xlsxwriter::{
-    ChartType, Color, DataValidationRule, FormatBorder,
-};
+use rust_xlsxwriter::{ChartType, Color, DataValidationRule, FormatBorder};
 
 /// Helper function to parse validation rules for integers
 pub fn parse_validation_rule_int(rule: String, value: i32) -> Result<DataValidationRule<i32>> {
@@ -43,9 +41,21 @@ pub fn parse_validation_rule_float(rule: String, value: f64) -> Result<DataValid
 
 /// Helper function to validate border styles
 pub fn is_valid_border(border: &str) -> bool {
-    matches!(border, "thin" | "medium" | "thick" | "double" | "dotted" | "dashed" |
-             "dashDot" | "dashDotDot" | "slantDashDot" | "mediumDashed" |
-             "mediumDashDot" | "mediumDashDotDot")
+    matches!(
+        border,
+        "thin"
+            | "medium"
+            | "thick"
+            | "double"
+            | "dotted"
+            | "dashed"
+            | "dashDot"
+            | "dashDotDot"
+            | "slantDashDot"
+            | "mediumDashed"
+            | "mediumDashDot"
+            | "mediumDashDotDot"
+    )
 }
 
 /// Helper function to parse border strings

@@ -67,8 +67,8 @@ npm install @nazarkalytiuk/rusc-xlsx
 
 ### Requirements
 
-- Node.js >= 16
-- Rust toolchain (for building from source)
+- Node.js >= 22.13
+- Rust >= 1.88 (only when building from source)
 
 ## Quick Start
 
@@ -169,6 +169,8 @@ workbook.save('output.xlsx');
 - `addWorksheetWithConstantMemory([name])` - Constant memory mode
 - `addWorksheetWithLowMemory([name])` - Low memory mode
 - `setTempdir(path)` - Set temp directory for memory modes
+- `setDefaultFormat(format, rowHeight, columnWidth)` - Set workbook-wide default formatting before adding worksheets
+- `useExcel2023Theme()` / `useCustomTheme(path)` - Select the workbook theme before adding worksheets
 - `save(filename)` - Save to file
 - `saveToBuffer()` - Save to Buffer
 - `saveToStream(writable)` - Save through a temp file and await stream completion
@@ -181,8 +183,8 @@ workbook.save('output.xlsx');
 - **Writing**: `write()`, `writeString()`, `writeNumber()`, `writeBoolean()`, `writeBlank()`
 - **DateTime**: `writeDatetime()`, `writeDatetimeFromTimestamp()`, `writeDatetimeFromYmd()`, etc.
 - **Formulas**: `writeFormula()`, `writeArrayFormula()`, `writeDynamicFormula()`
-- **Layout**: `setColumnWidth()`, `setRowHeight()`, `setDefaultRowHeight()`, `mergeRange()`, `setName()`
-- **Features**: `insertNote()`, `addDataValidation()`, `insertChart()`, `insertImage()`, `addTable()`, `insertButton()`, `insertShape()`
+- **Layout**: `setColumnWidth()`, `setRowHeight()`, `setDefaultRowHeight()`, `mergeRange()`, `setName()`, `autofit()`, `setAutofitMaxRow()`, `setAutofitMaxWidth()`
+- **Features**: `insertNote()`, `addDataValidation()`, `insertChart()`, `insertImage()`, `insertImageFitToCellCentered()`, `addTable()`, `insertButton()`, `insertShape()`
 - **Conditional Formatting**: 14 methods for all rule types
 - **Page Setup**: 26 methods for printing, margins, headers, etc.
 - **View**: `autofilter()`, `setFreezePanes()`, `setZoom()`, `setTabColor()`, `hideSheet()`
@@ -190,8 +192,8 @@ workbook.save('output.xlsx');
 - **Protection**: `protect()`, `protectWithPassword()`
 - **Rich Text**: `writeRichString()`
 
-### Format (39 methods)
-- **Font**: `setBold()`, `setItalic()`, `setFontSize()`, `setFontColor()`, `setFontName()`, `setUnderline()`, `setStrikethrough()`, `setFontScript()`
+### Format (40 methods)
+- **Font**: `setBold()`, `setItalic()`, `setFontSize()`, `setFontColor()`, `setFontName()`, `setFontScheme()`, `setUnderline()`, `setStrikethrough()`, `setFontScript()`
 - **Alignment**: `setAlign()`, `setVerticalAlign()`, `setRotation()`, `setIndent()`, `setTextWrap()`, `setShrink()`
 - **Borders**: `setBorder()`, `setBorderTop/Bottom/Left/Right()`, `setBorderColor()`, `setBorderDiagonal()`
 - **Fill**: `setBackgroundColor()`, `setForegroundColor()`, `setPattern()`
@@ -202,7 +204,7 @@ workbook.save('output.xlsx');
 ### Supporting Classes
 - **Chart**: 25 chart types with series, titles, legends, 48 styles
 - **Image**: Insert with scaling, positioning, alt text, URLs
-- **Table**: Custom columns, total rows, 60 styles
+- **Table**: Custom columns, total rows, alternative text, 60 styles
 - **Sparkline**: 3 types, markers, colors, 36 styles
 - **DataValidation**: All validation types with custom messages
 - **Note**: Comments with author, size, color, visibility
@@ -334,6 +336,45 @@ for await (const item of cursor) {
 
 This keeps memory bounded to the current cursor item while retaining
 constant-memory worksheet generation.
+
+### Node.js vs Go, C#, and Python Benchmark
+
+The cross-language benchmark compares concrete streaming XLSX libraries, not
+language runtimes in isolation:
+
+| Runtime | XLSX implementation | Bounded-memory API |
+|---------|---------------------|--------------------|
+| Node.js | `@nazarkalytiuk/rusc-xlsx` | Constant-memory `writeRow()` |
+| Go | Excelize 2.11.0 | `StreamWriter.SetRow()` |
+| C# | Open XML SDK 3.5.1 | Forward-only worksheet XML writer |
+| Python | XlsxWriter 3.2.9 | `constant_memory` + `write_row()` |
+
+Install Rust, Go 1.25+, the .NET 8 SDK, and Python 3.10+, then run:
+
+```bash
+npm run benchmark:languages
+```
+
+The runner builds release artifacts and creates an isolated Python virtual
+environment under `benchmarks/python-xlsxwriter/.venv`. The default workload is
+the same 200,000 rows × 20 columns, 50/50 string-and-number dataset used by the
+Rust comparison. Before measurement, each implementation generates a small
+workbook that is checked for its worksheet name, complete row/cell shape, and
+representative values. Measured execution order is balanced across runs, and
+the report includes median generation time, end-to-end process wall time,
+throughput, peak RSS, and XLSX size.
+
+Override the workload, select available runtimes, or reuse existing artifacts:
+
+```bash
+npm run benchmark:languages -- --rows 100000 --columns 20 --runs 5
+npm run benchmark:languages -- --implementations node,go,python
+npm run benchmark:languages -- --skip-build
+```
+
+Use `--node-write-mode cell|row|batch` to measure a different Node.js API;
+`row` is the cross-language default because all four implementations consume
+the workload sequentially by row.
 
 ## Limitations
 

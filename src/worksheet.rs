@@ -1,15 +1,15 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use rust_xlsxwriter::{
-    ConditionalFormat2ColorScale, ConditionalFormat3ColorScale,
-    ConditionalFormatAverage, ConditionalFormatAverageRule, ConditionalFormatBlank,
-    ConditionalFormatCell, ConditionalFormatCellRule, ConditionalFormatDataBar,
-    ConditionalFormatDate, ConditionalFormatDateRule, ConditionalFormatDuplicate,
-    ConditionalFormatError, ConditionalFormatFormula, ConditionalFormatIconSet,
-    ConditionalFormatIconType, ConditionalFormatText, ConditionalFormatTextRule,
-    ConditionalFormatTop, ConditionalFormatTopRule, ExcelDateTime, Format, Url, Workbook,
-};
 use parking_lot::Mutex;
+use rust_xlsxwriter::{
+    ConditionalFormat2ColorScale, ConditionalFormat3ColorScale, ConditionalFormatAverage,
+    ConditionalFormatAverageRule, ConditionalFormatBlank, ConditionalFormatCell,
+    ConditionalFormatCellRule, ConditionalFormatDataBar, ConditionalFormatDate,
+    ConditionalFormatDateRule, ConditionalFormatDuplicate, ConditionalFormatError,
+    ConditionalFormatFormula, ConditionalFormatIconSet, ConditionalFormatIconType,
+    ConditionalFormatText, ConditionalFormatTextRule, ConditionalFormatTop,
+    ConditionalFormatTopRule, ExcelDateTime, Format, Url, Workbook,
+};
 use std::sync::Arc;
 
 use crate::button::RuscButton;
@@ -25,7 +25,6 @@ use crate::sparkline::RuscSparkline;
 use crate::table::RuscTable;
 use crate::utils::parse_color;
 use crate::validation::RuscDataValidation;
-
 
 /// Worksheet wrapper for Excel sheet manipulation
 #[napi]
@@ -93,10 +92,20 @@ fn write_array_values(
 impl RuscWorksheet {
     /// Write a value to a cell (auto-detects type)
     #[napi]
-    pub fn write(&self, row: u32, col: u16, value: Either3<String, f64, bool>, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write(
+        &self,
+        row: u32,
+        col: u16,
+        value: Either3<String, f64, bool>,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
@@ -122,10 +131,20 @@ impl RuscWorksheet {
     /// instead of deserializing the entire row into Rust memory.
     /// Null/undefined values are skipped (preserving column positions).
     #[napi]
-    pub fn write_row(&self, row: u32, start_col: u16, values: Array, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_row(
+        &self,
+        row: u32,
+        start_col: u16,
+        values: Array,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
         let format = format.map(|value| value.to_format());
 
         write_array_values(ws, row, start_col, &values, format.as_ref())
@@ -136,16 +155,30 @@ impl RuscWorksheet {
     /// never materializing the entire grid in Rust memory.
     /// Null/undefined values are skipped (preserving column positions).
     #[napi]
-    pub fn write_rows(&self, start_row: u32, start_col: u16, rows: Array, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_rows(
+        &self,
+        start_row: u32,
+        start_col: u16,
+        rows: Array,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
         let format = format.map(|value| value.to_format());
 
         for row_offset in 0..rows.len() {
             let row = start_row + row_offset;
-            let values: Array = rows.get(row_offset)?
-                .ok_or_else(|| Error::new(Status::GenericFailure, format!("Missing row at index {}", row_offset)))?;
+            let values: Array = rows.get(row_offset)?.ok_or_else(|| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Missing row at index {}", row_offset),
+                )
+            })?;
             write_array_values(ws, row, start_col, &values, format.as_ref())?;
         }
 
@@ -156,11 +189,19 @@ impl RuscWorksheet {
     #[napi]
     pub fn write_string(&self, row: u32, col: u16, value: String) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.write_string(row, col, &value)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write string: {}", e)))?;
+        ws.write_string(row, col, &value).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write string: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -168,11 +209,19 @@ impl RuscWorksheet {
     #[napi]
     pub fn write_number(&self, row: u32, col: u16, value: f64) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.write_number(row, col, value)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write number: {}", e)))?;
+        ws.write_number(row, col, value).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write number: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -180,11 +229,19 @@ impl RuscWorksheet {
     #[napi]
     pub fn write_boolean(&self, row: u32, col: u16, value: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.write_boolean(row, col, value)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write boolean: {}", e)))?;
+        ws.write_boolean(row, col, value).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write boolean: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -192,11 +249,19 @@ impl RuscWorksheet {
     #[napi]
     pub fn write_blank(&self, row: u32, col: u16, format: &RuscFormat) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.write_blank(row, col, &format.to_format())
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write blank cell: {}", e)))?;
+        ws.write_blank(row, col, &format.to_format()).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write blank cell: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -204,8 +269,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn write_rich_string(&self, row: u32, col: u16, rich_text: &RuscRichText) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         // Build the segments array for rust_xlsxwriter, filtering out empty strings
         let segments = rich_text.get_segments();
@@ -228,8 +297,12 @@ impl RuscWorksheet {
             .map(|(fmt, text)| (fmt, text.as_str()))
             .collect();
 
-        ws.write_rich_string(row, col, &segment_refs)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write rich string: {}", e)))?;
+        ws.write_rich_string(row, col, &segment_refs).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write rich string: {}", e),
+            )
+        })?;
 
         Ok(())
     }
@@ -244,8 +317,12 @@ impl RuscWorksheet {
         cell_format: &RuscFormat,
     ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         // Build the segments array, filtering out empty strings
         let segments = rich_text.get_segments();
@@ -260,8 +337,12 @@ impl RuscWorksheet {
         // If all segments were blank, write a blank cell with the cell format instead
         if xlsxwriter_segments.is_empty() {
             let format = cell_format.to_format();
-            ws.write_blank(row, col, &format)
-                .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write blank cell: {}", e)))?;
+            ws.write_blank(row, col, &format).map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to write blank cell: {}", e),
+                )
+            })?;
             return Ok(());
         }
 
@@ -273,20 +354,39 @@ impl RuscWorksheet {
 
         let format = cell_format.to_format();
         ws.write_rich_string_with_format(row, col, &segment_refs, &format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write rich string with format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to write rich string with format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Write a datetime from a Unix timestamp (seconds since 1970-01-01 UTC)
     #[napi]
-    pub fn write_datetime_from_timestamp(&self, row: u32, col: u16, timestamp: f64, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_datetime_from_timestamp(
+        &self,
+        row: u32,
+        col: u16,
+        timestamp: f64,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        let datetime = ExcelDateTime::from_timestamp(timestamp as i64)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to create datetime from timestamp: {}", e)))?;
+        let datetime = ExcelDateTime::from_timestamp(timestamp as i64).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to create datetime from timestamp: {}", e),
+            )
+        })?;
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
@@ -294,20 +394,41 @@ impl RuscWorksheet {
         } else {
             ws.write_datetime(row, col, &datetime)
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write datetime: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write datetime: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Write a datetime from year, month, day components
     #[napi]
-    pub fn write_datetime_from_ymd(&self, row: u32, col: u16, year: u16, month: u8, day: u8, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_datetime_from_ymd(
+        &self,
+        row: u32,
+        col: u16,
+        year: u16,
+        month: u8,
+        day: u8,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        let datetime = ExcelDateTime::from_ymd(year, month, day)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to create datetime from ymd: {}", e)))?;
+        let datetime = ExcelDateTime::from_ymd(year, month, day).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to create datetime from ymd: {}", e),
+            )
+        })?;
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
@@ -315,22 +436,49 @@ impl RuscWorksheet {
         } else {
             ws.write_datetime(row, col, &datetime)
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write datetime: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write datetime: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Write a datetime from year, month, day, hour, minute, second components
     #[napi]
-    pub fn write_datetime_from_ymd_hms(&self, row: u32, col: u16, year: u16, month: u8, day: u8, hour: u16, min: u8, sec: f64, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_datetime_from_ymd_hms(
+        &self,
+        row: u32,
+        col: u16,
+        year: u16,
+        month: u8,
+        day: u8,
+        hour: u16,
+        min: u8,
+        sec: f64,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let datetime = ExcelDateTime::from_ymd(year, month, day)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to create date: {}", e)))?
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to create date: {}", e),
+                )
+            })?
             .and_hms(hour, min, sec)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add time: {}", e)))?;
+            .map_err(|e| {
+                Error::new(Status::GenericFailure, format!("Failed to add time: {}", e))
+            })?;
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
@@ -338,20 +486,39 @@ impl RuscWorksheet {
         } else {
             ws.write_datetime(row, col, &datetime)
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write datetime: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write datetime: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Write a datetime from an ISO 8601 string (e.g., "2023-01-25T12:30:00")
     #[napi]
-    pub fn write_datetime_from_string(&self, row: u32, col: u16, datetime_str: String, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_datetime_from_string(
+        &self,
+        row: u32,
+        col: u16,
+        datetime_str: String,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        let datetime = ExcelDateTime::parse_from_str(&datetime_str)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to parse datetime string: {}", e)))?;
+        let datetime = ExcelDateTime::parse_from_str(&datetime_str).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to parse datetime string: {}", e),
+            )
+        })?;
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
@@ -359,14 +526,25 @@ impl RuscWorksheet {
         } else {
             ws.write_datetime(row, col, &datetime)
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write datetime: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write datetime: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Write a value with formatting to a cell
     #[napi]
-    pub fn write_with_format(&self, row: u32, col: u16, value: Either3<String, f64, bool>, format: &RuscFormat) -> Result<()> {
+    pub fn write_with_format(
+        &self,
+        row: u32,
+        col: u16,
+        value: Either3<String, f64, bool>,
+        format: &RuscFormat,
+    ) -> Result<()> {
         self.write(row, col, value, Some(format))
     }
 
@@ -374,11 +552,19 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_column_width(&self, col: u16, width: f64) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.set_column_width(col, width)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set column width: {}", e)))?;
+        ws.set_column_width(col, width).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to set column width: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -386,11 +572,19 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_row_height(&self, row: u32, height: f64) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.set_row_height(row, height)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set row height: {}", e)))?;
+        ws.set_row_height(row, height).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to set row height: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -398,10 +592,58 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_default_row_height(&self, height: f64) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_default_row_height(height);
+        Ok(())
+    }
+    /// Set the exclusive upper row bound inspected by autofit.
+    #[napi]
+    pub fn set_autofit_max_row(&self, max_row: u32) -> Result<()> {
+        let mut wb = self.workbook.lock();
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
+
+        ws.set_autofit_max_row(max_row);
+        Ok(())
+    }
+
+    /// Limit the autofitted column width in pixels.
+    #[napi]
+    pub fn set_autofit_max_width(&self, max_width: u32) -> Result<()> {
+        let mut wb = self.workbook.lock();
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
+
+        ws.set_autofit_max_width(max_width);
+        Ok(())
+    }
+
+    /// Autofit worksheet columns based on their cell contents.
+    #[napi]
+    pub fn autofit(&self) -> Result<()> {
+        let mut wb = self.workbook.lock();
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
+
+        ws.autofit();
         Ok(())
     }
 
@@ -409,47 +651,102 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_name(&self, name: String) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.set_name(&name)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set worksheet name: {}", e)))?;
+        ws.set_name(&name).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to set worksheet name: {}", e),
+            )
+        })?;
         Ok(())
     }
 
     /// Merge a range of cells
     #[napi]
-    pub fn merge_range(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, value: String, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn merge_range(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        value: String,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
             ws.merge_range(first_row, first_col, last_row, last_col, &value, &f)
         } else {
-            ws.merge_range(first_row, first_col, last_row, last_col, &value, &Format::new())
+            ws.merge_range(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &value,
+                &Format::new(),
+            )
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to merge range: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to merge range: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Merge a range of cells with formatting
     #[napi]
-    pub fn merge_range_with_format(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, value: String, format: &RuscFormat) -> Result<()> {
-        self.merge_range(first_row, first_col, last_row, last_col, value, Some(format))
+    pub fn merge_range_with_format(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        value: String,
+        format: &RuscFormat,
+    ) -> Result<()> {
+        self.merge_range(
+            first_row,
+            first_col,
+            last_row,
+            last_col,
+            value,
+            Some(format),
+        )
     }
 
     /// Insert a note (post-it style comment) to a cell
     #[napi]
     pub fn insert_note(&self, row: u32, col: u16, note: &RuscNote) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.insert_note(row, col, note.get_note())
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert note: {}", e)))?;
+        ws.insert_note(row, col, note.get_note()).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to insert note: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -464,8 +761,12 @@ impl RuscWorksheet {
         }
 
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_default_note_author(&name);
         Ok(())
@@ -473,10 +774,20 @@ impl RuscWorksheet {
 
     /// Write a formula to a cell
     #[napi]
-    pub fn write_formula(&self, row: u32, col: u16, formula: &RuscFormula, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_formula(
+        &self,
+        row: u32,
+        col: u16,
+        formula: &RuscFormula,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
@@ -484,66 +795,155 @@ impl RuscWorksheet {
         } else {
             ws.write_formula(row, col, formula.get_formula())
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write formula: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write formula: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Write a dynamic array formula to a cell (Excel 365)
     #[napi]
-    pub fn write_dynamic_formula(&self, row: u32, col: u16, formula: &RuscFormula, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_dynamic_formula(
+        &self,
+        row: u32,
+        col: u16,
+        formula: &RuscFormula,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
-            ws.write_dynamic_array_formula_with_format(row, col, row, col, formula.get_formula(), &f)
+            ws.write_dynamic_array_formula_with_format(
+                row,
+                col,
+                row,
+                col,
+                formula.get_formula(),
+                &f,
+            )
         } else {
             ws.write_dynamic_array_formula(row, col, row, col, formula.get_formula())
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write dynamic formula: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write dynamic formula: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Write an array formula to a range of cells
     #[napi]
-    pub fn write_array_formula(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, formula: &RuscFormula, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_array_formula(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        formula: &RuscFormula,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
-            ws.write_array_formula_with_format(first_row, first_col, last_row, last_col, formula.get_formula(), &f)
+            ws.write_array_formula_with_format(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                formula.get_formula(),
+                &f,
+            )
         } else {
-            ws.write_array_formula(first_row, first_col, last_row, last_col, formula.get_formula())
+            ws.write_array_formula(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                formula.get_formula(),
+            )
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write array formula: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write array formula: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Add data validation to a cell or range
     #[napi]
-    pub fn add_data_validation(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, validation: &RuscDataValidation) -> Result<()> {
+    pub fn add_data_validation(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        validation: &RuscDataValidation,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.add_data_validation(first_row, first_col, last_row, last_col, validation.get_validation())
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add data validation: {}", e)))?;
+        ws.add_data_validation(
+            first_row,
+            first_col,
+            last_row,
+            last_col,
+            validation.get_validation(),
+        )
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to add data validation: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Write a URL to a cell
     #[napi]
-    pub fn write_url(&self, row: u32, col: u16, url: String, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_url(
+        &self,
+        row: u32,
+        col: u16,
+        url: String,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let url_obj = Url::new(&url);
 
@@ -553,17 +953,33 @@ impl RuscWorksheet {
         } else {
             ws.write_url(row, col, &url_obj)
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write URL: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write URL: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Write a URL to a cell with custom display text
     #[napi]
-    pub fn write_url_with_text(&self, row: u32, col: u16, url: String, text: String, format: Option<&RuscFormat>) -> Result<()> {
+    pub fn write_url_with_text(
+        &self,
+        row: u32,
+        col: u16,
+        url: String,
+        text: String,
+        format: Option<&RuscFormat>,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let url_obj = Url::new(&url).set_text(&text);
 
@@ -573,20 +989,40 @@ impl RuscWorksheet {
         } else {
             ws.write_url(row, col, &url_obj)
         }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write URL: {}", e)))?;
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write URL: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Set autofilter on a range
     #[napi]
-    pub fn autofilter(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16) -> Result<()> {
+    pub fn autofilter(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.autofilter(first_row, first_col, last_row, last_col)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set autofilter: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to set autofilter: {}", e),
+                )
+            })?;
 
         Ok(())
     }
@@ -595,50 +1031,108 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_freeze_panes(&self, row: u32, col: u16) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.set_freeze_panes(row, col)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set freeze panes: {}", e)))?;
+        ws.set_freeze_panes(row, col).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to set freeze panes: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Add 2-color scale conditional formatting
     #[napi]
-    pub fn add_conditional_format_2color_scale(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, min_color: String, max_color: String) -> Result<()> {
+    pub fn add_conditional_format_2color_scale(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        min_color: String,
+        max_color: String,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        let min = parse_color(&min_color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid min color: {}", min_color)))?;
-        let max = parse_color(&max_color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid max color: {}", max_color)))?;
+        let min = parse_color(&min_color).ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Invalid min color: {}", min_color),
+            )
+        })?;
+        let max = parse_color(&max_color).ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Invalid max color: {}", max_color),
+            )
+        })?;
 
         let format = ConditionalFormat2ColorScale::new()
             .set_minimum_color(min)
             .set_maximum_color(max);
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add 2-color scale: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add 2-color scale: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add 3-color scale conditional formatting
     #[napi]
-    pub fn add_conditional_format_3color_scale(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, min_color: String, mid_color: String, max_color: String) -> Result<()> {
+    pub fn add_conditional_format_3color_scale(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        min_color: String,
+        mid_color: String,
+        max_color: String,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        let min = parse_color(&min_color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid min color: {}", min_color)))?;
-        let mid = parse_color(&mid_color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid mid color: {}", mid_color)))?;
-        let max = parse_color(&max_color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid max color: {}", max_color)))?;
+        let min = parse_color(&min_color).ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Invalid min color: {}", min_color),
+            )
+        })?;
+        let mid = parse_color(&mid_color).ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Invalid mid color: {}", mid_color),
+            )
+        })?;
+        let max = parse_color(&max_color).ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Invalid max color: {}", max_color),
+            )
+        })?;
 
         let format = ConditionalFormat3ColorScale::new()
             .set_minimum_color(min)
@@ -646,36 +1140,73 @@ impl RuscWorksheet {
             .set_maximum_color(max);
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add 3-color scale: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add 3-color scale: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add data bar conditional formatting
     #[napi]
-    pub fn add_conditional_format_data_bar(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, bar_color: String) -> Result<()> {
+    pub fn add_conditional_format_data_bar(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        bar_color: String,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        let color = parse_color(&bar_color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid bar color: {}", bar_color)))?;
+        let color = parse_color(&bar_color).ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Invalid bar color: {}", bar_color),
+            )
+        })?;
 
-        let format = ConditionalFormatDataBar::new()
-            .set_fill_color(color);
+        let format = ConditionalFormatDataBar::new().set_fill_color(color);
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add data bar: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add data bar: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add cell-based conditional formatting (greater than, less than, etc.)
     #[napi]
-    pub fn add_conditional_format_cell(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, rule: String, value: f64, format: &RuscFormat) -> Result<()> {
+    pub fn add_conditional_format_cell(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        rule: String,
+        value: f64,
+        format: &RuscFormat,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let cell_rule = match rule.as_str() {
             "greaterThan" => ConditionalFormatCellRule::GreaterThan(value),
@@ -697,17 +1228,35 @@ impl RuscWorksheet {
             .set_format(format.to_format());
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add cell conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add cell conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add text-based conditional formatting
     #[napi]
-    pub fn add_conditional_format_text(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, rule: String, text: String, format: &RuscFormat) -> Result<()> {
+    pub fn add_conditional_format_text(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        rule: String,
+        text: String,
+        format: &RuscFormat,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let text_rule = match rule.as_str() {
             "contains" => ConditionalFormatTextRule::Contains(text),
@@ -727,17 +1276,34 @@ impl RuscWorksheet {
             .set_format(format.to_format());
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add text conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add text conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add average/standard deviation conditional formatting
     #[napi]
-    pub fn add_conditional_format_average(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, rule: String, format: &RuscFormat) -> Result<()> {
+    pub fn add_conditional_format_average(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        rule: String,
+        format: &RuscFormat,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let avg_rule = match rule.as_str() {
             "aboveAverage" => ConditionalFormatAverageRule::AboveAverage,
@@ -755,17 +1321,35 @@ impl RuscWorksheet {
             .set_format(format.to_format());
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add average conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add average conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add top/bottom N conditional formatting
     #[napi]
-    pub fn add_conditional_format_top(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, rule: String, value: u16, format: &RuscFormat) -> Result<()> {
+    pub fn add_conditional_format_top(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        rule: String,
+        value: u16,
+        format: &RuscFormat,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let top_rule = match rule.as_str() {
             "top" => ConditionalFormatTopRule::Top(value),
@@ -783,17 +1367,34 @@ impl RuscWorksheet {
             .set_format(format.to_format());
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add top/bottom conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add top/bottom conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add duplicate/unique values conditional formatting
     #[napi]
-    pub fn add_conditional_format_duplicate(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, invert: bool, format: &RuscFormat) -> Result<()> {
+    pub fn add_conditional_format_duplicate(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        invert: bool,
+        format: &RuscFormat,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let mut cond_format = ConditionalFormatDuplicate::new().set_format(format.to_format());
 
@@ -802,17 +1403,34 @@ impl RuscWorksheet {
         }
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add duplicate conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add duplicate conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add blank/non-blank conditional formatting
     #[napi]
-    pub fn add_conditional_format_blank(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, invert: bool, format: &RuscFormat) -> Result<()> {
+    pub fn add_conditional_format_blank(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        invert: bool,
+        format: &RuscFormat,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let mut cond_format = ConditionalFormatBlank::new().set_format(format.to_format());
 
@@ -821,17 +1439,34 @@ impl RuscWorksheet {
         }
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add blank conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add blank conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add error/non-error conditional formatting
     #[napi]
-    pub fn add_conditional_format_error(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, invert: bool, format: &RuscFormat) -> Result<()> {
+    pub fn add_conditional_format_error(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        invert: bool,
+        format: &RuscFormat,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let mut cond_format = ConditionalFormatError::new().set_format(format.to_format());
 
@@ -840,17 +1475,34 @@ impl RuscWorksheet {
         }
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add error conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add error conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add date-based conditional formatting
     #[napi]
-    pub fn add_conditional_format_date(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, rule: String, format: &RuscFormat) -> Result<()> {
+    pub fn add_conditional_format_date(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        rule: String,
+        format: &RuscFormat,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let date_rule = match rule.as_str() {
             "yesterday" => ConditionalFormatDateRule::Yesterday,
@@ -874,34 +1526,67 @@ impl RuscWorksheet {
             .set_format(format.to_format());
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add date conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add date conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add formula-based conditional formatting
     #[napi]
-    pub fn add_conditional_format_formula(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, formula: String, format: &RuscFormat) -> Result<()> {
+    pub fn add_conditional_format_formula(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        formula: String,
+        format: &RuscFormat,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let cond_format = ConditionalFormatFormula::new()
             .set_rule(&*formula)
             .set_format(format.to_format());
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add formula conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add formula conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add icon set conditional formatting
     #[napi]
-    pub fn add_conditional_format_icon_set(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, icon_type: String) -> Result<()> {
+    pub fn add_conditional_format_icon_set(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        icon_type: String,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         let icon_set_type = match icon_type.as_str() {
             "threeArrows" => ConditionalFormatIconType::ThreeArrows,
@@ -933,17 +1618,34 @@ impl RuscWorksheet {
         let cond_format = ConditionalFormatIconSet::new().set_icon_type(icon_set_type);
 
         ws.add_conditional_format(first_row, first_col, last_row, last_col, &cond_format)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add icon set conditional format: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add icon set conditional format: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Set page margins (in inches)
     #[napi]
-    pub fn set_margins(&self, left: f64, right: f64, top: f64, bottom: f64, header: f64, footer: f64) -> Result<()> {
+    pub fn set_margins(
+        &self,
+        left: f64,
+        right: f64,
+        top: f64,
+        bottom: f64,
+        header: f64,
+        footer: f64,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_margins(left, right, top, bottom, header, footer);
         Ok(())
@@ -953,8 +1655,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_portrait(&self) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_portrait();
         Ok(())
@@ -964,8 +1670,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_landscape(&self) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_landscape();
         Ok(())
@@ -975,8 +1685,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_paper_size(&self, paper_size: u8) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_paper_size(paper_size);
         Ok(())
@@ -986,8 +1700,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_header(&self, header: String) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_header(&header);
         Ok(())
@@ -997,8 +1715,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_footer(&self, footer: String) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_footer(&footer);
         Ok(())
@@ -1006,13 +1728,28 @@ impl RuscWorksheet {
 
     /// Set print area
     #[napi]
-    pub fn set_print_area(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16) -> Result<()> {
+    pub fn set_print_area(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_area(first_row, first_col, last_row, last_col)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set print area: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to set print area: {}", e),
+                )
+            })?;
         Ok(())
     }
 
@@ -1020,8 +1757,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_print_gridlines(&self, enable: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_gridlines(enable);
         Ok(())
@@ -1031,8 +1772,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_print_center_horizontally(&self, enable: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_center_horizontally(enable);
         Ok(())
@@ -1042,8 +1787,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_print_center_vertically(&self, enable: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_center_vertically(enable);
         Ok(())
@@ -1053,8 +1802,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_print_fit_to_pages(&self, width: u16, height: u16) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_fit_to_pages(width, height);
         Ok(())
@@ -1064,8 +1817,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_print_scale(&self, scale: u16) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_scale(scale);
         Ok(())
@@ -1075,8 +1832,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_print_first_page_number(&self, page_number: u16) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_first_page_number(page_number);
         Ok(())
@@ -1086,8 +1847,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_print_black_and_white(&self, enable: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_black_and_white(enable);
         Ok(())
@@ -1097,8 +1862,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_print_draft(&self, enable: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_draft(enable);
         Ok(())
@@ -1108,8 +1877,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_print_headings(&self, enable: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_print_headings(enable);
         Ok(())
@@ -1119,11 +1892,19 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_repeat_rows(&self, first_row: u32, last_row: u32) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.set_repeat_rows(first_row, last_row)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set repeat rows: {}", e)))?;
+        ws.set_repeat_rows(first_row, last_row).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to set repeat rows: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -1131,11 +1912,19 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_repeat_columns(&self, first_col: u16, last_col: u16) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.set_repeat_columns(first_col, last_col)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set repeat columns: {}", e)))?;
+        ws.set_repeat_columns(first_col, last_col).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to set repeat columns: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -1143,8 +1932,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_header_footer_scale_with_doc(&self, enable: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_header_footer_scale_with_doc(enable);
         Ok(())
@@ -1154,8 +1947,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_header_footer_align_with_page(&self, enable: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_header_footer_align_with_page(enable);
         Ok(())
@@ -1165,11 +1962,16 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_tab_color(&self, color: String) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        let color_obj = parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        let color_obj = parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
 
         ws.set_tab_color(color_obj);
         Ok(())
@@ -1179,8 +1981,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_hidden(&self, enable: bool) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_hidden(enable);
         Ok(())
@@ -1197,8 +2003,12 @@ impl RuscWorksheet {
         }
 
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_zoom(zoom);
         Ok(())
@@ -1206,13 +2016,28 @@ impl RuscWorksheet {
 
     /// Set the default cell selection when opening the worksheet
     #[napi]
-    pub fn set_selection(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16) -> Result<()> {
+    pub fn set_selection(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.set_selection(first_row, first_col, last_row, last_col)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set selection: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to set selection: {}", e),
+                )
+            })?;
         Ok(())
     }
 
@@ -1220,11 +2045,19 @@ impl RuscWorksheet {
     #[napi]
     pub fn set_top_left_cell(&self, row: u32, col: u16) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.set_top_left_cell(row, col)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set top left cell: {}", e)))?;
+        ws.set_top_left_cell(row, col).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to set top left cell: {}", e),
+            )
+        })?;
         Ok(())
     }
 
@@ -1232,8 +2065,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn protect(&self) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.protect();
         Ok(())
@@ -1243,8 +2080,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn protect_with_password(&self, password: String) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.protect_with_password(&password);
         Ok(())
@@ -1254,8 +2095,12 @@ impl RuscWorksheet {
     #[napi]
     pub fn protect_with_options(&self, options: &RuscProtectionOptions) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.protect_with_options(options.get_options());
         Ok(())
@@ -1263,10 +2108,18 @@ impl RuscWorksheet {
 
     /// Protect the worksheet with a password and granular protection options
     #[napi]
-    pub fn protect_with_password_and_options(&self, password: String, options: &RuscProtectionOptions) -> Result<()> {
+    pub fn protect_with_password_and_options(
+        &self,
+        password: String,
+        options: &RuscProtectionOptions,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.protect_with_password(&password);
         ws.protect_with_options(options.get_options());
@@ -1277,26 +2130,50 @@ impl RuscWorksheet {
     #[napi]
     pub fn insert_chart(&self, row: u32, col: u16, chart: &RuscChart) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         // Create a clone of the chart since rust_xlsxwriter takes by reference
         // Note: This is a workaround. In the future, we might need to handle chart lifecycle differently
-        ws.insert_chart(row, col, &chart.chart)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert chart: {}", e)))?;
+        ws.insert_chart(row, col, &chart.chart).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to insert chart: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Insert a chart at the specified cell position with pixel offsets
     #[napi]
-    pub fn insert_chart_with_offset(&self, row: u32, col: u16, chart: &RuscChart, x_offset: u32, y_offset: u32) -> Result<()> {
+    pub fn insert_chart_with_offset(
+        &self,
+        row: u32,
+        col: u16,
+        chart: &RuscChart,
+        x_offset: u32,
+        y_offset: u32,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.insert_chart_with_offset(row, col, &chart.chart, x_offset, y_offset)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert chart with offset: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to insert chart with offset: {}", e),
+                )
+            })?;
 
         Ok(())
     }
@@ -1305,50 +2182,131 @@ impl RuscWorksheet {
     #[napi]
     pub fn insert_image(&self, row: u32, col: u16, image: &RuscImage) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.insert_image(row, col, image.get_image())
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert image: {}", e)))?;
+        ws.insert_image(row, col, image.get_image()).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to insert image: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Insert an image at the specified cell position with pixel offsets
     #[napi]
-    pub fn insert_image_with_offset(&self, row: u32, col: u16, image: &RuscImage, x_offset: u32, y_offset: u32) -> Result<()> {
+    pub fn insert_image_with_offset(
+        &self,
+        row: u32,
+        col: u16,
+        image: &RuscImage,
+        x_offset: u32,
+        y_offset: u32,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.insert_image_with_offset(row, col, image.get_image(), x_offset, y_offset)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert image with offset: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to insert image with offset: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Insert an image that fits to a cell
     #[napi]
-    pub fn insert_image_fit_to_cell(&self, row: u32, col: u16, image: &RuscImage, keep_aspect_ratio: bool) -> Result<()> {
+    pub fn insert_image_fit_to_cell(
+        &self,
+        row: u32,
+        col: u16,
+        image: &RuscImage,
+        keep_aspect_ratio: bool,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.insert_image_fit_to_cell(row, col, image.get_image(), keep_aspect_ratio)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert fitted image: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to insert fitted image: {}", e),
+                )
+            })?;
+
+        Ok(())
+    }
+    /// Insert an image scaled proportionally and centered within a cell.
+    #[napi]
+    pub fn insert_image_fit_to_cell_centered(
+        &self,
+        row: u32,
+        col: u16,
+        image: &RuscImage,
+    ) -> Result<()> {
+        let mut wb = self.workbook.lock();
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
+
+        ws.insert_image_fit_to_cell_centered(row, col, image.get_image())
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to insert centered fitted image: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add a table to the worksheet
     #[napi]
-    pub fn add_table(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, table: &RuscTable) -> Result<()> {
+    pub fn add_table(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        table: &RuscTable,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.add_table(first_row, first_col, last_row, last_col, table.get_table())
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add table: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add table: {}", e),
+                )
+            })?;
 
         Ok(())
     }
@@ -1357,24 +2315,55 @@ impl RuscWorksheet {
     #[napi]
     pub fn add_sparkline(&self, row: u32, col: u16, sparkline: &RuscSparkline) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.add_sparkline(row, col, sparkline.get_sparkline())
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add sparkline: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add sparkline: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Add a sparkline group to a range of cells
     #[napi]
-    pub fn add_sparkline_group(&self, first_row: u32, first_col: u16, last_row: u32, last_col: u16, sparkline: &RuscSparkline) -> Result<()> {
+    pub fn add_sparkline_group(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        sparkline: &RuscSparkline,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.add_sparkline_group(first_row, first_col, last_row, last_col, sparkline.get_sparkline())
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to add sparkline group: {}", e)))?;
+        ws.add_sparkline_group(
+            first_row,
+            first_col,
+            last_row,
+            last_col,
+            sparkline.get_sparkline(),
+        )
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to add sparkline group: {}", e),
+            )
+        })?;
 
         Ok(())
     }
@@ -1383,24 +2372,49 @@ impl RuscWorksheet {
     #[napi]
     pub fn insert_button(&self, row: u32, col: u16, button: &RuscButton) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.insert_button(row, col, button.get_button())
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert button: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to insert button: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 
     /// Insert a button at the specified cell position with pixel offsets
     #[napi]
-    pub fn insert_button_with_offset(&self, row: u32, col: u16, button: &RuscButton, x_offset: u32, y_offset: u32) -> Result<()> {
+    pub fn insert_button_with_offset(
+        &self,
+        row: u32,
+        col: u16,
+        button: &RuscButton,
+        x_offset: u32,
+        y_offset: u32,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.insert_button_with_offset(row, col, button.get_button(), x_offset, y_offset)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert button with offset: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to insert button with offset: {}", e),
+                )
+            })?;
 
         Ok(())
     }
@@ -1409,26 +2423,49 @@ impl RuscWorksheet {
     #[napi]
     pub fn insert_shape(&self, row: u32, col: u16, shape: &RuscShape) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
-        ws.insert_shape(row, col, shape.get_shape())
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert shape: {}", e)))?;
+        ws.insert_shape(row, col, shape.get_shape()).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to insert shape: {}", e),
+            )
+        })?;
 
         Ok(())
     }
 
     /// Insert a shape (textbox) at the specified cell position with pixel offsets
     #[napi]
-    pub fn insert_shape_with_offset(&self, row: u32, col: u16, shape: &RuscShape, x_offset: u32, y_offset: u32) -> Result<()> {
+    pub fn insert_shape_with_offset(
+        &self,
+        row: u32,
+        col: u16,
+        shape: &RuscShape,
+        x_offset: u32,
+        y_offset: u32,
+    ) -> Result<()> {
         let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to get worksheet: {}", e)))?;
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
 
         ws.insert_shape_with_offset(row, col, shape.get_shape(), x_offset, y_offset)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to insert shape with offset: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to insert shape with offset: {}", e),
+                )
+            })?;
 
         Ok(())
     }
 }
-

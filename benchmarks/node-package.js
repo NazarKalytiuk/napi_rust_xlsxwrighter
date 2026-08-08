@@ -4,6 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const { performance } = require('perf_hooks')
 const { Workbook } = require('../wrapper.js')
+const packageJson = require('../package.json')
 
 const DEFAULT_ROWS = 200_000
 const DEFAULT_COLUMNS = 20
@@ -131,6 +132,8 @@ function run(config) {
     implementation: config.writeMode === 'batch'
       ? `node-package/batch-${config.batchRows}`
       : `node-package/${config.writeMode}`,
+    libraryVersion: packageJson.version,
+    runtimeVersion: process.version,
     mode: 'constant-memory',
     writeMode: config.writeMode,
     batchRows: config.writeMode === 'batch' ? config.batchRows : null,

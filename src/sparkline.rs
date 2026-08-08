@@ -1,7 +1,7 @@
 // Sparkline module for Excel sparklines
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use rust_xlsxwriter::{Sparkline, SparklineType, ChartEmptyCells, Color};
+use rust_xlsxwriter::{ChartEmptyCells, Color, Sparkline, SparklineType};
 
 #[napi]
 pub struct RuscSparkline {
@@ -29,7 +29,10 @@ impl RuscSparkline {
         };
 
         if parts.len() != 2 {
-            return Err(Error::new(Status::InvalidArg, "Invalid range format. Use 'Sheet!A1:B10' or 'A1:B10'"));
+            return Err(Error::new(
+                Status::InvalidArg,
+                "Invalid range format. Use 'Sheet!A1:B10' or 'A1:B10'",
+            ));
         }
 
         let sheet_name = parts[0];
@@ -38,13 +41,19 @@ impl RuscSparkline {
         // Parse cell range (e.g., "A1:E1")
         let cells: Vec<&str> = cell_range.split(':').collect();
         if cells.len() != 2 {
-            return Err(Error::new(Status::InvalidArg, "Invalid cell range. Use 'A1:E1' format"));
+            return Err(Error::new(
+                Status::InvalidArg,
+                "Invalid cell range. Use 'A1:E1' format",
+            ));
         }
 
         let (row1, col1) = Self::parse_cell_reference(cells[0])?;
         let (row2, col2) = Self::parse_cell_reference(cells[1])?;
 
-        self.sparkline = self.sparkline.clone().set_range((sheet_name, row1, col1, row2, col2));
+        self.sparkline = self
+            .sparkline
+            .clone()
+            .set_range((sheet_name, row1, col1, row2, col2));
         Ok(self)
     }
 
@@ -67,7 +76,8 @@ impl RuscSparkline {
             return Err(Error::new(Status::InvalidArg, "Missing row number"));
         }
 
-        let row: u32 = row_str.parse()
+        let row: u32 = row_str
+            .parse()
             .map_err(|_| Error::new(Status::InvalidArg, "Invalid row number"))?;
 
         Ok((row - 1, col - 1)) // Convert to 0-based indexing
@@ -80,7 +90,15 @@ impl RuscSparkline {
             "line" => SparklineType::Line,
             "column" => SparklineType::Column,
             "winlose" | "win_lose" => SparklineType::WinLose,
-            _ => return Err(Error::new(Status::InvalidArg, format!("Invalid sparkline type: {}. Use 'line', 'column', or 'winLose'", sparkline_type))),
+            _ => {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!(
+                        "Invalid sparkline type: {}. Use 'line', 'column', or 'winLose'",
+                        sparkline_type
+                    ),
+                ))
+            }
         };
         self.sparkline = self.sparkline.clone().set_type(spark_type);
         Ok(self)
@@ -193,7 +211,10 @@ impl RuscSparkline {
     #[napi]
     pub fn set_negative_points_color(&mut self, color: String) -> Result<&Self> {
         let parsed_color = Self::parse_color(&color)?;
-        self.sparkline = self.sparkline.clone().set_negative_points_color(parsed_color);
+        self.sparkline = self
+            .sparkline
+            .clone()
+            .set_negative_points_color(parsed_color);
         Ok(self)
     }
 
@@ -254,7 +275,15 @@ impl RuscSparkline {
             "gaps" => ChartEmptyCells::Gaps,
             "zero" => ChartEmptyCells::Zero,
             "connected" => ChartEmptyCells::Connected,
-            _ => return Err(Error::new(Status::InvalidArg, format!("Invalid empty cells option: {}. Use 'gaps', 'zero', or 'connected'", option))),
+            _ => {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!(
+                        "Invalid empty cells option: {}. Use 'gaps', 'zero', or 'connected'",
+                        option
+                    ),
+                ))
+            }
         };
         self.sparkline = self.sparkline.clone().show_empty_cells_as(empty_cells);
         Ok(self)
@@ -272,7 +301,10 @@ impl RuscSparkline {
             let color_value = ((r as u32) << 16) | ((g as u32) << 8) | (b as u32);
             Ok(Color::RGB(color_value))
         } else {
-            Err(Error::new(Status::InvalidArg, "Color must be in hex format (#RRGGBB)"))
+            Err(Error::new(
+                Status::InvalidArg,
+                "Color must be in hex format (#RRGGBB)",
+            ))
         }
     }
 

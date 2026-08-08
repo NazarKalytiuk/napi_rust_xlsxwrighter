@@ -1,8 +1,8 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use rust_xlsxwriter::{
-    Color, Format, FormatAlign, FormatBorder, FormatDiagonalBorder,
-    FormatPattern, FormatScript, FormatUnderline,
+    Color, FontScheme, Format, FormatAlign, FormatBorder, FormatDiagonalBorder, FormatPattern,
+    FormatScript, FormatUnderline,
 };
 
 use crate::utils::{is_valid_border, parse_border, parse_color};
@@ -14,6 +14,7 @@ pub struct RuscFormat {
     pub(crate) italic: bool,
     font_size: Option<f64>,
     font_name: Option<String>,
+    font_scheme: Option<FontScheme>,
     font_color: Option<String>,
     underline: Option<String>,
     strikethrough: bool,
@@ -57,6 +58,7 @@ impl RuscFormat {
             italic: false,
             font_size: None,
             font_name: None,
+            font_scheme: None,
             font_color: None,
             underline: None,
             strikethrough: false,
@@ -116,8 +118,9 @@ impl RuscFormat {
     #[napi]
     pub fn set_font_color(&mut self, color: String) -> Result<()> {
         // Validate color
-        parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
         self.font_color = Some(color);
         Ok(())
     }
@@ -126,8 +129,9 @@ impl RuscFormat {
     #[napi]
     pub fn set_background_color(&mut self, color: String) -> Result<()> {
         // Validate color
-        parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
         self.background_color = Some(color);
         Ok(())
     }
@@ -140,7 +144,10 @@ impl RuscFormat {
                 self.align = Some(align);
                 Ok(())
             }
-            _ => Err(Error::new(Status::GenericFailure, format!("Invalid alignment: {}", align))),
+            _ => Err(Error::new(
+                Status::GenericFailure,
+                format!("Invalid alignment: {}", align),
+            )),
         }
     }
 
@@ -152,7 +159,10 @@ impl RuscFormat {
                 self.vertical_align = Some(align);
                 Ok(())
             }
-            _ => Err(Error::new(Status::GenericFailure, format!("Invalid vertical alignment: {}", align))),
+            _ => Err(Error::new(
+                Status::GenericFailure,
+                format!("Invalid vertical alignment: {}", align),
+            )),
         }
     }
 
@@ -164,7 +174,10 @@ impl RuscFormat {
                 self.border = Some(border);
                 Ok(())
             }
-            _ => Err(Error::new(Status::GenericFailure, format!("Invalid border style: {}", border))),
+            _ => Err(Error::new(
+                Status::GenericFailure,
+                format!("Invalid border style: {}", border),
+            )),
         }
     }
 
@@ -179,6 +192,25 @@ impl RuscFormat {
     #[napi]
     pub fn set_font_name(&mut self, font_name: String) -> Result<()> {
         self.font_name = Some(font_name);
+        Ok(())
+    }
+    /// Set whether the font uses a body, headings, or custom font scheme.
+    #[napi]
+    pub fn set_font_scheme(&mut self, scheme: String) -> Result<()> {
+        self.font_scheme = Some(match scheme.as_str() {
+            "body" => FontScheme::Body,
+            "headings" => FontScheme::Headings,
+            "none" => FontScheme::None,
+            _ => {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!(
+                        "Invalid font scheme: {}. Valid values: 'body', 'headings', 'none'",
+                        scheme
+                    ),
+                ))
+            }
+        });
         Ok(())
     }
 
@@ -204,8 +236,9 @@ impl RuscFormat {
     /// Set foreground color (for patterns)
     #[napi]
     pub fn set_foreground_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
         self.foreground_color = Some(color);
         Ok(())
     }
@@ -214,13 +247,17 @@ impl RuscFormat {
     #[napi]
     pub fn set_pattern(&mut self, pattern: String) -> Result<()> {
         match pattern.as_str() {
-            "solid" | "mediumGray" | "darkGray" | "lightGray" | "darkHorizontal" | "darkVertical" |
-            "darkDown" | "darkUp" | "darkGrid" | "darkTrellis" | "lightHorizontal" | "lightVertical" |
-            "lightDown" | "lightUp" | "lightGrid" | "lightTrellis" | "gray125" | "gray0625" => {
+            "solid" | "mediumGray" | "darkGray" | "lightGray" | "darkHorizontal"
+            | "darkVertical" | "darkDown" | "darkUp" | "darkGrid" | "darkTrellis"
+            | "lightHorizontal" | "lightVertical" | "lightDown" | "lightUp" | "lightGrid"
+            | "lightTrellis" | "gray125" | "gray0625" => {
                 self.pattern = Some(pattern);
                 Ok(())
             }
-            _ => Err(Error::new(Status::GenericFailure, format!("Invalid pattern: {}", pattern))),
+            _ => Err(Error::new(
+                Status::GenericFailure,
+                format!("Invalid pattern: {}", pattern),
+            )),
         }
     }
 
@@ -235,7 +272,10 @@ impl RuscFormat {
     #[napi]
     pub fn set_indent(&mut self, indent: u32) -> Result<()> {
         if indent > 15 {
-            return Err(Error::new(Status::GenericFailure, "Indent level must be between 0 and 15".to_string()));
+            return Err(Error::new(
+                Status::GenericFailure,
+                "Indent level must be between 0 and 15".to_string(),
+            ));
         }
         self.indent = Some(indent as u8);
         Ok(())
@@ -245,7 +285,10 @@ impl RuscFormat {
     #[napi]
     pub fn set_rotation(&mut self, rotation: i32) -> Result<()> {
         if (rotation < -90 || rotation > 90) && rotation != 270 {
-            return Err(Error::new(Status::GenericFailure, "Rotation must be between -90 and 90, or 270 for vertical text".to_string()));
+            return Err(Error::new(
+                Status::GenericFailure,
+                "Rotation must be between -90 and 90, or 270 for vertical text".to_string(),
+            ));
         }
         self.rotation = Some(rotation as i16);
         Ok(())
@@ -262,7 +305,10 @@ impl RuscFormat {
     #[napi]
     pub fn set_border_top(&mut self, border: String) -> Result<()> {
         if !is_valid_border(&border) {
-            return Err(Error::new(Status::GenericFailure, format!("Invalid border style: {}", border)));
+            return Err(Error::new(
+                Status::GenericFailure,
+                format!("Invalid border style: {}", border),
+            ));
         }
         self.border_top = Some(border);
         Ok(())
@@ -272,7 +318,10 @@ impl RuscFormat {
     #[napi]
     pub fn set_border_bottom(&mut self, border: String) -> Result<()> {
         if !is_valid_border(&border) {
-            return Err(Error::new(Status::GenericFailure, format!("Invalid border style: {}", border)));
+            return Err(Error::new(
+                Status::GenericFailure,
+                format!("Invalid border style: {}", border),
+            ));
         }
         self.border_bottom = Some(border);
         Ok(())
@@ -282,7 +331,10 @@ impl RuscFormat {
     #[napi]
     pub fn set_border_left(&mut self, border: String) -> Result<()> {
         if !is_valid_border(&border) {
-            return Err(Error::new(Status::GenericFailure, format!("Invalid border style: {}", border)));
+            return Err(Error::new(
+                Status::GenericFailure,
+                format!("Invalid border style: {}", border),
+            ));
         }
         self.border_left = Some(border);
         Ok(())
@@ -292,7 +344,10 @@ impl RuscFormat {
     #[napi]
     pub fn set_border_right(&mut self, border: String) -> Result<()> {
         if !is_valid_border(&border) {
-            return Err(Error::new(Status::GenericFailure, format!("Invalid border style: {}", border)));
+            return Err(Error::new(
+                Status::GenericFailure,
+                format!("Invalid border style: {}", border),
+            ));
         }
         self.border_right = Some(border);
         Ok(())
@@ -301,8 +356,9 @@ impl RuscFormat {
     /// Set color for all borders
     #[napi]
     pub fn set_border_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
         self.border_color = Some(color);
         Ok(())
     }
@@ -310,8 +366,9 @@ impl RuscFormat {
     /// Set top border color
     #[napi]
     pub fn set_border_top_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
         self.border_top_color = Some(color);
         Ok(())
     }
@@ -319,8 +376,9 @@ impl RuscFormat {
     /// Set bottom border color
     #[napi]
     pub fn set_border_bottom_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
         self.border_bottom_color = Some(color);
         Ok(())
     }
@@ -328,8 +386,9 @@ impl RuscFormat {
     /// Set left border color
     #[napi]
     pub fn set_border_left_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
         self.border_left_color = Some(color);
         Ok(())
     }
@@ -337,8 +396,9 @@ impl RuscFormat {
     /// Set right border color
     #[napi]
     pub fn set_border_right_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
         self.border_right_color = Some(color);
         Ok(())
     }
@@ -370,10 +430,15 @@ impl RuscFormat {
         self.font_script = Some(match script.to_lowercase().as_str() {
             "superscript" => FormatScript::Superscript,
             "subscript" => FormatScript::Subscript,
-            _ => return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid font script: {}. Use 'superscript' or 'subscript'", script),
-            )),
+            _ => {
+                return Err(Error::new(
+                    Status::GenericFailure,
+                    format!(
+                        "Invalid font script: {}. Use 'superscript' or 'subscript'",
+                        script
+                    ),
+                ))
+            }
         });
         Ok(())
     }
@@ -382,10 +447,12 @@ impl RuscFormat {
     #[napi]
     pub fn set_border_diagonal(&mut self, border: String) -> Result<()> {
         self.border_diagonal = parse_border(&border)
-            .ok_or_else(|| Error::new(
-                Status::GenericFailure,
-                format!("Invalid border style: {}", border),
-            ))?
+            .ok_or_else(|| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Invalid border style: {}", border),
+                )
+            })?
             .into();
         Ok(())
     }
@@ -404,10 +471,15 @@ impl RuscFormat {
             "up" => FormatDiagonalBorder::BorderUp,
             "down" => FormatDiagonalBorder::BorderDown,
             "both" | "updown" => FormatDiagonalBorder::BorderUpDown,
-            _ => return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid diagonal border type: {}. Use 'up', 'down', or 'both'", border_type),
-            )),
+            _ => {
+                return Err(Error::new(
+                    Status::GenericFailure,
+                    format!(
+                        "Invalid diagonal border type: {}. Use 'up', 'down', or 'both'",
+                        border_type
+                    ),
+                ))
+            }
         });
         Ok(())
     }
@@ -457,6 +529,9 @@ impl RuscFormat {
             fmt = fmt.set_font_name(name);
         }
 
+        if let Some(scheme) = self.font_scheme {
+            fmt = fmt.set_font_scheme(scheme);
+        }
         if let Some(ref color) = self.font_color {
             if let Some(c) = parse_color(color) {
                 fmt = fmt.set_font_color(c);
@@ -647,4 +722,3 @@ impl RuscFormat {
         fmt
     }
 }
-

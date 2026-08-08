@@ -8,12 +8,14 @@ import {
   VerticalAlign,
   BorderStyle,
   UnderlineStyle,
-  FillPattern
+  FillPattern,
+  FontScheme
 } from '@nazarkalytiuk/rusc-xlsx';
 
 // Type-safe example demonstrating IntelliSense support with fluent API
 
 const workbook = new Workbook();
+workbook.useExcel2023Theme();
 const worksheet: Worksheet = workbook.addWorksheet('TypeScript Demo');
 
 // Font styling with type safety and fluent API
@@ -22,6 +24,8 @@ const headerFormat = new Format()
   .setItalic()
   .setFontSize(16)
   .setFontName('Arial');
+const fontScheme: FontScheme = 'none';
+headerFormat.setFontScheme(fontScheme);
 
 // Color type ensures valid values
 const validColor: Color = '#4472C4';
@@ -123,6 +127,10 @@ const mergeFormat = new Format()
 
 worksheet.setRowHeight(5, 25);
 worksheet.mergeRange(5, 0, 5, 2, 'Merged Header', mergeFormat);
+
+worksheet.setAutofitMaxRow(200);
+worksheet.setAutofitMaxWidth(300);
+worksheet.autofit();
 
 // Multiple worksheets
 const dataSheet = workbook.addWorksheet('Data');

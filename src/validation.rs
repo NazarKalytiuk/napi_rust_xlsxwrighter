@@ -30,7 +30,8 @@ impl RuscDataValidation {
     /// Allow whole number validation between two values
     #[napi]
     pub fn allow_whole_number_between(&mut self, min: i32, max: i32) -> Result<()> {
-        self.validation = DataValidation::new().allow_whole_number(DataValidationRule::Between(min, max));
+        self.validation =
+            DataValidation::new().allow_whole_number(DataValidationRule::Between(min, max));
         Ok(())
     }
 
@@ -45,7 +46,8 @@ impl RuscDataValidation {
     /// Allow decimal number validation between two values
     #[napi]
     pub fn allow_decimal_number_between(&mut self, min: f64, max: f64) -> Result<()> {
-        self.validation = DataValidation::new().allow_decimal_number(DataValidationRule::Between(min, max));
+        self.validation =
+            DataValidation::new().allow_decimal_number(DataValidationRule::Between(min, max));
         Ok(())
     }
 
@@ -55,7 +57,9 @@ impl RuscDataValidation {
         let string_refs: Vec<&str> = list.iter().map(|s| s.as_str()).collect();
         self.validation = DataValidation::new()
             .allow_list_strings(&string_refs)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set list: {}", e)))?;
+            .map_err(|e| {
+                Error::new(Status::GenericFailure, format!("Failed to set list: {}", e))
+            })?;
         Ok(())
     }
 
@@ -117,9 +121,16 @@ impl RuscDataValidation {
                 "Input title must be 32 characters or less".to_string(),
             ));
         }
-        self.validation = self.validation.clone()
+        self.validation = self
+            .validation
+            .clone()
             .set_input_title(title)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set input title: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to set input title: {}", e),
+                )
+            })?;
         Ok(())
     }
 
@@ -132,9 +143,16 @@ impl RuscDataValidation {
                 "Input message must be 255 characters or less".to_string(),
             ));
         }
-        self.validation = self.validation.clone()
+        self.validation = self
+            .validation
+            .clone()
             .set_input_message(message)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set input message: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to set input message: {}", e),
+                )
+            })?;
         Ok(())
     }
 
@@ -147,9 +165,16 @@ impl RuscDataValidation {
                 "Error title must be 32 characters or less".to_string(),
             ));
         }
-        self.validation = self.validation.clone()
+        self.validation = self
+            .validation
+            .clone()
             .set_error_title(title)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set error title: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to set error title: {}", e),
+                )
+            })?;
         Ok(())
     }
 
@@ -162,9 +187,16 @@ impl RuscDataValidation {
                 "Error message must be 255 characters or less".to_string(),
             ));
         }
-        self.validation = self.validation.clone()
+        self.validation = self
+            .validation
+            .clone()
             .set_error_message(message)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set error message: {}", e)))?;
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to set error message: {}", e),
+                )
+            })?;
         Ok(())
     }
 
@@ -178,7 +210,10 @@ impl RuscDataValidation {
             _ => {
                 return Err(Error::new(
                     Status::GenericFailure,
-                    format!("Invalid error style: {}. Valid values: 'stop', 'warning', 'information'", style),
+                    format!(
+                        "Invalid error style: {}. Valid values: 'stop', 'warning', 'information'",
+                        style
+                    ),
                 ))
             }
         };

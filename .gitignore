@@ -1,6 +1,5 @@
 # Rust
 target/
-Cargo.lock
 **/*.rs.bk
 
 # Node.js
@@ -38,3 +37,9 @@ rust_xlsxwriter/
 
 # Temporary benchmark directory (results preserved in benchmarks/)
 benchmark-comparison/
+
+# Cross-language benchmark build artifacts
+benchmarks/go-excelize/bin/
+benchmarks/csharp-openxml/bin/
+benchmarks/csharp-openxml/obj/
+benchmarks/python-xlsxwriter/.venv/

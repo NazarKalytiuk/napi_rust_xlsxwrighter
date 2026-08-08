@@ -1,8 +1,9 @@
 [package]
 name = "rusc-xlsx"
-version = "1.0.10"
+version = "2.0.0"
 authors = ["Nazarii Kalytiuk <nazarkwork@gmail.com>"]
 edition = "2021"
+rust-version = "1.88"
 license = "MIT"
 description = "Node.js bindings for rust_xlsxwriter using NAPI-RS"
 repository = "https://github.com/NazarKalytiuk/napi_rust_xlsxwrighter"
@@ -11,13 +12,13 @@ repository = "https://github.com/NazarKalytiuk/napi_rust_xlsxwrighter"
 crate-type = ["cdylib"]
 
 [dependencies]
-napi = { version = "3.3.0", features = ["async", "tokio_rt", "napi6"] }
-napi-derive = "3.3.0"
-parking_lot = "0.12"
-rust_xlsxwriter = { version = "0.90.2", features = ["constant_memory"] }
+napi = { version = "3.12.0", features = ["async", "tokio_rt", "napi9"] }
+napi-derive = "3.6.2"
+parking_lot = "0.12.5"
+rust_xlsxwriter = { version = "0.97.1", features = ["constant_memory", "zmij"] }
 
 [build-dependencies]
-napi-build = "2"
+napi-build = "2.4.0"
 
 [profile.release]
 lto = true

@@ -122,6 +122,8 @@ export declare class RuscFormat {
   setNumFormat(numFormat: string): void
   /** Set font name (e.g., 'Arial', 'Calibri', 'Times New Roman') */
   setFontName(fontName: string): void
+  /** Set whether the font uses a body, headings, or custom font scheme. */
+  setFontScheme(scheme: string): void
   /** Set text underline style */
   setUnderline(underline: string): void
   /** Set strikethrough text */
@@ -368,6 +370,10 @@ export declare class RuscTable {
   setLastColumn(show: boolean): this
   /** Set the name of the table */
   setName(name: string): this
+  /** Set alternative text for screen readers. */
+  setAltText(altText: string): this
+  /** Set the alternative text title for screen readers. */
+  setAltTextTitle(title: string): this
   /** Set the style of the table (1-21 for light styles, 22-49 for medium styles, 50-61 for dark styles) */
   setStyle(styleId: number): this
   /** Add columns to the table */
@@ -399,6 +405,18 @@ export declare class RuscWorkbook {
   addWorksheetWithLowMemory(name?: string | undefined | null): RuscWorksheet
   /** Set a custom temporary directory for constant memory mode */
   setTempdir(dir: string): void
+  /**
+   * Set the default workbook format and row/column dimensions in pixels.
+   * Must be called before adding worksheets.
+   */
+  setDefaultFormat(format: RuscFormat, rowHeight: number, columnWidth: number): void
+  /**
+   * Use the Excel 2023 Office theme with the Aptos default font.
+   * Must be called before adding worksheets.
+   */
+  useExcel2023Theme(): void
+  /** Load a custom theme from a .thmx, .xlsx, or theme XML file. */
+  useCustomTheme(path: string): void
   /** Save the workbook to a file */
   save(filename: string): void
   /** Save the workbook to a buffer */
@@ -478,6 +496,12 @@ export declare class RuscWorksheet {
   setRowHeight(row: number, height: number): void
   /** Set the default height for all worksheet rows efficiently */
   setDefaultRowHeight(height: number): void
+  /** Set the exclusive upper row bound inspected by autofit. */
+  setAutofitMaxRow(maxRow: number): void
+  /** Limit the autofitted column width in pixels. */
+  setAutofitMaxWidth(maxWidth: number): void
+  /** Autofit worksheet columns based on their cell contents. */
+  autofit(): void
   /** Set the name of the worksheet */
   setName(name: string): void
   /** Merge a range of cells */
@@ -598,6 +622,8 @@ export declare class RuscWorksheet {
   insertImageWithOffset(row: number, col: number, image: RuscImage, xOffset: number, yOffset: number): void
   /** Insert an image that fits to a cell */
   insertImageFitToCell(row: number, col: number, image: RuscImage, keepAspectRatio: boolean): void
+  /** Insert an image scaled proportionally and centered within a cell. */
+  insertImageFitToCellCentered(row: number, col: number, image: RuscImage): void
   /** Add a table to the worksheet */
   addTable(firstRow: number, firstCol: number, lastRow: number, lastCol: number, table: RuscTable): void
   /** Add a sparkline to a single cell */

@@ -14,8 +14,12 @@ impl RuscImage {
     /// Supports PNG, JPG, GIF, and BMP formats
     #[napi(factory)]
     pub fn new(path: String) -> Result<RuscImage> {
-        let image = Image::new(&path)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to load image: {}", e)))?;
+        let image = Image::new(&path).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to load image: {}", e),
+            )
+        })?;
 
         Ok(RuscImage { image })
     }
@@ -24,8 +28,12 @@ impl RuscImage {
     #[napi(factory)]
     pub fn new_from_buffer(buffer: Buffer) -> Result<RuscImage> {
         let data = buffer.to_vec();
-        let image = Image::new_from_buffer(&data)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to load image from buffer: {}", e)))?;
+        let image = Image::new_from_buffer(&data).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to load image from buffer: {}", e),
+            )
+        })?;
 
         Ok(RuscImage { image })
     }
@@ -61,7 +69,10 @@ impl RuscImage {
     /// Scale the image to a specific size maintaining or ignoring aspect ratio
     #[napi]
     pub fn set_scale_to_size(&mut self, width: f64, height: f64, keep_aspect_ratio: bool) -> &Self {
-        self.image = self.image.clone().set_scale_to_size(width, height, keep_aspect_ratio);
+        self.image = self
+            .image
+            .clone()
+            .set_scale_to_size(width, height, keep_aspect_ratio);
         self
     }
 
@@ -104,8 +115,10 @@ impl RuscImage {
     #[napi]
     pub fn set_url(&mut self, url: String) -> Result<&Self> {
         let url_obj = Url::new(&url);
-        self.image = self.image.clone().set_url(url_obj)
-            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to set URL: {}", e)))?;
+        self.image =
+            self.image.clone().set_url(url_obj).map_err(|e| {
+                Error::new(Status::GenericFailure, format!("Failed to set URL: {}", e))
+            })?;
         Ok(self)
     }
 

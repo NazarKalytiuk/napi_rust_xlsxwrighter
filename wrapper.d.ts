@@ -33,6 +33,9 @@ export type FillPattern =
   | 'lightDown' | 'lightUp' | 'lightGrid' | 'lightTrellis'
   | 'gray125' | 'gray0625';
 
+/** Font theme scheme */
+export type FontScheme = 'body' | 'headings' | 'none';
+
 /** Data validation rule type */
 export type ValidationRule = 'equal' | 'notEqual' | 'greaterThan' | 'lessThan' | 'greaterThanOrEqual' | 'lessThanOrEqual';
 
@@ -65,6 +68,8 @@ export declare class Format {
   setFontSize(size: number): this;
   /** Set font name (e.g., 'Arial', 'Calibri', 'Times New Roman') */
   setFontName(fontName: string): this;
+  /** Set whether the font belongs to the body, headings, or no theme scheme */
+  setFontScheme(scheme: FontScheme): this;
   /** Set font color using named color or hex code */
   setFontColor(color: Color): this;
   /** Set text underline style */
@@ -853,6 +858,21 @@ export declare class Worksheet {
   setDefaultRowHeight(height: number): void;
 
   /**
+   * Set the exclusive upper row bound inspected by autofit
+   * @param maxRow - Rows at or above this zero-indexed bound are skipped
+   */
+  setAutofitMaxRow(maxRow: number): void;
+
+  /**
+   * Limit the maximum autofitted column width
+   * @param maxWidth - Maximum width in pixels
+   */
+  setAutofitMaxWidth(maxWidth: number): void;
+
+  /** Autofit worksheet columns based on cell contents */
+  autofit(): void;
+
+  /**
    * Set the worksheet name
    * @param name - Worksheet name
    */
@@ -1449,6 +1469,14 @@ export declare class Worksheet {
   insertImageFitToCell(row: number, col: number, image: Image, keepAspectRatio?: boolean): void;
 
   /**
+   * Insert an image scaled proportionally and centered within a cell
+   * @param row - Row number (0-indexed)
+   * @param col - Column number (0-indexed)
+   * @param image - Image instance
+   */
+  insertImageFitToCellCentered(row: number, col: number, image: Image): void;
+
+  /**
    * Add a table to the worksheet
    * @param firstRow - First row of the table (0-indexed)
    * @param firstCol - First column of the table (0-indexed)
@@ -1817,6 +1845,12 @@ export declare class Table {
    * @param name - Table name (must be unique)
    */
   setName(name: string): this;
+
+  /** Set alternative text for screen readers */
+  setAltText(altText: string): this;
+
+  /** Set the alternative text title for screen readers */
+  setAltTextTitle(title: string): this;
 
   /**
    * Set the style of the table
@@ -2270,6 +2304,27 @@ export declare class Workbook {
    * @param dir - Directory path for temporary files
    */
   setTempdir(dir: string): void;
+
+  /**
+   * Set the default workbook format and row/column dimensions.
+   * Must be called before adding worksheets.
+   * @param format - Default cell format
+   * @param rowHeight - Default row height in pixels
+   * @param columnWidth - Supported default column width in pixels: 56, 64, 72, 80, 96, 104, or 120
+   */
+  setDefaultFormat(format: Format, rowHeight: number, columnWidth: number): void;
+
+  /**
+   * Use the Excel 2023 Office theme with the Aptos default font.
+   * Must be called before adding worksheets.
+   */
+  useExcel2023Theme(): void;
+
+  /**
+   * Load a custom theme from a .thmx, .xlsx, or theme XML file.
+   * Must be called before adding worksheets.
+   */
+  useCustomTheme(path: string): void;
 
   /**
    * Save the workbook to a file

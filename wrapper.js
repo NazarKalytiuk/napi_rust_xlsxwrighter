@@ -57,6 +57,11 @@ class Format {
     return this
   }
 
+  setFontScheme(scheme) {
+    this._native.setFontScheme(scheme)
+    return this
+  }
+
   setUnderline(underline) {
     this._native.setUnderline(underline)
     return this
@@ -594,6 +599,18 @@ class Worksheet {
     return this._native.setDefaultRowHeight(height)
   }
 
+  setAutofitMaxRow(maxRow) {
+    return this._native.setAutofitMaxRow(maxRow)
+  }
+
+  setAutofitMaxWidth(maxWidth) {
+    return this._native.setAutofitMaxWidth(maxWidth)
+  }
+
+  autofit() {
+    return this._native.autofit()
+  }
+
   setName(name) {
     return this._native.setName(name)
   }
@@ -849,6 +866,10 @@ class Worksheet {
     return this._native.insertImageFitToCell(row, col, image._native, keepAspectRatio)
   }
 
+  insertImageFitToCellCentered(row, col, image) {
+    return this._native.insertImageFitToCellCentered(row, col, image._native)
+  }
+
   addTable(firstRow, firstCol, lastRow, lastCol, table) {
     return this._native.addTable(firstRow, firstCol, lastRow, lastCol, table._native)
   }
@@ -953,6 +974,16 @@ class Table {
 
   setName(name) {
     this._native.setName(name)
+    return this
+  }
+
+  setAltText(altText) {
+    this._native.setAltText(altText)
+    return this
+  }
+
+  setAltTextTitle(title) {
+    this._native.setAltTextTitle(title)
     return this
   }
 
@@ -1278,6 +1309,18 @@ class Workbook {
 
   setTempdir(dir) {
     return this._native.setTempdir(dir)
+  }
+
+  setDefaultFormat(format, rowHeight, columnWidth) {
+    return this._native.setDefaultFormat(format._native, rowHeight, columnWidth)
+  }
+
+  useExcel2023Theme() {
+    return this._native.useExcel2023Theme()
+  }
+
+  useCustomTheme(path) {
+    return this._native.useCustomTheme(path)
   }
 
   save(filename) {

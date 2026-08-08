@@ -1,0 +1,26 @@
+# Нотатки / коментарі (`note`)
+
+[← Coverage dashboard](../rust-xlsxwriter-coverage-checklist.md)
+
+> Pinned baseline: `rust_xlsxwriter 0.97.1`; **13 grouped capabilities**, **13 canonical symbol rows**.
+
+- Grouped: **7 full · 1 partial · 5 missing · 0 N/A**.
+- Symbol rows: **7 full · 1 partial · 5 missing · 0 N/A**.
+- `[x] FULL`; `[ ] PARTIAL`; `[ ] MISSING`; plain `N/A` is outside the compiled/runtime denominator.
+- Before marking `FULL`, satisfy the [shared definition of done](../rust-xlsxwriter-coverage-checklist.md#definition-of-done).
+
+## `Note`
+
+- [x] **FULL** `rust_xlsxwriter::note::Note#struct` — → `Note class`, `RuscNote class/factory` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct --><!-- coverage-row:rust_xlsxwriter::note::Note#struct -->
+- [ ] **MISSING** `rust_xlsxwriter::note::Note#struct::add_author_prefix#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::add_author_prefix#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::add_author_prefix#function -->
+- [x] **FULL** `rust_xlsxwriter::note::Note#struct::new#function` — → `Note::constructor`, `RuscNote::constructor` — evidence: `static-forwarding` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::new#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::new#function -->
+- [ ] **MISSING** `rust_xlsxwriter::note::Note#struct::reset_text#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::reset_text#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::reset_text#function -->
+- [x] **FULL** `rust_xlsxwriter::note::Note#struct::set_alt_text#function` — → `Note.prototype.setAltText`, `RuscNote.prototype.setAltText` — evidence: `static-forwarding` — tests: `tests/fluent-api.test.js:226`, `tests/fluent-api.test.js:241`, `tests/notes.test.js:88` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::set_alt_text#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::set_alt_text#function -->
+- [x] **FULL** `rust_xlsxwriter::note::Note#struct::set_author#function` — → `Note.prototype.setAuthor`, `RuscNote.prototype.setAuthor` — evidence: `static-forwarding` — tests: `tests/fluent-api.test.js:176`, `tests/fluent-api.test.js:199`, `tests/fluent-api.test.js:217` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::set_author#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::set_author#function -->
+- [ ] **PARTIAL** `rust_xlsxwriter::note::Note#struct::set_background_color#function` — → `Note.prototype.setBackgroundColor`, `RuscNote.prototype.setBackgroundColor` — evidence: `static-forwarding` — tests: `tests/fluent-api.test.js:185`, `tests/fluent-api.test.js:202`, `tests/fluent-api.test.js:226` — gap: A local adapter path reaches the upstream operation, but option space, error behavior, builder access, or fluent/result semantics are narrowed. <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::set_background_color#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::set_background_color#function -->
+- [ ] **MISSING** `rust_xlsxwriter::note::Note#struct::set_font_name#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::set_font_name#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::set_font_name#function -->
+- [ ] **MISSING** `rust_xlsxwriter::note::Note#struct::set_font_size#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::set_font_size#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::set_font_size#function -->
+- [x] **FULL** `rust_xlsxwriter::note::Note#struct::set_height#function` — → `Note.prototype.setHeight`, `RuscNote.prototype.setHeight` — evidence: `static-forwarding` — tests: `tests/fluent-api.test.js:182`, `tests/fluent-api.test.js:201`, `tests/fluent-api.test.js:217` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::set_height#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::set_height#function -->
+- [ ] **MISSING** `rust_xlsxwriter::note::Note#struct::set_object_movement#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::set_object_movement#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::set_object_movement#function -->
+- [x] **FULL** `rust_xlsxwriter::note::Note#struct::set_visible#function` — → `Note.prototype.setVisible`, `RuscNote.prototype.setVisible` — evidence: `static-forwarding` — tests: `tests/fluent-api.test.js:203`, `tests/fluent-api.test.js:226`, `tests/fluent-api.test.js:241` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::set_visible#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::set_visible#function -->
+- [x] **FULL** `rust_xlsxwriter::note::Note#struct::set_width#function` — → `Note.prototype.setWidth`, `RuscNote.prototype.setWidth` — evidence: `static-forwarding` — tests: `tests/fluent-api.test.js:179`, `tests/fluent-api.test.js:200`, `tests/fluent-api.test.js:217` <!-- coverage-capability:rust_xlsxwriter::note::Note#struct::set_width#function --><!-- coverage-row:rust_xlsxwriter::note::Note#struct::set_width#function -->

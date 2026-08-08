@@ -23,7 +23,12 @@ impl RuscChart {
 
     /// Add a data series to the chart
     #[napi]
-    pub fn add_series(&mut self, categories: Option<String>, values: String, name: Option<String>) -> Result<()> {
+    pub fn add_series(
+        &mut self,
+        categories: Option<String>,
+        values: String,
+        name: Option<String>,
+    ) -> Result<()> {
         let series = self.chart.add_series();
 
         if let Some(cat) = categories {

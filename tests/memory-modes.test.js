@@ -94,10 +94,14 @@ describe('Memory Modes', () => {
       const cell = address => xml.match(
         new RegExp(`<c r="${address}"[^>]*>[\\s\\S]*?</c>`),
       )?.[0];
+      const numericCellValue = address => {
+        const value = cell(address)?.match(/<v>([^<]+)<\/v>/)?.[1];
+        return value === undefined ? undefined : Number(value);
+      };
 
       expect(cell('A1')).toContain('<t>Alice</t>');
-      expect(cell('B1')).toContain('<v>30</v>');
-      expect(cell('C1')).toContain('<v>1</v>');
+      expect(numericCellValue('B1')).toBe(30);
+      expect(numericCellValue('C1')).toBe(1);
       expect(cell('D1')).toBeUndefined();
       expect(cell('E2')).toContain('<t>done</t>');
     });

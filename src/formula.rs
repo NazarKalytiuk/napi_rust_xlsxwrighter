@@ -29,4 +29,3 @@ impl RuscFormula {
         &self.formula
     }
 }
-

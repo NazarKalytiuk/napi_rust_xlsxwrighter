@@ -66,6 +66,19 @@ impl RuscTable {
         self.table = self.table.clone().set_name(&name);
         self
     }
+    /// Set alternative text for screen readers.
+    #[napi]
+    pub fn set_alt_text(&mut self, alt_text: String) -> &Self {
+        self.table = self.table.clone().set_alt_text(alt_text);
+        self
+    }
+
+    /// Set the alternative text title for screen readers.
+    #[napi]
+    pub fn set_alt_text_title(&mut self, title: String) -> &Self {
+        self.table = self.table.clone().set_alt_text_title(title);
+        self
+    }
 
     /// Set the style of the table (1-21 for light styles, 22-49 for medium styles, 50-61 for dark styles)
     #[napi]

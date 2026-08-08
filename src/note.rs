@@ -49,8 +49,9 @@ impl RuscNote {
     /// Set the background color of the note
     #[napi]
     pub fn set_background_color(&mut self, color: String) -> Result<()> {
-        let c = parse_color(&color)
-            .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid color: {}", color)))?;
+        let c = parse_color(&color).ok_or_else(|| {
+            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
+        })?;
         self.note = self.note.clone().set_background_color(c);
         Ok(())
     }
@@ -74,4 +75,3 @@ impl RuscNote {
         &self.note
     }
 }
-
