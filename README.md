@@ -18,7 +18,9 @@ Fast, feature-complete Excel XLSX library for Node.js powered by [rust_xlsxwrite
   - Fills (18 patterns, foreground/background colors)
   - Number formats (currency, percentage, dates, custom)
   - Cell protection (locked/unlocked, hidden formulas)
-- **Layout**: Column widths, row heights, merged cells
+- **Layout**: Column widths, row heights, column/row formats, hidden rows and columns, merged cells
+- **Outlines**: Grouped rows and columns, nested and collapsed
+- **Formatting after writing**: Format cells and ranges (with an outside border) without rewriting their data
 - **Formulas**: Standard, array, and dynamic formulas
 - **Data Validation**: Dropdowns, number ranges, custom rules with messages
 - **Conditional Formatting**:
@@ -186,7 +188,10 @@ workbook.save('output.xlsx');
 - **Writing**: `write()`, `writeString()`, `writeNumber()`, `writeBoolean()`, `writeBlank()`
 - **DateTime**: `writeDatetime()`, `writeDatetimeFromTimestamp()`, `writeDatetimeFromYmd()`, etc.
 - **Formulas**: `writeFormula()`, `writeArrayFormula()`, `writeDynamicFormula()`
-- **Layout**: `setColumnWidth()`, `setRowHeight()`, `setDefaultRowHeight()`, `mergeRange()`, `setName()`, `autofit()`, `setAutofitMaxRow()`, `setAutofitMaxWidth()`
+- **Layout**: `setColumnWidth()`, `setColumnWidthPixels()`, `setColumnRangeWidth()`, `setColumnAutofitWidth()`, `setRowHeight()`, `setRowHeightPixels()`, `setDefaultRowHeight()`, `mergeRange()`, `setName()`, `autofit()`, `setAutofitMaxRow()`, `setAutofitMaxWidth()`
+- **Rows & columns**: `setColumnFormat()`, `setColumnRangeFormat()`, `setColumnHidden()`, `setColumnRangeHidden()`, `setRowFormat()`, `setRowHidden()`, `setRowUnhidden()`, `hideUnusedRows()`
+- **Outlines**: `groupRows()`, `groupRowsCollapsed()`, `groupColumns()`, `groupColumnsCollapsed()`, `groupSymbolsAbove()`, `groupSymbolsToLeft()`
+- **Cell formatting**: `setCellFormat()`, `setRangeFormat()`, `setRangeFormatWithBorder()`, `clearCell()`, `clearCellFormat()`
 - **Features**: `insertNote()`, `addDataValidation()`, `insertChart()`, `insertImage()`, `insertImageFitToCellCentered()`, `addTable()`, `insertButton()`, `insertShape()`
 - **Conditional Formatting**: 14 methods for all rule types
 - **Page Setup**: 26 methods for printing, margins, headers, etc.

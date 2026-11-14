@@ -559,6 +559,74 @@ export declare class RuscWorksheet {
   setRowHeight(row: number, height: number): void
   /** Set the default height for all worksheet rows efficiently */
   setDefaultRowHeight(height: number): void
+  /** Set the width of a column in pixels */
+  setColumnWidthPixels(col: number, width: number): void
+  /** Set the width of a range of columns in character units */
+  setColumnRangeWidth(firstCol: number, lastCol: number, width: number): void
+  /** Set the width of a range of columns in pixels */
+  setColumnRangeWidthPixels(firstCol: number, lastCol: number, width: number): void
+  /**
+   * Set the width of a column in pixels in auto-fit mode: as with a column
+   * Excel auto-fitted, Excel widens it when a number in it gets more digits
+   */
+  setColumnAutofitWidth(col: number, width: number): void
+  /** Set the default format of a column, used by its cells that have no format */
+  setColumnFormat(col: number, format: RuscFormat): void
+  /** Set the default format of a range of columns */
+  setColumnRangeFormat(firstCol: number, lastCol: number, format: RuscFormat): void
+  /** Hide a column */
+  setColumnHidden(col: number): void
+  /** Hide a range of columns */
+  setColumnRangeHidden(firstCol: number, lastCol: number): void
+  /** Set the height of a row in pixels */
+  setRowHeightPixels(row: number, height: number): void
+  /** Set the default height of all worksheet rows in pixels */
+  setDefaultRowHeightPixels(height: number): void
+  /** Set the default format of a row, used by its cells that have no format */
+  setRowFormat(row: number, format: RuscFormat): void
+  /** Hide a row */
+  setRowHidden(row: number): void
+  /** Unhide a row hidden with setRowHidden() */
+  setRowUnhidden(row: number): void
+  /**
+   * Hide all rows that have no data, format or row settings, with a single
+   * worksheet setting instead of one per row
+   */
+  hideUnusedRows(enable: boolean): void
+  /**
+   * Group a range of rows into an outline level; a range inside an existing
+   * group adds a nested level
+   */
+  groupRows(firstRow: number, lastRow: number): void
+  /** Group a range of rows into a collapsed outline level */
+  groupRowsCollapsed(firstRow: number, lastRow: number): void
+  /**
+   * Group a range of columns into an outline level; a range inside an existing
+   * group adds a nested level
+   */
+  groupColumns(firstCol: number, lastCol: number): void
+  /** Group a range of columns into a collapsed outline level */
+  groupColumnsCollapsed(firstCol: number, lastCol: number): void
+  /** Show the row outline expand/collapse symbols above the groups instead of below */
+  groupSymbolsAbove(enable: boolean): void
+  /**
+   * Show the column outline expand/collapse symbols to the left of the groups
+   * instead of to the right
+   */
+  groupSymbolsToLeft(enable: boolean): void
+  /** Set the format of a cell, keeping its data, or of an empty cell */
+  setCellFormat(row: number, col: number, format: RuscFormat): void
+  /** Set the format of every cell in a range, keeping their data */
+  setRangeFormat(firstRow: number, firstCol: number, lastRow: number, lastCol: number, format: RuscFormat): void
+  /**
+   * Set the format of every cell in a range, keeping their data, and draw the
+   * border of `borderFormat` around the range
+   */
+  setRangeFormatWithBorder(firstRow: number, firstCol: number, lastRow: number, lastCol: number, cellFormat: RuscFormat, borderFormat: RuscFormat): void
+  /** Remove the data and format of a cell */
+  clearCell(row: number, col: number): void
+  /** Remove the format of a cell, keeping its data */
+  clearCellFormat(row: number, col: number): void
   /** Set the exclusive upper row bound inspected by autofit. */
   setAutofitMaxRow(maxRow: number): void
   /** Limit the autofitted column width in pixels. */

@@ -78,6 +78,19 @@ fn unsupported_cell_value(value: &Unknown<'_>, value_type: ValueType) -> Result<
     ))
 }
 
+/// Converts the result of a fluent `rust_xlsxwriter` call into a JavaScript
+/// result, naming the failed action in the error.
+trait OrJsError {
+    fn or_js_error(self, action: &str) -> Result<()>;
+}
+
+impl<T> OrJsError for std::result::Result<T, rust_xlsxwriter::XlsxError> {
+    fn or_js_error(self, action: &str) -> Result<()> {
+        self.map(drop)
+            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to {action}: {e}")))
+    }
+}
+
 /// Writes `value` like `rust_xlsxwriter` writes `Option` cell data: no value
 /// leaves the cell alone, or writes a blank cell when there is a format.
 fn write_cell(
@@ -581,6 +594,263 @@ impl RuscWorksheet {
         ws.set_default_row_height(height);
         Ok(())
     }
+    /// Set the width of a column in pixels
+    #[napi]
+    pub fn set_column_width_pixels(&self, col: u16, width: u32) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_column_width_pixels(col, width)
+                .or_js_error("set column width")
+        })
+    }
+
+    /// Set the width of a range of columns in character units
+    #[napi]
+    pub fn set_column_range_width(&self, first_col: u16, last_col: u16, width: f64) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_column_range_width(first_col, last_col, width)
+                .or_js_error("set column range width")
+        })
+    }
+
+    /// Set the width of a range of columns in pixels
+    #[napi]
+    pub fn set_column_range_width_pixels(
+        &self,
+        first_col: u16,
+        last_col: u16,
+        width: u32,
+    ) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_column_range_width_pixels(first_col, last_col, width)
+                .or_js_error("set column range width")
+        })
+    }
+
+    /// Set the width of a column in pixels in auto-fit mode: as with a column
+    /// Excel auto-fitted, Excel widens it when a number in it gets more digits
+    #[napi]
+    pub fn set_column_autofit_width(&self, col: u16, width: u32) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_column_autofit_width(col, width)
+                .or_js_error("set column autofit width")
+        })
+    }
+
+    /// Set the default format of a column, used by its cells that have no format
+    #[napi]
+    pub fn set_column_format(&self, col: u16, format: &RuscFormat) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_column_format(col, &format.to_format())
+                .or_js_error("set column format")
+        })
+    }
+
+    /// Set the default format of a range of columns
+    #[napi]
+    pub fn set_column_range_format(
+        &self,
+        first_col: u16,
+        last_col: u16,
+        format: &RuscFormat,
+    ) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_column_range_format(first_col, last_col, &format.to_format())
+                .or_js_error("set column range format")
+        })
+    }
+
+    /// Hide a column
+    #[napi]
+    pub fn set_column_hidden(&self, col: u16) -> Result<()> {
+        self.with_worksheet(|ws| ws.set_column_hidden(col).or_js_error("hide column"))
+    }
+
+    /// Hide a range of columns
+    #[napi]
+    pub fn set_column_range_hidden(&self, first_col: u16, last_col: u16) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_column_range_hidden(first_col, last_col)
+                .or_js_error("hide column range")
+        })
+    }
+
+    /// Set the height of a row in pixels
+    #[napi]
+    pub fn set_row_height_pixels(&self, row: u32, height: u32) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_row_height_pixels(row, height)
+                .or_js_error("set row height")
+        })
+    }
+
+    /// Set the default height of all worksheet rows in pixels
+    #[napi]
+    pub fn set_default_row_height_pixels(&self, height: u32) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_default_row_height_pixels(height);
+            Ok(())
+        })
+    }
+
+    /// Set the default format of a row, used by its cells that have no format
+    #[napi]
+    pub fn set_row_format(&self, row: u32, format: &RuscFormat) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_row_format(row, &format.to_format())
+                .or_js_error("set row format")
+        })
+    }
+
+    /// Hide a row
+    #[napi]
+    pub fn set_row_hidden(&self, row: u32) -> Result<()> {
+        self.with_worksheet(|ws| ws.set_row_hidden(row).or_js_error("hide row"))
+    }
+
+    /// Unhide a row hidden with setRowHidden()
+    #[napi]
+    pub fn set_row_unhidden(&self, row: u32) -> Result<()> {
+        self.with_worksheet(|ws| ws.set_row_unhidden(row).or_js_error("unhide row"))
+    }
+
+    /// Hide all rows that have no data, format or row settings, with a single
+    /// worksheet setting instead of one per row
+    #[napi]
+    pub fn hide_unused_rows(&self, enable: bool) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.hide_unused_rows(enable);
+            Ok(())
+        })
+    }
+
+    /// Group a range of rows into an outline level; a range inside an existing
+    /// group adds a nested level
+    #[napi]
+    pub fn group_rows(&self, first_row: u32, last_row: u32) -> Result<()> {
+        self.with_worksheet(|ws| ws.group_rows(first_row, last_row).or_js_error("group rows"))
+    }
+
+    /// Group a range of rows into a collapsed outline level
+    #[napi]
+    pub fn group_rows_collapsed(&self, first_row: u32, last_row: u32) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.group_rows_collapsed(first_row, last_row)
+                .or_js_error("group rows")
+        })
+    }
+
+    /// Group a range of columns into an outline level; a range inside an existing
+    /// group adds a nested level
+    #[napi]
+    pub fn group_columns(&self, first_col: u16, last_col: u16) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.group_columns(first_col, last_col)
+                .or_js_error("group columns")
+        })
+    }
+
+    /// Group a range of columns into a collapsed outline level
+    #[napi]
+    pub fn group_columns_collapsed(&self, first_col: u16, last_col: u16) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.group_columns_collapsed(first_col, last_col)
+                .or_js_error("group columns")
+        })
+    }
+
+    /// Show the row outline expand/collapse symbols above the groups instead of below
+    #[napi]
+    pub fn group_symbols_above(&self, enable: bool) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.group_symbols_above(enable);
+            Ok(())
+        })
+    }
+
+    /// Show the column outline expand/collapse symbols to the left of the groups
+    /// instead of to the right
+    #[napi]
+    pub fn group_symbols_to_left(&self, enable: bool) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.group_symbols_to_left(enable);
+            Ok(())
+        })
+    }
+
+    /// Set the format of a cell, keeping its data, or of an empty cell
+    #[napi]
+    pub fn set_cell_format(&self, row: u32, col: u16, format: &RuscFormat) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_cell_format(row, col, &format.to_format())
+                .or_js_error("set cell format")
+        })
+    }
+
+    /// Set the format of every cell in a range, keeping their data
+    #[napi]
+    pub fn set_range_format(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        format: &RuscFormat,
+    ) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_range_format(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &format.to_format(),
+            )
+            .or_js_error("set range format")
+        })
+    }
+
+    /// Set the format of every cell in a range, keeping their data, and draw the
+    /// border of `borderFormat` around the range
+    #[napi]
+    pub fn set_range_format_with_border(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        cell_format: &RuscFormat,
+        border_format: &RuscFormat,
+    ) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.set_range_format_with_border(
+                first_row,
+                first_col,
+                last_row,
+                last_col,
+                &cell_format.to_format(),
+                &border_format.to_format(),
+            )
+            .or_js_error("set range format")
+        })
+    }
+
+    /// Remove the data and format of a cell
+    #[napi]
+    pub fn clear_cell(&self, row: u32, col: u16) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.clear_cell(row, col);
+            Ok(())
+        })
+    }
+
+    /// Remove the format of a cell, keeping its data
+    #[napi]
+    pub fn clear_cell_format(&self, row: u32, col: u16) -> Result<()> {
+        self.with_worksheet(|ws| {
+            ws.clear_cell_format(row, col);
+            Ok(())
+        })
+    }
+
     /// Set the exclusive upper row bound inspected by autofit.
     #[napi]
     pub fn set_autofit_max_row(&self, max_row: u32) -> Result<()> {
@@ -2527,5 +2797,20 @@ impl RuscWorksheet {
         })?;
 
         Ok(())
+    }
+
+    /// Runs `f` on this worksheet while holding the workbook lock.
+    fn with_worksheet<T>(
+        &self,
+        f: impl FnOnce(&mut rust_xlsxwriter::Worksheet) -> Result<T>,
+    ) -> Result<T> {
+        let mut wb = self.workbook.lock();
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
+        f(ws)
     }
 }
