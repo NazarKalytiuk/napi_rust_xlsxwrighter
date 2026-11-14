@@ -348,6 +348,9 @@ jobs:
       # passed as npm config through the environment reach all of them, so the
       # native binaries get the same dist-tag and provenance as the root package;
       # `publishConfig.access` is copied into each platform package.json.
+      # Every package authenticates with npm trusted publishing (OIDC through
+      # `id-token: write`): each lists this workflow and the `npm` environment
+      # as its trusted publisher, so no npm token is stored.
       - name: Publish
         shell: bash
         run: |
@@ -356,5 +359,4 @@ jobs:
           fi
           npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
