@@ -14,6 +14,7 @@ use std::sync::Arc;
 
 use crate::button::RuscButton;
 use crate::chart::RuscChart;
+use crate::datetime::{DateTimeFormats, from_js_time};
 use crate::format::RuscFormat;
 use crate::formula::{RuscFormula, RuscFormulaData, to_formula};
 use crate::image::RuscImage;
@@ -38,6 +39,8 @@ enum CellValue {
     String(String),
     Number(f64),
     Boolean(bool),
+    /// A JavaScript `Date`, as milliseconds since the Unix epoch.
+    DateTime(f64),
 }
 
 impl CellValue {
@@ -49,6 +52,17 @@ impl CellValue {
             ValueType::String => Self::String(unsafe { value.cast()? }),
             ValueType::Number => Self::Number(unsafe { value.cast()? }),
             ValueType::Boolean => Self::Boolean(unsafe { value.cast()? }),
+            ValueType::Object if value.is_date()? => {
+                // SAFETY: `is_date()` established that this is a JavaScript Date.
+                let time = unsafe { value.cast::<napi::JsDate>()? }.value_of()?;
+                if time.is_nan() {
+                    return Err(Error::new(
+                        Status::InvalidArg,
+                        "Unsupported cell value: Invalid Date",
+                    ));
+                }
+                Self::DateTime(time)
+            }
             ValueType::Null | ValueType::Undefined => return Ok(None),
             value_type => return Err(unsupported_cell_value(value, value_type)?),
         };
@@ -58,12 +72,6 @@ impl CellValue {
 
 /// The error for a JavaScript value that cannot be written to a cell.
 fn unsupported_cell_value(value: &Unknown<'_>, value_type: ValueType) -> Result<Error> {
-    if value.is_date()? {
-        return Ok(Error::new(
-            Status::InvalidArg,
-            "Unsupported cell value: Date. Use writeDatetime() for dates",
-        ));
-    }
     let kind = match value_type {
         ValueType::Object if value.is_array()? => "array",
         ValueType::Object => "object",
@@ -74,7 +82,7 @@ fn unsupported_cell_value(value: &Unknown<'_>, value_type: ValueType) -> Result<
     };
     Ok(Error::new(
         Status::InvalidArg,
-        format!("Unsupported cell value type: {kind}. Use a string, number, boolean or null"),
+        format!("Unsupported cell value type: {kind}. Use a string, number, boolean, Date or null"),
     ))
 }
 
@@ -92,15 +100,21 @@ impl<T> OrJsError for std::result::Result<T, rust_xlsxwriter::XlsxError> {
 }
 
 /// Writes `value` like `rust_xlsxwriter` writes `Option` cell data: no value
-/// leaves the cell alone, or writes a blank cell when there is a format.
+/// leaves the cell alone, or writes a blank cell when there is a format. A date
+/// is written with its format from `dates`, so that it displays as a date.
 fn write_cell(
     worksheet: &mut rust_xlsxwriter::Worksheet,
     row: u32,
     col: u16,
     value: Option<CellValue>,
     format: Option<&Format>,
+    dates: &DateTimeFormats<'_>,
 ) -> std::result::Result<(), rust_xlsxwriter::XlsxError> {
     match (value, format) {
+        (Some(CellValue::DateTime(time)), _) => {
+            let datetime = from_js_time(time)?;
+            worksheet.write_datetime_with_format(row, col, &datetime, dates.get(&datetime))
+        }
         (Some(CellValue::String(s)), None) => worksheet.write_string(row, col, &s),
         (Some(CellValue::Number(n)), None) => worksheet.write_number(row, col, n),
         (Some(CellValue::Boolean(b)), None) => worksheet.write_boolean(row, col, b),
@@ -125,6 +139,7 @@ fn write_array_values(
     start_col: u16,
     values: &Array<'_>,
     format: Option<&Format>,
+    dates: &DateTimeFormats<'_>,
 ) -> Result<()> {
     for index in 0..values.len() {
         let column = start_col + index as u16;
@@ -138,7 +153,7 @@ fn write_array_values(
             None => None,
         };
 
-        write_cell(worksheet, row, column, value, format).map_err(|error| {
+        write_cell(worksheet, row, column, value, format, dates).map_err(|error| {
             Error::new(
                 Status::GenericFailure,
                 format!("Failed to write at row {row}, col {column}: {error}"),
@@ -152,13 +167,15 @@ fn write_array_values(
 #[napi]
 impl RuscWorksheet {
     /// Write a value to a cell (auto-detects type). `null` or `undefined`
-    /// writes nothing, or a blank cell with the format when one is given.
+    /// writes nothing, or a blank cell with the format when one is given. A
+    /// `Date` is written as a UTC datetime; without a number format of its own it
+    /// gets Excel's built-in date or date-time format.
     #[napi]
     pub fn write(
         &self,
         row: u32,
         col: u16,
-        #[napi(ts_arg_type = "string | number | boolean | null | undefined")] value: Unknown,
+        #[napi(ts_arg_type = "string | number | boolean | Date | null | undefined")] value: Unknown,
         format: Option<&RuscFormat>,
     ) -> Result<()> {
         let value = CellValue::from_js(&value)?;
@@ -170,8 +187,9 @@ impl RuscWorksheet {
             )
         })?;
 
+        let dates = DateTimeFormats::new(format);
         let format = format.map(RuscFormat::to_format);
-        write_cell(ws, row, col, value, format.as_ref())
+        write_cell(ws, row, col, value, format.as_ref(), &dates)
             .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write: {}", e)))
     }
 
@@ -195,9 +213,10 @@ impl RuscWorksheet {
                 format!("Failed to get worksheet: {}", e),
             )
         })?;
-        let format = format.map(|value| value.to_format());
+        let dates = DateTimeFormats::new(format);
+        let format = format.map(RuscFormat::to_format);
 
-        write_array_values(ws, row, start_col, &values, format.as_ref())
+        write_array_values(ws, row, start_col, &values, format.as_ref(), &dates)
     }
 
     /// Write a 2D array of values starting at the given position.
@@ -220,7 +239,8 @@ impl RuscWorksheet {
                 format!("Failed to get worksheet: {}", e),
             )
         })?;
-        let format = format.map(|value| value.to_format());
+        let dates = DateTimeFormats::new(format);
+        let format = format.map(RuscFormat::to_format);
 
         for row_offset in 0..rows.len() {
             let row = start_row + row_offset;
@@ -236,7 +256,7 @@ impl RuscWorksheet {
                     ));
                 }
             };
-            write_array_values(ws, row, start_col, &values, format.as_ref())?;
+            write_array_values(ws, row, start_col, &values, format.as_ref(), &dates)?;
         }
 
         Ok(())
@@ -377,12 +397,12 @@ impl RuscWorksheet {
             )
         })?;
 
-        if let Some(fmt) = format {
-            let f = fmt.to_format();
-            ws.write_datetime_with_format(row, col, &datetime, &f)
-        } else {
-            ws.write_datetime(row, col, &datetime)
-        }
+        ws.write_datetime_with_format(
+            row,
+            col,
+            &datetime,
+            DateTimeFormats::new(format).get(&datetime),
+        )
         .map_err(|e| {
             Error::new(
                 Status::GenericFailure,
@@ -419,12 +439,12 @@ impl RuscWorksheet {
             )
         })?;
 
-        if let Some(fmt) = format {
-            let f = fmt.to_format();
-            ws.write_datetime_with_format(row, col, &datetime, &f)
-        } else {
-            ws.write_datetime(row, col, &datetime)
-        }
+        ws.write_datetime_with_format(
+            row,
+            col,
+            &datetime,
+            DateTimeFormats::new(format).get(&datetime),
+        )
         .map_err(|e| {
             Error::new(
                 Status::GenericFailure,
@@ -471,12 +491,12 @@ impl RuscWorksheet {
                 Error::new(Status::GenericFailure, format!("Failed to add time: {}", e))
             })?;
 
-        if let Some(fmt) = format {
-            let f = fmt.to_format();
-            ws.write_datetime_with_format(row, col, &datetime, &f)
-        } else {
-            ws.write_datetime(row, col, &datetime)
-        }
+        ws.write_datetime_with_format(
+            row,
+            col,
+            &datetime,
+            DateTimeFormats::new(format).get(&datetime),
+        )
         .map_err(|e| {
             Error::new(
                 Status::GenericFailure,
@@ -511,12 +531,12 @@ impl RuscWorksheet {
             )
         })?;
 
-        if let Some(fmt) = format {
-            let f = fmt.to_format();
-            ws.write_datetime_with_format(row, col, &datetime, &f)
-        } else {
-            ws.write_datetime(row, col, &datetime)
-        }
+        ws.write_datetime_with_format(
+            row,
+            col,
+            &datetime,
+            DateTimeFormats::new(format).get(&datetime),
+        )
         .map_err(|e| {
             Error::new(
                 Status::GenericFailure,
@@ -534,7 +554,7 @@ impl RuscWorksheet {
         &self,
         row: u32,
         col: u16,
-        #[napi(ts_arg_type = "string | number | boolean | null | undefined")] value: Unknown,
+        #[napi(ts_arg_type = "string | number | boolean | Date | null | undefined")] value: Unknown,
         format: &RuscFormat,
     ) -> Result<()> {
         self.write(row, col, value, Some(format))

@@ -529,6 +529,11 @@ impl RuscFormat {
         Ok(())
     }
 
+    /// Whether the format sets a number format of its own.
+    pub(crate) fn has_num_format(&self) -> bool {
+        self.num_format.is_some()
+    }
+
     /// Internal method to convert to rust_xlsxwriter Format
     pub(crate) fn to_format(&self) -> Format {
         let mut fmt = Format::new();

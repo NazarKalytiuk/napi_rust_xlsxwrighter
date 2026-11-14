@@ -122,6 +122,13 @@ export type ValidationRule =
 export type ValidationErrorStyle = 'stop' | 'warning' | 'information';
 
 /**
+ * A value that {@link Worksheet.write}, {@link Worksheet.writeRow} and
+ * {@link Worksheet.writeRows} write to a cell. A `Date` is written as its UTC
+ * date and time; `null` and `undefined` are no value.
+ */
+export type CellValue = string | number | boolean | Date | null | undefined;
+
+/**
  * When Excel recalculates formulas: `automatic` (the default), `manual` (only on
  * request, e.g. F9), or `partial` (automatic except for data tables).
  */
@@ -1049,18 +1056,17 @@ export class Worksheet {
    * Write a value to a cell (auto-detects type)
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
-   * @param value - Value to write (string, number, or boolean); `null` or `undefined`
-   *   writes nothing, or a blank cell when a format is given
+   * @param value - Value to write (string, number, boolean or Date); `null` or
+   *   `undefined` writes nothing, or a blank cell when a format is given. A Date
+   *   is written as its UTC date and time and, unless the format has a number
+   *   format of its own, shown with Excel's built-in date or date-time format.
    * @param format - Optional format to apply
-   * @throws If the value is of another type, such as an object or a Date (use
-   *   {@link Worksheet.writeDatetime} for dates)
+   * @throws If the value is of another type, such as an object, or an invalid
+   *   Date or one outside Excel's 1900-9999 range
+   * @example
+   * worksheet.write(0, 0, new Date('2024-01-15')); // shown as a date, e.g. 1/15/2024
    */
-  write(
-    row: number,
-    col: number,
-    value: string | number | boolean | null | undefined,
-    format?: Format,
-  ): void {
+  write(row: number, col: number, value: CellValue, format?: Format): void {
     if (format) {
       return this._native.write(row, col, value, format._native);
     }
@@ -1087,18 +1093,13 @@ export class Worksheet {
    * @param startCol - Starting column number (0-indexed)
    * @param values - Array of values to write
    * @param format - Optional format to apply to all cells in the row
-   * @throws If a value is of another type, such as an object or a Date; the
-   *   values before it are already written
+   * @throws If a value is of another type, such as an object, or an invalid
+   *   Date; the values before it are already written
    * @example
    * worksheet.writeRow(0, 0, ['Name', 'Age', 'Active'], headerFormat);
    * worksheet.writeRow(1, 0, ['Alice', 30, true]);
    */
-  writeRow(
-    row: number,
-    startCol: number,
-    values: (string | number | boolean | null | undefined)[],
-    format?: Format,
-  ): void {
+  writeRow(row: number, startCol: number, values: CellValue[], format?: Format): void {
     return this._native.writeRow(row, startCol, values, format ? format._native : undefined);
   }
 
@@ -1113,7 +1114,7 @@ export class Worksheet {
    * @param rows - 2D array of values to write
    * @param format - Optional format to apply to all cells
    * @throws If a row is not an array or a value is of another type, such as an
-   *   object or a Date; the values before it are already written
+   *   object, or an invalid Date; the values before it are already written
    * @example
    * worksheet.writeRows(0, 0, [
    *   ['Name', 'Age', 'Active'],
@@ -1121,12 +1122,7 @@ export class Worksheet {
    *   ['Bob', 25, false],
    * ]);
    */
-  writeRows(
-    startRow: number,
-    startCol: number,
-    rows: (string | number | boolean | null | undefined)[][],
-    format?: Format,
-  ): void {
+  writeRows(startRow: number, startCol: number, rows: CellValue[][], format?: Format): void {
     return this._native.writeRows(startRow, startCol, rows, format ? format._native : undefined);
   }
 
@@ -1179,7 +1175,8 @@ export class Worksheet {
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
    * @param timestamp - Unix timestamp in seconds
-   * @param format - Optional format (should include date/time number format)
+   * @param format - Optional format; unless it has a number format of its own,
+   *   the value is shown with Excel's built-in date, date-time or time format
    * @example
    * const dateFormat = new Format().setNumFormat('yyyy-mm-dd hh:mm');
    * worksheet.writeDatetimeFromTimestamp(0, 0, 1706184600, dateFormat);
@@ -1200,7 +1197,8 @@ export class Worksheet {
    * @param year - Year (1900-9999)
    * @param month - Month (1-12)
    * @param day - Day (1-31)
-   * @param format - Optional format (should include date number format)
+   * @param format - Optional format; unless it has a number format of its own,
+   *   the value is shown with Excel's built-in date format
    * @example
    * const dateFormat = new Format().setNumFormat('yyyy-mm-dd');
    * worksheet.writeDatetimeFromYmd(0, 0, 2023, 1, 25, dateFormat);
@@ -1233,7 +1231,8 @@ export class Worksheet {
    * @param hour - Hour (0-23)
    * @param min - Minute (0-59)
    * @param sec - Second (0-59.999...)
-   * @param format - Optional format (should include date/time number format)
+   * @param format - Optional format; unless it has a number format of its own,
+   *   the value is shown with Excel's built-in date, date-time or time format
    * @example
    * const datetimeFormat = new Format().setNumFormat('yyyy-mm-dd hh:mm:ss');
    * worksheet.writeDatetimeFromYmdHms(0, 0, 2023, 1, 25, 12, 30, 45.5, datetimeFormat);
@@ -1267,7 +1266,8 @@ export class Worksheet {
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
    * @param datetimeStr - ISO 8601 date/time string (e.g., "2023-01-25T12:30:00" or "2023-01-25")
-   * @param format - Optional format (should include date/time number format)
+   * @param format - Optional format; unless it has a number format of its own,
+   *   the value is shown with Excel's built-in date, date-time or time format
    * @example
    * const datetimeFormat = new Format().setNumFormat('yyyy-mm-dd hh:mm');
    * worksheet.writeDatetimeFromString(0, 0, '2023-01-25T12:30:00', datetimeFormat);
@@ -1283,11 +1283,13 @@ export class Worksheet {
 
   /**
    * Write a datetime (convenience method that auto-detects input type)
-   * Accepts: Date object, Unix timestamp (number), ISO string, or object with date components
+   * Accepts: Date object (written as its UTC date and time), Unix timestamp in seconds
+   * (number), ISO string, or object with date components
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
    * @param datetime - Date/time value in various formats
-   * @param format - Optional format (should include date/time number format)
+   * @param format - Optional format; unless it has a number format of its own,
+   *   the value is shown with Excel's built-in date, date-time or time format
    * @example
    * // Using JavaScript Date
    * const dateFormat = new Format().setNumFormat('yyyy-mm-dd hh:mm');
@@ -1317,9 +1319,8 @@ export class Worksheet {
   ): void {
     // Convenience method that handles multiple input types
     if (datetime instanceof Date) {
-      // JavaScript Date object
-      const timestamp = Math.floor(datetime.getTime() / 1000);
-      return this.writeDatetimeFromTimestamp(row, col, timestamp, format);
+      // A Date is a cell value of its own, written with its milliseconds
+      return this._native.write(row, col, datetime, format ? format._native : undefined);
     } else if (typeof datetime === 'number') {
       // Unix timestamp
       return this.writeDatetimeFromTimestamp(row, col, datetime, format);
@@ -1361,17 +1362,13 @@ export class Worksheet {
    * Write a value with formatting to a cell
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
-   * @param value - Value to write (string, number, or boolean); `null` or `undefined`
-   *   writes a blank cell with the format
-   * @param format - Format to apply
-   * @throws If the value is of another type, such as an object or a Date
+   * @param value - Value to write (string, number, boolean or Date); `null` or
+   *   `undefined` writes a blank cell with the format
+   * @param format - Format to apply; a Date shown with Excel's built-in date
+   *   format unless the format has a number format of its own
+   * @throws If the value is of another type, such as an object, or an invalid Date
    */
-  writeWithFormat(
-    row: number,
-    col: number,
-    value: string | number | boolean | null | undefined,
-    format: Format,
-  ): void {
+  writeWithFormat(row: number, col: number, value: CellValue, format: Format): void {
     return this._native.writeWithFormat(row, col, value, format._native);
   }
 
