@@ -8,6 +8,12 @@ pub struct RuscTable {
     pub(crate) table: Table,
 }
 
+impl Default for RuscTable {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[napi]
 impl RuscTable {
     /// Create a new Table
@@ -169,6 +175,12 @@ pub struct RuscTableColumn {
     pub(crate) column: TableColumn,
 }
 
+impl Default for RuscTableColumn {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[napi]
 impl RuscTableColumn {
     /// Create a new table column
@@ -198,7 +210,15 @@ impl RuscTableColumn {
             "stdDev" | "standardDeviation" => TableFunction::StdDev,
             "sum" => TableFunction::Sum,
             "var" | "variance" => TableFunction::Var,
-            _ => return Err(Error::new(Status::InvalidArg, format!("Invalid table function: {}. Use 'average', 'count', 'countNumbers', 'max', 'min', 'stdDev', 'sum', or 'var'", func))),
+            _ => {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!(
+                        "Invalid table function: {}. Use 'average', 'count', 'countNumbers', 'max', 'min', 'stdDev', 'sum', or 'var'",
+                        func
+                    ),
+                ));
+            }
         };
         self.column = self.column.clone().set_total_function(table_func);
         Ok(self)

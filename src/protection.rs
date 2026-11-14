@@ -7,6 +7,12 @@ pub struct RuscProtectionOptions {
     pub(crate) options: ProtectionOptions,
 }
 
+impl Default for RuscProtectionOptions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[napi]
 impl RuscProtectionOptions {
     /// Create a new ProtectionOptions object with default settings

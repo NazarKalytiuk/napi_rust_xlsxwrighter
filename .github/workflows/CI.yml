@@ -18,19 +18,19 @@ env:
   APP_NAME: rusc_xlsx
   DEBUG: napi:*
   MACOSX_DEPLOYMENT_TARGET: '10.13'
-  NODE_VERSION: '24.19.0'
-  RUST_VERSION: '1.97.1'
-  RUST_MSRV: '1.88.0'
+  NODE_VERSION: '26.13.1'
+  RUST_VERSION: '1.100.0'
+  RUST_MSRV: '1.95.0'
 
 jobs:
   quality:
     name: Quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -39,36 +39,42 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_VERSION }}
-          components: rustfmt
+          components: rustfmt, clippy
 
       - name: Cache Cargo
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: quality-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
-          restore-keys: quality-${{ runner.os }}-
+          save-if: ${{ github.ref == 'refs/heads/master' }}
 
+      # `prepare` builds wrapper.js + wrapper.d.ts from wrapper.ts with tsdown.
       - name: Install dependencies
         run: npm ci
+
+      - name: Check formatting (oxfmt, rustfmt)
+        run: npm run fmt:check
+
+      - name: Lint JavaScript (oxlint)
+        run: npm run lint -- --format github
+
+      - name: Lint Rust (clippy)
+        run: npm run lint:rust
+
+      - name: Lint package (publint, attw)
+        run: npm run lint:package
 
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Check Rust formatting
-        run: cargo fmt --all -- --check
-
-      - name: Check Rust
-        run: cargo check --locked
+      # Re-derives test call sites, counts and the dashboard from the markdown
+      # and checks the pinned rust_xlsxwriter matches Cargo.lock; no nightly needed.
+      - name: Check coverage checklist
+        run: npm run coverage:check
 
   msrv:
     name: Rust MSRV
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Rust MSRV
         uses: dtolnay/rust-toolchain@master
@@ -76,15 +82,9 @@ jobs:
           toolchain: ${{ env.RUST_MSRV }}
 
       - name: Cache Cargo
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: msrv-${{ runner.os }}-${{ env.RUST_MSRV }}-${{ hashFiles('Cargo.lock') }}
-          restore-keys: msrv-${{ runner.os }}-${{ env.RUST_MSRV }}-
+          save-if: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Check minimum supported Rust version
         run: cargo check --locked
@@ -96,13 +96,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node: [22, 24]
+        node: [22, 24, 26]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -113,15 +113,9 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
 
       - name: Cache Cargo
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: test-${{ runner.os }}-node${{ matrix.node }}-${{ hashFiles('Cargo.lock') }}
-          restore-keys: test-${{ runner.os }}-node${{ matrix.node }}-
+          save-if: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Install dependencies
         run: npm ci
@@ -129,8 +123,8 @@ jobs:
       - name: Build native module
         run: npm run build
 
-      - name: Run tests
-        run: npm test -- --runInBand
+      - name: Run tests (Vitest)
+        run: npm test
 
   release-bindings:
     name: Build ${{ matrix.settings.target }}
@@ -167,10 +161,10 @@ jobs:
             build: npm run build -- --target x86_64-unknown-linux-musl -x
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -182,22 +176,16 @@ jobs:
           targets: ${{ matrix.settings.target }}
 
       - name: Cache Cargo
-        uses: actions/cache@v4
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ~/.napi-rs/
-            target/
-          key: release-${{ matrix.settings.target }}-${{ hashFiles('Cargo.lock') }}
-          restore-keys: release-${{ matrix.settings.target }}-
+          key: ${{ matrix.settings.target }}
+          cache-directories: ~/.napi-rs
 
       - name: Setup Zig
         if: contains(matrix.settings.target, 'musl')
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.14.1
+          version: 0.17.1
 
       - name: Install cargo-zigbuild
         if: contains(matrix.settings.target, 'musl')
@@ -213,7 +201,7 @@ jobs:
         shell: bash
 
       - name: Upload binding
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bindings-${{ matrix.settings.target }}
           path: ${{ env.APP_NAME }}.*.node
@@ -225,10 +213,10 @@ jobs:
     needs: release-bindings
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -237,13 +225,13 @@ jobs:
         run: npm ci
 
       - name: Download macOS x64 binding
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: bindings-x86_64-apple-darwin
           path: artifacts/x64
 
       - name: Download macOS arm64 binding
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: bindings-aarch64-apple-darwin
           path: artifacts/arm64
@@ -255,7 +243,7 @@ jobs:
         run: npm run universal
 
       - name: Upload universal binding
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bindings-universal-apple-darwin
           path: ${{ env.APP_NAME }}.darwin-universal.node
@@ -272,10 +260,10 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -292,20 +280,25 @@ jobs:
         run: npx napi create-npm-dirs
 
       - name: Download all bindings
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
       - name: Move bindings into npm packages
         run: npm run artifacts
 
+      # `npm publish` first runs `napi prepublish` (prepublishOnly), which
+      # publishes every platform package with a plain `npm publish`. Settings
+      # passed as npm config through the environment reach all of them, so the
+      # native binaries get the same dist-tag and provenance as the root package;
+      # `publishConfig.access` is copied into each platform package.json.
       - name: Publish
         shell: bash
         run: |
           if [[ "${GITHUB_REF_NAME}" == *-* ]]; then
-            npm publish --tag next --access public --provenance
-          else
-            npm publish --access public --provenance
+            export NPM_CONFIG_TAG=next
           fi
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true

@@ -16,17 +16,11 @@ const headerFormat = new Format()
   .setBackgroundColor('blue')
   .setAlign('center');
 
-const currencyFormat = new Format()
-  .setNumFormat('$#,##0.00');
+const currencyFormat = new Format().setNumFormat('$#,##0.00');
 
-const percentFormat = new Format()
-  .setNumFormat('0.00%');
+const percentFormat = new Format().setNumFormat('0.00%');
 
-const dateFormat = new Format()
-  .setNumFormat('yyyy-mm-dd');
-
-const borderedFormat = new Format()
-  .setBorder('thin');
+const borderedFormat = new Format().setBorder('thin');
 
 // Write headers with formatting
 worksheet.write(0, 0, 'Product', headerFormat);
@@ -42,7 +36,7 @@ worksheet.write(1, 3, 84.99, currencyFormat);
 
 worksheet.write(2, 0, 'Widget B', borderedFormat);
 worksheet.write(2, 1, 149.99, currencyFormat);
-worksheet.write(2, 2, 0.20, percentFormat);
+worksheet.write(2, 2, 0.2, percentFormat);
 worksheet.write(2, 3, 119.99, currencyFormat);
 
 // Adjust column widths

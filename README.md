@@ -68,7 +68,7 @@ npm install @nazarkalytiuk/rusc-xlsx
 ### Requirements
 
 - Node.js >= 22.13
-- Rust >= 1.88 (only when building from source)
+- Rust >= 1.95 (only when building from source)
 
 ## Quick Start
 
@@ -171,6 +171,9 @@ workbook.save('output.xlsx');
 - `setTempdir(path)` - Set temp directory for memory modes
 - `setDefaultFormat(format, rowHeight, columnWidth)` - Set workbook-wide default formatting before adding worksheets
 - `useExcel2023Theme()` / `useCustomTheme(path)` - Select the workbook theme before adding worksheets
+- `setCalculationMode(mode)` - Formula recalculation: `'automatic'`, `'manual'` or `'partial'`
+- `setZipCompressionLevel(level)` - Trade file size for speed (1-9, default 6)
+- `setTabRatio(ratio)` - Width of the sheet tab bar vs. the horizontal scroll bar (0-100)
 - `save(filename)` - Save to file
 - `saveToBuffer()` - Save to Buffer
 - `saveToStream(writable)` - Save through a temp file and await stream completion
@@ -187,7 +190,7 @@ workbook.save('output.xlsx');
 - **Features**: `insertNote()`, `addDataValidation()`, `insertChart()`, `insertImage()`, `insertImageFitToCellCentered()`, `addTable()`, `insertButton()`, `insertShape()`
 - **Conditional Formatting**: 14 methods for all rule types
 - **Page Setup**: 26 methods for printing, margins, headers, etc.
-- **View**: `autofilter()`, `setFreezePanes()`, `setZoom()`, `setTabColor()`, `hideSheet()`
+- **View**: `autofilter()`, `setFreezePanes()`, `setZoom()`, `setTabColor()`, `setHiddenZeroes()`, `setHidden()`
 - **Hyperlinks**: `writeUrl()`
 - **Protection**: `protect()`, `protectWithPassword()`
 - **Rich Text**: `writeRichString()`
@@ -247,14 +250,29 @@ See the `examples/` directory for complete examples:
 git clone https://github.com/NazarKalytiuk/napi_rust_xlsxwrighter.git
 cd napi_rust_xlsxwrighter
 
-# Install dependencies
+# Install dependencies (also builds wrapper.js + wrapper.d.ts from wrapper.ts via tsdown)
 npm install
 
 # Build native module
 npm run build
 
-# Run tests (577 tests)
+# Rebuild the JavaScript wrapper after editing wrapper.ts
+npm run build:wrapper
+
+# Run tests (Vitest)
 npm test
+npm run test:watch      # re-run on change
+npm run test:coverage   # V8 coverage report for wrapper.ts
+
+# Format, lint (oxfmt, oxlint, rustfmt, clippy) and typecheck — same as CI
+npm run check
+npm run fmt             # apply oxfmt + rustfmt
+
+# rust_xlsxwriter coverage checklist (rust-xlsxwriter-coverage-checklist.md)
+npm run coverage:check  # verify test call sites, counts and the pinned version
+npm run coverage:sync   # refresh them after editing tests or row statuses; after a
+                        # rust_xlsxwriter upgrade it documents the new release with
+                        # rustdoc JSON (`rustup toolchain install nightly-2026-11-13`)
 
 # Run examples
 node examples/basic.js
@@ -267,7 +285,7 @@ node examples/basic.js
 Built with Rust and NAPI-RS for native-level performance:
 - **Fast execution**: Native Rust performance via NAPI bindings
 - **Low memory usage**: Optimized memory footprint across all modes
-- **Test performance**: All 577 tests complete in < 1 second
+- **Test performance**: All 601 tests complete in < 1 second
 
 ### Memory Modes
 
@@ -336,6 +354,49 @@ for await (const item of cursor) {
 
 This keeps memory bounded to the current cursor item while retaining
 constant-memory worksheet generation.
+
+### Node.js vs Bun Benchmarks
+
+The runtime benchmark executes the same package workload through the same
+release N-API binary on Node.js and Bun:
+
+```bash
+npm run benchmark:runtimes
+```
+
+Bun must be installed and available in `PATH`. The default workload generates
+200,000 rows × 20 columns through `writeRow()` in constant-memory mode. The
+runner alternates runtime order across three runs, reports both in-process
+generation time and end-to-end process wall time, and verifies identical
+worksheet XML size and CRC for every Node.js/Bun pair.
+
+Override the workload or package API, or reuse the existing release build:
+
+```bash
+npm run benchmark:runtimes -- --rows 100000 --columns 20 --runs 5
+npm run benchmark:runtimes -- --write-mode cell
+npm run benchmark:runtimes -- --write-mode batch --batch-rows 1000
+npm run benchmark:runtimes -- --skip-build
+```
+
+#### ExcelJS runtime comparison
+
+To isolate the runtime difference for a JavaScript XLSX implementation, run the
+same dataset through the ExcelJS streaming writer:
+
+```bash
+npm run benchmark:runtimes:exceljs
+```
+
+This profile uses ExcelJS `stream.xlsx.WorkbookWriter`, disables styles and
+shared strings, fixes ZIP DEFLATE compression at level 6, and commits every
+row. It uses the same alternating order, timing and memory metrics, and
+worksheet-equivalence checks as the native-package profile. Override the
+default workload when needed:
+
+```bash
+npm run benchmark:runtimes:exceljs -- --rows 100000 --columns 20 --runs 5
+```
 
 ### Node.js vs Go, C#, and Python Benchmark
 

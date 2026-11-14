@@ -8,6 +8,12 @@ pub struct RuscSparkline {
     pub(crate) sparkline: Sparkline,
 }
 
+impl Default for RuscSparkline {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[napi]
 impl RuscSparkline {
     /// Create a new Sparkline
@@ -97,7 +103,7 @@ impl RuscSparkline {
                         "Invalid sparkline type: {}. Use 'line', 'column', or 'winLose'",
                         sparkline_type
                     ),
-                ))
+                ));
             }
         };
         self.sparkline = self.sparkline.clone().set_type(spark_type);
@@ -282,7 +288,7 @@ impl RuscSparkline {
                         "Invalid empty cells option: {}. Use 'gaps', 'zero', or 'connected'",
                         option
                     ),
-                ))
+                ));
             }
         };
         self.sparkline = self.sparkline.clone().show_empty_cells_as(empty_cells);

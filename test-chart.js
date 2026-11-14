@@ -25,12 +25,12 @@ const columnChart = new Chart('column');
 columnChart.addSeries({
   categories: 'Charts Demo!$A$2:$A$7',
   values: 'Charts Demo!$B$2:$B$7',
-  name: 'Sales'
+  name: 'Sales',
 });
 columnChart.addSeries({
   categories: 'Charts Demo!$A$2:$A$7',
   values: 'Charts Demo!$C$2:$C$7',
-  name: 'Expenses'
+  name: 'Expenses',
 });
 columnChart.setTitle('Monthly Sales vs Expenses');
 columnChart.setXAxisName('Month');
@@ -45,7 +45,7 @@ const lineChart = new Chart('line');
 lineChart.addSeries({
   categories: 'Charts Demo!$A$2:$A$7',
   values: 'Charts Demo!$B$2:$B$7',
-  name: 'Sales Trend'
+  name: 'Sales Trend',
 });
 lineChart.setTitle('Sales Trend');
 lineChart.setXAxisName('Month');
@@ -74,7 +74,7 @@ const pieChart = new Chart('pie');
 pieChart.addSeries({
   categories: 'Pie Chart!$A$2:$A$6',
   values: 'Pie Chart!$B$2:$B$6',
-  name: 'Market Share'
+  name: 'Market Share',
 });
 pieChart.setTitle('Product Market Share');
 pieChart.setStyle(10);

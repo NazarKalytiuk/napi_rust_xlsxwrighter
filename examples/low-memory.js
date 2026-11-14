@@ -21,7 +21,9 @@
 const { Workbook, Format } = require('@nazarkalytiuk/rusc-xlsx');
 
 console.log('Creating large Excel file with low memory mode...');
-console.log('This dataset has many repeated strings, demonstrating the benefit of shared string table.\n');
+console.log(
+  'This dataset has many repeated strings, demonstrating the benefit of shared string table.\n',
+);
 
 const startTime = Date.now();
 
@@ -39,11 +41,7 @@ const headerFormat = new Format()
   .setFontColor('white')
   .setAlign('center');
 
-const currencyFormat = new Format()
-  .setNumFormat('$#,##0.00');
-
-const percentFormat = new Format()
-  .setNumFormat('0.0%');
+const currencyFormat = new Format().setNumFormat('$#,##0.00');
 
 // Write headers
 worksheet.write(0, 0, 'Order ID', headerFormat);
@@ -76,7 +74,7 @@ const products = [
   'Keyboard Wireless',
   'Mouse Ergonomic',
   'Desk Standing',
-  'Headphones Noise-Canceling'
+  'Headphones Noise-Canceling',
 ];
 const salesReps = [
   'Alice Johnson',
@@ -86,7 +84,7 @@ const salesReps = [
   'Emma Davis',
   'Frank Miller',
   'Grace Wilson',
-  'Henry Moore'
+  'Henry Moore',
 ];
 const statuses = ['Pending', 'Approved', 'Shipped', 'Delivered', 'Cancelled'];
 
@@ -129,5 +127,7 @@ console.log('- Ideal for datasets with categorical/repeated string data');
 
 console.log('\nString statistics:');
 console.log(`- Total rows: ${numRows.toLocaleString()}`);
-console.log(`- Unique strings: ${regions.length + categories.length + products.length + salesReps.length + statuses.length}`);
+console.log(
+  `- Unique strings: ${regions.length + categories.length + products.length + salesReps.length + statuses.length}`,
+);
 console.log(`- String reuse ratio: ~${Math.floor(numRows / 31)}x`);

@@ -68,7 +68,7 @@ impl RuscChart {
     /// Set the chart style (1-48)
     #[napi]
     pub fn set_style(&mut self, style: u8) -> Result<()> {
-        if style < 1 || style > 48 {
+        if !(1..=48).contains(&style) {
             return Err(Error::new(
                 Status::GenericFailure,
                 "Chart style must be between 1 and 48".to_string(),

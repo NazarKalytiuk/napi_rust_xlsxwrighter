@@ -5,7 +5,14 @@
  * proper type checking and IntelliSense support.
  */
 
-import { Workbook, Format, Note, Color, BorderStyle, HorizontalAlign } from '@nazarkalytiuk/rusc-xlsx';
+import {
+  Workbook,
+  Format,
+  Note,
+  type Color,
+  type BorderStyle,
+  type HorizontalAlign,
+} from '@nazarkalytiuk/rusc-xlsx';
 
 // ✅ VALID CODE - These should compile without errors
 
@@ -26,24 +33,27 @@ const validAlign: HorizontalAlign = 'center';
 
 // Fluent API with method chaining
 const format = new Format()
-  .setBold()                          // Returns Format
-  .setItalic()                        // Returns Format
-  .setFontColor(validColor1)          // Type-safe color
-  .setBorder(validBorder1)            // Type-safe border
-  .setAlign(validAlign)               // Type-safe alignment
-  .setFontSize(14)                    // Number
-  .setRotation(45);                   // Number with validation
+  .setBold() // Returns Format
+  .setItalic() // Returns Format
+  .setFontColor(validColor1) // Type-safe color
+  .setBackgroundColor(validColor2) // Hex colors are typed too
+  .setBorder(validBorder1) // Type-safe border
+  .setBorderBottom(validBorder2) // Per-side border style
+  .setBorderColor(validColor3) // Type-safe border color
+  .setAlign(validAlign) // Type-safe alignment
+  .setFontSize(14) // Number
+  .setRotation(45); // Number with validation
 
 // Note with fluent API
 const note = new Note('Test')
-  .setAuthor('Author')                // Returns Note
-  .setWidth(200)                      // Returns Note
-  .setVisible(true);                  // Returns Note
+  .setAuthor('Author') // Returns Note
+  .setWidth(200) // Returns Note
+  .setVisible(true); // Returns Note
 
 // Write with type-safe values
-worksheet.write(0, 0, 'String');      // string
-worksheet.write(0, 1, 123);           // number
-worksheet.write(0, 2, true);          // boolean
+worksheet.write(0, 0, 'String'); // string
+worksheet.write(0, 1, 123); // number
+worksheet.write(0, 2, true); // boolean
 worksheet.write(0, 3, 'Formatted', format);
 
 worksheet.insertNote(0, 0, note);

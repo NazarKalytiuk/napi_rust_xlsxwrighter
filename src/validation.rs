@@ -9,6 +9,12 @@ pub struct RuscDataValidation {
     pub(crate) validation: DataValidation,
 }
 
+impl Default for RuscDataValidation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[napi]
 impl RuscDataValidation {
     /// Create a new data validation with "any value" type
@@ -214,7 +220,7 @@ impl RuscDataValidation {
                         "Invalid error style: {}. Valid values: 'stop', 'warning', 'information'",
                         style
                     ),
-                ))
+                ));
             }
         };
         self.validation = self.validation.clone().set_error_style(style_enum);

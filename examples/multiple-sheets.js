@@ -13,9 +13,7 @@ const expensesSheet = workbook.addWorksheet('Expenses');
 const summarySheet = workbook.addWorksheet('Summary');
 
 // Header format
-const headerFormat = new Format()
-  .setBold()
-  .setBackgroundColor('gray');
+const headerFormat = new Format().setBold().setBackgroundColor('gray');
 
 // Sales sheet
 salesSheet.write(0, 0, 'Month', headerFormat);
@@ -38,10 +36,7 @@ expensesSheet.write(3, 0, 'March');
 expensesSheet.write(3, 1, 32000);
 
 // Summary sheet with merged cells
-const titleFormat = new Format()
-  .setBold()
-  .setFontSize(16)
-  .setAlign('center');
+const titleFormat = new Format().setBold().setFontSize(16).setAlign('center');
 
 summarySheet.mergeRange(0, 0, 0, 2, 'Q1 Financial Summary');
 summarySheet.write(0, 0, 'Q1 Financial Summary', titleFormat);
@@ -56,7 +51,7 @@ summarySheet.write(4, 0, 'Net Profit:', headerFormat);
 summarySheet.write(4, 1, 73000);
 
 // Adjust column widths
-[salesSheet, expensesSheet, summarySheet].forEach(sheet => {
+[salesSheet, expensesSheet, summarySheet].forEach((sheet) => {
   sheet.setColumnWidth(0, 15);
   sheet.setColumnWidth(1, 15);
 });

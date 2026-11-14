@@ -33,7 +33,7 @@ function formatBytes(bytes) {
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
 // Helper function to format time
@@ -126,10 +126,12 @@ async function runBenchmark() {
       const elapsed = Date.now() - startTime;
       const rowsPerSecond = Math.round(rowsWritten / (elapsed / 1000));
       const currentMem = getMemoryStats();
-      process.stdout.write(`\r[${rowsWritten.toLocaleString()}/${ROWS.toLocaleString()}] ` +
-        `${rowsPerSecond.toLocaleString()} rows/s | ` +
-        `Heap: ${formatBytes(currentMem.heapUsed)} | ` +
-        `RSS: ${formatBytes(currentMem.rss)}     `);
+      process.stdout.write(
+        `\r[${rowsWritten.toLocaleString()}/${ROWS.toLocaleString()}] ` +
+          `${rowsPerSecond.toLocaleString()} rows/s | ` +
+          `Heap: ${formatBytes(currentMem.heapUsed)} | ` +
+          `RSS: ${formatBytes(currentMem.rss)}     `,
+      );
     }, 500);
 
     // Write data rows
@@ -148,7 +150,8 @@ async function runBenchmark() {
       // Show dots every 10,000 rows
       if (row % 10000 === 0) {
         const now = Date.now();
-        if (now - lastProgressTime > 100) { // Throttle dot output
+        if (now - lastProgressTime > 100) {
+          // Throttle dot output
           process.stdout.write('.');
           lastProgressTime = now;
         }
@@ -203,7 +206,9 @@ async function runBenchmark() {
     console.log(`  Write Time:        ${formatTime(writeTime)}`);
     console.log(`  Save Time:         ${formatTime(saveTime)}`);
     console.log(`  Rows/second:       ${Math.round(ROWS / (totalTime / 1000)).toLocaleString()}`);
-    console.log(`  Cells/second:      ${Math.round((ROWS * COLUMNS) / (totalTime / 1000)).toLocaleString()}`);
+    console.log(
+      `  Cells/second:      ${Math.round((ROWS * COLUMNS) / (totalTime / 1000)).toLocaleString()}`,
+    );
     console.log('');
 
     console.log('Memory Usage:');
@@ -229,7 +234,6 @@ async function runBenchmark() {
     console.log('='.repeat(70));
     console.log('✅ Benchmark completed successfully!');
     console.log('='.repeat(70));
-
   } catch (error) {
     clearInterval(progressInterval);
     console.error('');
@@ -258,7 +262,7 @@ console.log('(Run with --expose-gc flag for accurate memory measurements)');
 console.log('Example: node --expose-gc benchmark-large-dataset.js');
 console.log('');
 
-runBenchmark().catch(err => {
+runBenchmark().catch((err) => {
   console.error('Fatal error:', err);
   process.exit(1);
 });

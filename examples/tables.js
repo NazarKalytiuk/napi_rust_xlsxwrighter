@@ -2,7 +2,7 @@
  * Tables example - demonstrates Excel tables with styles, totals, and formulas
  */
 
-const { Workbook, Format, Table, TableColumn } = require('@nazarkalytiuk/rusc-xlsx');
+const { Workbook, Table, TableColumn } = require('@nazarkalytiuk/rusc-xlsx');
 
 const workbook = new Workbook();
 

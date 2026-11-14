@@ -21,7 +21,11 @@ target/
 tests/
 test-*.js
 test-*.xlsx
-jest.config.js
+vitest.config.mts
+tsdown.config.mts
+wrapper.ts
+.oxlintrc.json
+.oxfmtrc.json
 coverage/
 
 # Example files (outputs)

@@ -448,6 +448,8 @@ impl RuscWorksheet {
 
     /// Write a datetime from year, month, day, hour, minute, second components
     #[napi]
+    // The arguments mirror the positional parameters of the public JS API.
+    #[allow(clippy::too_many_arguments)]
     pub fn write_datetime_from_ymd_hms(
         &self,
         row: u32,
@@ -1097,6 +1099,8 @@ impl RuscWorksheet {
 
     /// Add 3-color scale conditional formatting
     #[napi]
+    // The arguments mirror the positional parameters of the public JS API.
+    #[allow(clippy::too_many_arguments)]
     pub fn add_conditional_format_3color_scale(
         &self,
         first_row: u32,
@@ -1190,6 +1194,8 @@ impl RuscWorksheet {
 
     /// Add cell-based conditional formatting (greater than, less than, etc.)
     #[napi]
+    // The arguments mirror the positional parameters of the public JS API.
+    #[allow(clippy::too_many_arguments)]
     pub fn add_conditional_format_cell(
         &self,
         first_row: u32,
@@ -1218,8 +1224,11 @@ impl RuscWorksheet {
             _ => {
                 return Err(Error::new(
                     Status::GenericFailure,
-                    format!("Invalid cell rule: {}. Valid values: 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual', 'equal', 'notEqual'", rule),
-                ))
+                    format!(
+                        "Invalid cell rule: {}. Valid values: 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual', 'equal', 'notEqual'",
+                        rule
+                    ),
+                ));
             }
         };
 
@@ -1240,6 +1249,8 @@ impl RuscWorksheet {
 
     /// Add text-based conditional formatting
     #[napi]
+    // The arguments mirror the positional parameters of the public JS API.
+    #[allow(clippy::too_many_arguments)]
     pub fn add_conditional_format_text(
         &self,
         first_row: u32,
@@ -1266,8 +1277,11 @@ impl RuscWorksheet {
             _ => {
                 return Err(Error::new(
                     Status::GenericFailure,
-                    format!("Invalid text rule: {}. Valid values: 'contains', 'notContains', 'beginsWith', 'endsWith'", rule),
-                ))
+                    format!(
+                        "Invalid text rule: {}. Valid values: 'contains', 'notContains', 'beginsWith', 'endsWith'",
+                        rule
+                    ),
+                ));
             }
         };
 
@@ -1310,10 +1324,15 @@ impl RuscWorksheet {
             "belowAverage" => ConditionalFormatAverageRule::BelowAverage,
             "equalOrAboveAverage" => ConditionalFormatAverageRule::EqualOrAboveAverage,
             "equalOrBelowAverage" => ConditionalFormatAverageRule::EqualOrBelowAverage,
-            _ => return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid average rule: {}. Valid values: 'aboveAverage', 'belowAverage', 'equalOrAboveAverage', 'equalOrBelowAverage'", rule),
-            ))
+            _ => {
+                return Err(Error::new(
+                    Status::GenericFailure,
+                    format!(
+                        "Invalid average rule: {}. Valid values: 'aboveAverage', 'belowAverage', 'equalOrAboveAverage', 'equalOrBelowAverage'",
+                        rule
+                    ),
+                ));
+            }
         };
 
         let cond_format = ConditionalFormatAverage::new()
@@ -1333,6 +1352,8 @@ impl RuscWorksheet {
 
     /// Add top/bottom N conditional formatting
     #[napi]
+    // The arguments mirror the positional parameters of the public JS API.
+    #[allow(clippy::too_many_arguments)]
     pub fn add_conditional_format_top(
         &self,
         first_row: u32,
@@ -1356,10 +1377,15 @@ impl RuscWorksheet {
             "bottom" => ConditionalFormatTopRule::Bottom(value),
             "topPercent" => ConditionalFormatTopRule::TopPercent(value),
             "bottomPercent" => ConditionalFormatTopRule::BottomPercent(value),
-            _ => return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid top/bottom rule: {}. Valid values: 'top', 'bottom', 'topPercent', 'bottomPercent'", rule),
-            ))
+            _ => {
+                return Err(Error::new(
+                    Status::GenericFailure,
+                    format!(
+                        "Invalid top/bottom rule: {}. Valid values: 'top', 'bottom', 'topPercent', 'bottomPercent'",
+                        rule
+                    ),
+                ));
+            }
         };
 
         let cond_format = ConditionalFormatTop::new()
@@ -1515,10 +1541,15 @@ impl RuscWorksheet {
             "lastMonth" => ConditionalFormatDateRule::LastMonth,
             "thisMonth" => ConditionalFormatDateRule::ThisMonth,
             "nextMonth" => ConditionalFormatDateRule::NextMonth,
-            _ => return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid date rule: {}. Valid values: 'yesterday', 'today', 'tomorrow', 'last7Days', 'lastWeek', 'thisWeek', 'nextWeek', 'lastMonth', 'thisMonth', 'nextMonth'", rule),
-            ))
+            _ => {
+                return Err(Error::new(
+                    Status::GenericFailure,
+                    format!(
+                        "Invalid date rule: {}. Valid values: 'yesterday', 'today', 'tomorrow', 'last7Days', 'lastWeek', 'thisWeek', 'nextWeek', 'lastMonth', 'thisMonth', 'nextMonth'",
+                        rule
+                    ),
+                ));
+            }
         };
 
         let cond_format = ConditionalFormatDate::new()
@@ -1609,10 +1640,15 @@ impl RuscWorksheet {
             "fiveHistograms" => ConditionalFormatIconType::FiveHistograms,
             "fiveQuadrants" => ConditionalFormatIconType::FiveQuadrants,
             "fiveBoxes" => ConditionalFormatIconType::FiveBoxes,
-            _ => return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid icon set type: {}. Valid values: 'threeArrows', 'threeArrowsGray', 'threeFlags', 'threeTrafficLights', 'threeTrafficLightsWithRim', 'threeSigns', 'threeSymbols', 'threeSymbolsCircled', 'threeStars', 'threeTriangles', 'fourArrows', 'fourArrowsGray', 'fourRedToBlack', 'fourHistograms', 'fourTrafficLights', 'fiveArrows', 'fiveArrowsGray', 'fiveHistograms', 'fiveQuadrants', 'fiveBoxes'", icon_type),
-            ))
+            _ => {
+                return Err(Error::new(
+                    Status::GenericFailure,
+                    format!(
+                        "Invalid icon set type: {}. Valid values: 'threeArrows', 'threeArrowsGray', 'threeFlags', 'threeTrafficLights', 'threeTrafficLightsWithRim', 'threeSigns', 'threeSymbols', 'threeSymbolsCircled', 'threeStars', 'threeTriangles', 'fourArrows', 'fourArrowsGray', 'fourRedToBlack', 'fourHistograms', 'fourTrafficLights', 'fiveArrows', 'fiveArrowsGray', 'fiveHistograms', 'fiveQuadrants', 'fiveBoxes'",
+                        icon_type
+                    ),
+                ));
+            }
         };
 
         let cond_format = ConditionalFormatIconSet::new().set_icon_type(icon_set_type);
@@ -2011,6 +2047,22 @@ impl RuscWorksheet {
         })?;
 
         ws.set_zoom(zoom);
+        Ok(())
+    }
+
+    /// Hide zero values in worksheet cells, the equivalent of turning off the
+    /// Excel option "Show a zero in cells that have zero value"
+    #[napi]
+    pub fn set_hidden_zeroes(&self, enable: bool) -> Result<()> {
+        let mut wb = self.workbook.lock();
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
+
+        ws.set_hidden_zeroes(enable);
         Ok(())
     }
 

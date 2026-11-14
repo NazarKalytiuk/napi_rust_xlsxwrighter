@@ -54,7 +54,12 @@ row++;
 const wrapFormat = new Format();
 wrapFormat.setTextWrap();
 worksheet.setRowHeight(row, 40);
-worksheet.write(row++, 0, 'This is a long text that will wrap to multiple lines within the cell', wrapFormat);
+worksheet.write(
+  row++,
+  0,
+  'This is a long text that will wrap to multiple lines within the cell',
+  wrapFormat,
+);
 
 // Indent
 const indent1 = new Format();

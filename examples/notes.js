@@ -18,7 +18,7 @@ worksheet.setColumnWidth(0, 16);
 const partyItems = ['Invitations', 'Doors', 'Flowers', 'Champagne', 'Menu', 'Peter'];
 
 partyItems.forEach((item, index) => {
-    worksheet.writeString(index, 0, item);
+  worksheet.writeString(index, 0, item);
 });
 
 // Create a basic note
@@ -27,7 +27,7 @@ note1.setAuthor('Clarissa Dalloway');
 worksheet.insertNote(2, 0, note1); // Add note to "Flowers" cell
 
 // Create a custom note with different properties
-const note2 = new Note('Don\'t forget to send these out by Friday!');
+const note2 = new Note("Don't forget to send these out by Friday!");
 note2.setAuthor('Party Planner');
 note2.setWidth(200);
 note2.setHeight(100);
@@ -44,7 +44,7 @@ worksheet.insertNote(4, 0, note3); // Add note to "Menu" cell
 
 // Create a note with alt text for accessibility
 const note4 = new Note('Check his availability');
-note4.setAltText('Note about checking Peter\'s availability');
+note4.setAltText("Note about checking Peter's availability");
 worksheet.insertNote(5, 0, note4); // Add note to "Peter" cell
 
 // Save the workbook

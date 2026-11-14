@@ -56,7 +56,15 @@ impl RuscShape {
             "moveOnly" => ObjectMovement::MoveButDontSizeWithCells,
             "none" => ObjectMovement::DontMoveOrSizeWithCells,
             "moveAndSizeAfter" => ObjectMovement::MoveAndSizeWithCellsAfter,
-            _ => return Err(Error::new(Status::InvalidArg, format!("Invalid object movement option: {}. Use 'moveAndSize', 'moveOnly', 'none', or 'moveAndSizeAfter'", option))),
+            _ => {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!(
+                        "Invalid object movement option: {}. Use 'moveAndSize', 'moveOnly', 'none', or 'moveAndSizeAfter'",
+                        option
+                    ),
+                ));
+            }
         };
 
         self.shape = self.shape.clone().set_object_movement(movement);
