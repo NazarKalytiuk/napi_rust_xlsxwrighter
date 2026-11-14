@@ -187,6 +187,13 @@ export declare class RuscFormat {
   setQuotePrefix(): void
 }
 
+/**
+ * A formula for the native formula writers.
+ *
+ * @deprecated Pass a `RuscFormulaData` object instead. An instance keeps its Rust
+ * memory until its finalizer runs after the event loop turns, so instances
+ * created in a synchronous loop accumulate.
+ */
 export declare class RuscFormula {
   /** Create a new formula */
   constructor(formula: string)
@@ -281,7 +288,13 @@ export declare class RuscProtectionOptions {
   setContents(allow: boolean): this
 }
 
-/** Wrapper for rich text strings (multi-format text in a single cell) */
+/**
+ * Wrapper for rich text strings (multi-format text in a single cell)
+ *
+ * @deprecated Pass `[text, format]` segments to `RuscWorksheet.writeRichString`
+ * instead. An instance keeps its Rust memory until its finalizer runs after the
+ * event loop turns, so instances created in a synchronous loop accumulate.
+ */
 export declare class RuscRichText {
   /** Create a new empty rich text string */
   constructor()
@@ -511,10 +524,22 @@ export declare class RuscWorksheet {
   writeBoolean(row: number, col: number, value: boolean): void
   /** Write a blank cell with formatting */
   writeBlank(row: number, col: number, format: RuscFormat): void
-  /** Write a rich text string (multi-format text) to a cell */
-  writeRichString(row: number, col: number, richText: RuscRichText): void
-  /** Write a rich text string with an additional cell format */
-  writeRichStringWithFormat(row: number, col: number, richText: RuscRichText, cellFormat: RuscFormat): void
+  /**
+   * Write a rich text string (multi-format text) to a cell.
+   *
+   * `richText` is `[text, format]` segments, or a deprecated `RuscRichText`; a
+   * segment without a format uses the default cell font. Segments are plain data,
+   * so nothing outlives the call. Empty segments are skipped, and a rich string
+   * whose segments are all empty leaves the cell untouched.
+   */
+  writeRichString(row: number, col: number, richText: RuscRichText | Array<[string, RuscFormat | undefined | null]>): void
+  /**
+   * Write a rich text string with an additional cell format.
+   *
+   * `richText` is as for `writeRichString`. A rich string whose segments are all
+   * empty writes a blank cell with the cell format.
+   */
+  writeRichStringWithFormat(row: number, col: number, richText: RuscRichText | Array<[string, RuscFormat | undefined | null]>, cellFormat: RuscFormat): void
   /** Write a datetime from a Unix timestamp (seconds since 1970-01-01 UTC) */
   writeDatetimeFromTimestamp(row: number, col: number, timestamp: number, format?: RuscFormat | undefined | null): void
   /** Write a datetime from year, month, day components */
@@ -551,11 +576,11 @@ export declare class RuscWorksheet {
   /** Set the default author name for all notes in the worksheet */
   setDefaultNoteAuthor(name: string): void
   /** Write a formula to a cell */
-  writeFormula(row: number, col: number, formula: RuscFormula, format?: RuscFormat | undefined | null): void
+  writeFormula(row: number, col: number, formula: RuscFormula | RuscFormulaData, format?: RuscFormat | undefined | null): void
   /** Write a dynamic array formula to a cell (Excel 365) */
-  writeDynamicFormula(row: number, col: number, formula: RuscFormula, format?: RuscFormat | undefined | null): void
+  writeDynamicFormula(row: number, col: number, formula: RuscFormula | RuscFormulaData, format?: RuscFormat | undefined | null): void
   /** Write an array formula to a range of cells */
-  writeArrayFormula(firstRow: number, firstCol: number, lastRow: number, lastCol: number, formula: RuscFormula, format?: RuscFormat | undefined | null): void
+  writeArrayFormula(firstRow: number, firstCol: number, lastRow: number, lastCol: number, formula: RuscFormula | RuscFormulaData, format?: RuscFormat | undefined | null): void
   /** Add data validation to a cell or range */
   addDataValidation(firstRow: number, firstCol: number, lastRow: number, lastCol: number, validation: RuscDataValidation): void
   /** Write a URL to a cell */
@@ -681,6 +706,18 @@ export declare class RuscWorksheet {
   insertShape(row: number, col: number, shape: RuscShape): void
   /** Insert a shape (textbox) at the specified cell position with pixel offsets */
   insertShapeWithOffset(row: number, col: number, shape: RuscShape, xOffset: number, yOffset: number): void
+}
+
+/**
+ * The data of a JavaScript `Formula`: the formula text and, for applications
+ * that don't recalculate, its cached result.
+ *
+ * It is plain data rather than a class so that a formula written per row owns no
+ * Rust memory between writes.
+ */
+export interface RuscFormulaData {
+  formula: string
+  result?: string
 }
 
 /**

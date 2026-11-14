@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Workbook, Format, ProtectionOptions, RichText } from '../wrapper.ts';
+import { Workbook, Format, ProtectionOptions, RichText, RuscRichText } from '../wrapper.ts';
 import fs from 'node:fs';
 import { cleanupTestOutput, readXlsxPart } from './test-helpers.mjs';
 
@@ -256,6 +256,45 @@ describe('Rich Text Strings', () => {
     });
   });
 
+  describe('Segment Data', () => {
+    it('reads a segment format when the rich text is written', () => {
+      const format = new Format();
+      const richText = new RichText().addSegment('plain ').addSegment('bold', format);
+
+      format.setBold();
+      worksheet.writeRichString(0, 0, richText);
+
+      const sharedStrings = readXlsxPart(workbook.saveToBuffer(), 'xl/sharedStrings.xml');
+      expect(sharedStrings).toContain('<r><rPr><b/>');
+      expect(sharedStrings).toContain('<t>bold</t></r></si>');
+    });
+
+    it('writes one RichText to several cells', () => {
+      const richText = new RichText()
+        .addSegment('plain ')
+        .addSegment('bold', new Format().setBold());
+
+      worksheet.writeRichString(0, 0, richText);
+      worksheet.writeRichString(1, 0, richText);
+
+      const sharedStrings = readXlsxPart(workbook.saveToBuffer(), 'xl/sharedStrings.xml');
+      expect(sharedStrings).toContain('count="2" uniqueCount="1"');
+    });
+
+    it('native writers take segments and the deprecated RuscRichText', () => {
+      const italic = new Format().setItalic();
+      const deprecated = new RuscRichText();
+      deprecated.addSegment('native ', italic._native);
+
+      worksheet._native.writeRichString(0, 0, [['data ', italic._native]]);
+      worksheet._native.writeRichString(1, 0, deprecated);
+
+      const sharedStrings = readXlsxPart(workbook.saveToBuffer(), 'xl/sharedStrings.xml');
+      expect(sharedStrings).toContain('<t xml:space="preserve">data </t>');
+      expect(sharedStrings).toContain('<t xml:space="preserve">native </t>');
+    });
+  });
+
   describe('Complex Rich Text', () => {
     it('should create formatted document with rich text', () => {
       const header = new Format().setBold().setFontSize(14).setFontColor('blue');
@@ -308,6 +347,15 @@ describe('Rich Text Strings', () => {
       expect(() => {
         worksheet.writeRichString(0, 0, richText);
       }).not.toThrow();
+    });
+
+    it('writes a blank formatted cell when every segment is empty', () => {
+      const richText = new RichText().addSegment('');
+
+      worksheet.writeRichStringWithFormat(0, 0, richText, new Format().setBold());
+
+      const sheet = readXlsxPart(workbook.saveToBuffer(), 'xl/worksheets/sheet1.xml');
+      expect(sheet).toContain('<c r="A1" s="1"/>');
     });
 
     it('should handle long text with formatting', () => {

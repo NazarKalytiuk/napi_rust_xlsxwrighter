@@ -2,6 +2,7 @@
 import { expectTypeOf } from 'vitest';
 import {
   Format,
+  Formula,
   RichText,
   Shape,
   Workbook,
@@ -17,6 +18,12 @@ expectTypeOf(format.setBold().setItalic()).toEqualTypeOf<Format>();
 
 // Allocator diagnostics are a [currentBytes, peakBytes] pair.
 expectTypeOf(rustMemoryStats).returns.toEqualTypeOf<[number, number]>();
+
+// Formula writers take a Formula or a formula string.
+expectTypeOf(worksheet.writeFormula).toBeCallableWith(0, 0, '=A1+B1');
+expectTypeOf(worksheet.writeFormula).toBeCallableWith(0, 0, new Formula('=A1+B1'), format);
+expectTypeOf(worksheet.writeArrayFormula).toBeCallableWith(0, 0, 1, 0, '=A1:A2*2');
+expectTypeOf(worksheet.writeDynamicFormula).toBeCallableWith(0, 0, '=SORT(A1:A2)');
 
 // Rich text segments may omit their format.
 expectTypeOf(new RichText().addSegment('plain')).toEqualTypeOf<RichText>();

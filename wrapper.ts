@@ -17,6 +17,7 @@ import {
   RuscDocProperties,
   RuscFormat,
   RuscFormula,
+  type RuscFormulaData,
   RuscImage,
   RuscNote,
   RuscProtectionOptions,
@@ -475,15 +476,18 @@ export class Note {
  * const formulaWithResult = new Formula('=2+2').setResult('4');
  */
 export class Formula {
-  /** Internal native binding */
-  _native: RuscFormula;
+  /**
+   * Internal formula data passed to the native writer. A `Formula` is plain
+   * JavaScript data, so creating one per row allocates no Rust memory.
+   */
+  readonly _data: RuscFormulaData;
 
   /**
    * Create a new formula
    * @param formula - Excel formula string (e.g., '=SUM(A1:A10)')
    */
   constructor(formula: string) {
-    this._native = new RuscFormula(formula);
+    this._data = { formula };
   }
 
   /**
@@ -491,9 +495,14 @@ export class Formula {
    * @param result - The calculated result as a string
    */
   setResult(result: string): this {
-    this._native.setResult(result);
+    this._data.result = result;
     return this;
   }
+}
+
+/** The data the native formula writers take for a `Formula` or a formula string. */
+function formulaData(formula: Formula | string): RuscFormulaData {
+  return typeof formula === 'string' ? { formula } : formula._data;
 }
 
 /**
@@ -994,25 +1003,26 @@ export class Image {
  * worksheet.writeRichString(0, 0, richText);
  */
 export class RichText {
-  /** Internal native binding */
-  _native: RuscRichText;
-
-  /** Create a new empty rich text string */
-  constructor() {
-    this._native = new RuscRichText();
-  }
+  /**
+   * Internal `[text, format]` segments passed to the native writer. A
+   * `RichText` is plain JavaScript data, so creating one per row allocates no
+   * Rust memory.
+   */
+  readonly _segments: [text: string, format: RuscFormat | undefined][] = [];
 
   /**
-   * Add a text segment with formatting
+   * Add a text segment with formatting. The format is read when the rich text
+   * is written, as the format of any other write is.
    * @param text - The text content
-   * @param format - Optional format to apply to this segment
+   * @param format - Optional format to apply to this segment; without one the
+   *   segment uses the default cell font
    * @returns this for method chaining
    * @example
    * richText.addSegment('Hello ', normalFormat)
    *         .addSegment('World', boldFormat);
    */
   addSegment(text: string, format?: Format): this {
-    this._native.addSegment(text, format ? format._native : null);
+    this._segments.push([text, format?._native]);
     return this;
   }
 }
@@ -1496,14 +1506,17 @@ export class Worksheet {
    * Write a formula to a cell
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
-   * @param formula - Formula object
+   * @param formula - Formula object or formula string (e.g., '=SUM(A1:A10)')
    * @param format - Optional format to apply
+   * @example
+   * worksheet.writeFormula(0, 2, '=A1+B1');
+   * worksheet.writeFormula(1, 2, new Formula('=A2+B2').setResult('42'));
    */
-  writeFormula(row: number, col: number, formula: Formula, format?: Format): void {
+  writeFormula(row: number, col: number, formula: Formula | string, format?: Format): void {
     return this._native.writeFormula(
       row,
       col,
-      formula._native,
+      formulaData(formula),
       format ? format._native : undefined,
     );
   }
@@ -1513,14 +1526,15 @@ export class Worksheet {
    * Dynamic arrays automatically spill into adjacent cells
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
-   * @param formula - Formula object with dynamic array function (FILTER, SORT, UNIQUE, etc.)
+   * @param formula - Formula object or formula string with a dynamic array
+   *   function (FILTER, SORT, UNIQUE, etc.)
    * @param format - Optional format to apply
    */
-  writeDynamicFormula(row: number, col: number, formula: Formula, format?: Format): void {
+  writeDynamicFormula(row: number, col: number, formula: Formula | string, format?: Format): void {
     return this._native.writeDynamicFormula(
       row,
       col,
-      formula._native,
+      formulaData(formula),
       format ? format._native : undefined,
     );
   }
@@ -1531,7 +1545,7 @@ export class Worksheet {
    * @param firstCol - First column of range (0-indexed)
    * @param lastRow - Last row of range (0-indexed)
    * @param lastCol - Last column of range (0-indexed)
-   * @param formula - Formula object
+   * @param formula - Formula object or formula string
    * @param format - Optional format to apply
    */
   writeArrayFormula(
@@ -1539,7 +1553,7 @@ export class Worksheet {
     firstCol: number,
     lastRow: number,
     lastCol: number,
-    formula: Formula,
+    formula: Formula | string,
     format?: Format,
   ): void {
     return this._native.writeArrayFormula(
@@ -1547,7 +1561,7 @@ export class Worksheet {
       firstCol,
       lastRow,
       lastCol,
-      formula._native,
+      formulaData(formula),
       format ? format._native : undefined,
     );
   }
@@ -2471,7 +2485,7 @@ export class Worksheet {
    * worksheet.writeRichString(0, 0, richText);
    */
   writeRichString(row: number, col: number, richText: RichText): void {
-    return this._native.writeRichString(row, col, richText._native);
+    return this._native.writeRichString(row, col, richText._segments);
   }
 
   /**
@@ -2493,7 +2507,7 @@ export class Worksheet {
     richText: RichText,
     cellFormat: Format,
   ): void {
-    return this._native.writeRichStringWithFormat(row, col, richText._native, cellFormat._native);
+    return this._native.writeRichStringWithFormat(row, col, richText._segments, cellFormat._native);
   }
 
   /**
@@ -3649,6 +3663,7 @@ export {
   RuscButton,
   RuscShape,
 };
+export type { RuscFormulaData };
 
 // Rust allocator diagnostics; documented on the Rust functions in src/lib.rs
 export { rustMemoryResetPeak, rustMemoryStats } from './index.js';
