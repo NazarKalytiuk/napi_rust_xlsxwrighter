@@ -108,4 +108,46 @@ describe('Workbook.saveToStream', () => {
     await expect(createWorkbook().saveToStream(writable)).rejects.toBe(writableError);
     expectTemporaryDirectoryEmpty();
   });
+
+  test('ignores a temporary file that was never created', async () => {
+    const saveError = new Error('native save failed before writing');
+    const workbook = Object.create(Workbook.prototype);
+    workbook._native = {
+      save() {
+        throw saveError;
+      },
+    };
+
+    await expect(workbook.saveToStream(createSink())).rejects.toBe(saveError);
+    expectTemporaryDirectoryEmpty();
+  });
+
+  test('rejects with the cleanup error when only removing the temporary file fails', async () => {
+    const cleanupError = Object.assign(new Error('permission denied'), { code: 'EACCES' });
+    vi.spyOn(fs.promises, 'unlink').mockRejectedValueOnce(cleanupError);
+
+    await expect(createWorkbook().saveToStream(createSink())).rejects.toBe(cleanupError);
+  });
+
+  test('rejects with both errors when saving and cleanup fail', async () => {
+    const saveError = new Error('native save failed');
+    const cleanupError = new Error('cleanup failed without an errno code');
+    const workbook = Object.create(Workbook.prototype);
+    workbook._native = {
+      save(filename) {
+        fs.writeFileSync(filename, 'partial workbook');
+        throw saveError;
+      },
+    };
+    vi.spyOn(fs.promises, 'unlink').mockRejectedValueOnce(cleanupError);
+
+    const rejection = await workbook.saveToStream(createSink()).catch((error) => error);
+
+    expect(rejection).toBeInstanceOf(AggregateError);
+    expect(rejection.message).toBe(
+      'Failed to save workbook to stream and remove the temporary file',
+    );
+    expect(rejection.errors).toEqual([saveError, cleanupError]);
+    expect(rejection.cause).toBe(cleanupError);
+  });
 });

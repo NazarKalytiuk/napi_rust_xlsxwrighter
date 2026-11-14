@@ -5,7 +5,11 @@ use rust_xlsxwriter::{ChartEmptyCells, Color, Sparkline, SparklineType};
 
 #[napi]
 pub struct RuscSparkline {
-    pub(crate) sparkline: Sparkline,
+    sparkline: Sparkline,
+    /// Data range given without a sheet name, as (first row, first col, last
+    /// row, last col). It refers to the worksheet the sparkline is added to,
+    /// whose name is only known at that point.
+    local_range: Option<(u32, u16, u32, u16)>,
 }
 
 impl Default for RuscSparkline {
@@ -21,28 +25,24 @@ impl RuscSparkline {
     pub fn new() -> Self {
         RuscSparkline {
             sparkline: Sparkline::new(),
+            local_range: None,
         }
     }
 
-    /// Set the data range for the sparkline (e.g., "Sheet1!A1:E1")
+    /// Set the data range for the sparkline, e.g. "Sheet1!A1:E1", or "A1:E1"
+    /// for a range on the worksheet the sparkline is added to
     #[napi]
     pub fn set_range(&mut self, range: String) -> Result<&Self> {
-        // Parse the range string (format: "Sheet!A1:B10" or just "A1:B10")
-        let parts: Vec<&str> = if range.contains('!') {
-            range.split('!').collect()
-        } else {
-            vec!["Sheet1", &range]
+        let (sheet_name, cell_range) = match range.split('!').collect::<Vec<_>>()[..] {
+            [cell_range] => (None, cell_range),
+            [sheet_name, cell_range] => (Some(sheet_name), cell_range),
+            _ => {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    "Invalid range format. Use 'Sheet!A1:B10' or 'A1:B10'",
+                ));
+            }
         };
-
-        if parts.len() != 2 {
-            return Err(Error::new(
-                Status::InvalidArg,
-                "Invalid range format. Use 'Sheet!A1:B10' or 'A1:B10'",
-            ));
-        }
-
-        let sheet_name = parts[0];
-        let cell_range = parts[1];
 
         // Parse cell range (e.g., "A1:E1")
         let cells: Vec<&str> = cell_range.split(':').collect();
@@ -56,10 +56,16 @@ impl RuscSparkline {
         let (row1, col1) = Self::parse_cell_reference(cells[0])?;
         let (row2, col2) = Self::parse_cell_reference(cells[1])?;
 
-        self.sparkline = self
-            .sparkline
-            .clone()
-            .set_range((sheet_name, row1, col1, row2, col2));
+        match sheet_name {
+            Some(sheet_name) => {
+                self.sparkline = self
+                    .sparkline
+                    .clone()
+                    .set_range((sheet_name, row1, col1, row2, col2));
+                self.local_range = None;
+            }
+            None => self.local_range = Some((row1, col1, row2, col2)),
+        }
         Ok(self)
     }
 
@@ -314,8 +320,15 @@ impl RuscSparkline {
         }
     }
 
-    /// Get the internal sparkline reference
-    pub(crate) fn get_sparkline(&self) -> &Sparkline {
-        &self.sparkline
+    /// The sparkline as added to the worksheet named `sheet_name`, which a
+    /// range set without a sheet name refers to
+    pub(crate) fn for_worksheet(&self, sheet_name: &str) -> Sparkline {
+        match self.local_range {
+            Some((row1, col1, row2, col2)) => self
+                .sparkline
+                .clone()
+                .set_range((sheet_name, row1, col1, row2, col2)),
+            None => self.sparkline.clone(),
+        }
     }
 }

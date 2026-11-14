@@ -310,7 +310,10 @@ export declare class RuscShape {
 export declare class RuscSparkline {
   /** Create a new Sparkline */
   static new(): RuscSparkline
-  /** Set the data range for the sparkline (e.g., "Sheet1!A1:E1") */
+  /**
+   * Set the data range for the sparkline, e.g. "Sheet1!A1:E1", or "A1:E1"
+   * for a range on the worksheet the sparkline is added to
+   */
   setRange(range: string): this
   /** Set the type of sparkline: 'line', 'column', or 'winLose' */
   setType(sparklineType: string): this
@@ -383,7 +386,10 @@ export declare class RuscTable {
   setAltText(altText: string): this
   /** Set the alternative text title for screen readers. */
   setAltTextTitle(title: string): this
-  /** Set the style of the table (1-21 for light styles, 22-49 for medium styles, 50-61 for dark styles) */
+  /**
+   * Set the style of the table: 0 for no style, 1-21 for light styles,
+   * 22-49 for medium styles and 50-60 for dark styles
+   */
   setStyle(styleId: number): this
   /** Add columns to the table */
   setColumns(columns: Array<RuscTableColumn>): this
@@ -476,20 +482,25 @@ export declare class RuscWorkbook {
 
 /** Worksheet wrapper for Excel sheet manipulation */
 export declare class RuscWorksheet {
-  /** Write a value to a cell (auto-detects type) */
-  write(row: number, col: number, value: string | number | boolean, format?: RuscFormat | undefined | null): void
+  /**
+   * Write a value to a cell (auto-detects type). `null` or `undefined`
+   * writes nothing, or a blank cell with the format when one is given.
+   */
+  write(row: number, col: number, value: string | number | boolean | null | undefined, format?: RuscFormat | undefined | null): void
   /**
    * Write an array of values as a row starting at the given column.
    * Uses lazy Array iteration — reads one cell at a time from the JS array
    * instead of deserializing the entire row into Rust memory.
-   * Null/undefined values are skipped (preserving column positions).
+   * Values are written as `write` writes them: `null`, `undefined` and
+   * holes leave the cell empty, or write a blank cell with the format.
    */
   writeRow(row: number, startCol: number, values: unknown[], format?: RuscFormat | undefined | null): void
   /**
    * Write a 2D array of values starting at the given position.
    * Uses lazy Array iteration — reads one row/cell at a time from JS,
    * never materializing the entire grid in Rust memory.
-   * Null/undefined values are skipped (preserving column positions).
+   * Values are written as `write` writes them: `null`, `undefined` and
+   * holes leave the cell empty, or write a blank cell with the format.
    */
   writeRows(startRow: number, startCol: number, rows: unknown[], format?: RuscFormat | undefined | null): void
   /** Write a string to a cell */
@@ -512,8 +523,11 @@ export declare class RuscWorksheet {
   writeDatetimeFromYmdHms(row: number, col: number, year: number, month: number, day: number, hour: number, min: number, sec: number, format?: RuscFormat | undefined | null): void
   /** Write a datetime from an ISO 8601 string (e.g., "2023-01-25T12:30:00") */
   writeDatetimeFromString(row: number, col: number, datetimeStr: string, format?: RuscFormat | undefined | null): void
-  /** Write a value with formatting to a cell */
-  writeWithFormat(row: number, col: number, value: string | number | boolean, format: RuscFormat): void
+  /**
+   * Write a value with formatting to a cell; `null` or `undefined` writes
+   * a blank cell with the format
+   */
+  writeWithFormat(row: number, col: number, value: string | number | boolean | null | undefined, format: RuscFormat): void
   /** Set the width of a column */
   setColumnWidth(col: number, width: number): void
   /** Set the height of a row */

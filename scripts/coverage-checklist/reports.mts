@@ -136,6 +136,8 @@ export function renderDashboard(
     '- Для enum variant з payload використовується один checkbox на capability; усі canonical symbol rows залишаються вкладеними.',
     '- При роботі над пунктом змінюйте status послідовно `MISSING` → `PARTIAL` → `FULL`; не ставте `[x]`, не змінивши label та evidence.',
     '- `tests:` виводяться з mapping: перші три call sites відповідних API у `tests/*.test.mjs` (для `JavaScript Error boundary` — перші три `toThrow` assertions).',
+    "- Mapping з літеральним аргументом, напр. `Format.prototype.setAlign('left')` чи `Table.prototype.setStyle(0)`, рахує лише виклики, що передають цей літерал — прямо, через константу або через колонку таблиці `test.each`/`it.each`/`describe.each`. Так рядок enum variant посилається на тести саме цього значення.",
+    '- `npm run coverage:check` падає, якщо `[x] FULL` рядок має API mapping, але жоден тест його не викликає.',
     '',
     '<a id="definition-of-done"></a>',
     '### Definition of done для `[x] FULL`',

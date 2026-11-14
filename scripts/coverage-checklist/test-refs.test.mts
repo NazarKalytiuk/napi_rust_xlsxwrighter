@@ -3,7 +3,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, test } from 'vitest';
 
-import { ERROR_BOUNDARY, collectCallSites, declaredApis, readApiShapes } from './test-refs.mts';
+import {
+  API_KEY,
+  ERROR_BOUNDARY,
+  collectCallSites,
+  declaredApis,
+  literalArgument,
+  readApiShapes,
+} from './test-refs.mts';
 
 const WRAPPER = `
 export class Workbook {
@@ -88,6 +95,48 @@ describe('collectCallSites', () => {
     expect(sites.get('Worksheet.prototype.setZoom')).toEqual([4]);
   });
 
+  test('records constructors and the literal arguments of calls', () => {
+    const sites = sitesFor(
+      [
+        "import { Note, Workbook } from '../wrapper.ts';",
+        "const label = 'kept';",
+        "new Note('memo').setWidth(10, 'wide', label);",
+        'Workbook.create().addWorksheet().setZoom(-5);',
+        'new Note().setWidth(width);',
+      ].join('\n'),
+    );
+    expect(sites.get('Note::constructor')).toEqual([3, 5]);
+    expect(sites.get("Note::constructor('memo')")).toEqual([3]);
+    expect(sites.get('Note.prototype.setWidth')).toEqual([3, 5]);
+    expect(sites.get('Note.prototype.setWidth(10)')).toEqual([3]);
+    expect(sites.get("Note.prototype.setWidth('wide')")).toEqual([3]);
+    expect(sites.get("Note.prototype.setWidth('kept')")).toEqual([3]);
+    expect(sites.get('Worksheet.prototype.setZoom(-5)')).toEqual([4]);
+  });
+
+  test('binds .each callback parameters to the literals of their table column', () => {
+    const sites = sitesFor(
+      [
+        "import { Note } from '../wrapper.ts';",
+        "const WIDTHS = ['narrow', 'wide'];",
+        'test.each(WIDTHS)("%s", (width) => new Note().setWidth(width));',
+        "it.each([[1, 'one'], [2, 'two']])('%i', (count, name) => {",
+        '  new Note().setWidth(name);',
+        '});',
+        "describe.each([['x', { not: 'literal' }]])('%s', (_label, options) => {",
+        '  new Note().setWidth(options);',
+        '});',
+      ].join('\n'),
+    );
+    expect(sites.get("Note.prototype.setWidth('narrow')")).toEqual([3]);
+    expect(sites.get("Note.prototype.setWidth('wide')")).toEqual([3]);
+    expect(sites.get("Note.prototype.setWidth('one')")).toEqual([5]);
+    expect(sites.get("Note.prototype.setWidth('two')")).toEqual([5]);
+    expect(sites.get('Note.prototype.setWidth(1)')).toBeUndefined();
+    expect(sites.get('Note.prototype.setWidth')).toEqual([3, 5, 8]);
+    expect([...sites.keys()].filter((key) => key.includes("('x')"))).toEqual([]);
+  });
+
   test('records throwing assertions but not negated ones', () => {
     const sites = sitesFor(
       [
@@ -110,4 +159,25 @@ test('declaredApis lists public members and skips private constructors', () => {
     'Worksheet.prototype.setName',
     'Worksheet.prototype.setZoom',
   ]);
+});
+
+test('API keys name an API, optionally with one literal argument', () => {
+  const keys = [
+    'Format.prototype.setBold',
+    'Image.static.fromBuffer',
+    'Chart::constructor',
+    "Chart::constructor('radar')",
+    'Table.prototype.setStyle(30)',
+    "Note.prototype.setAuthor('O\\'Brien')",
+  ];
+  expect(keys.filter((key) => !API_KEY.test(key))).toEqual([]);
+  const notKeys = ['Button class', 'Format.setBold', "Table.prototype.setStyle('a', 'b')"];
+  expect(notKeys.filter((key) => API_KEY.test(key))).toEqual([]);
+  expect(API_KEY.exec("Chart::constructor('radar')")?.[1]).toBe('Chart::constructor');
+});
+
+test('literalArgument renders numbers bare and quotes strings', () => {
+  expect(literalArgument(30)).toBe('(30)');
+  expect(literalArgument('left')).toBe("('left')");
+  expect(literalArgument("O'Brien")).toBe("('O\\'Brien')");
 });

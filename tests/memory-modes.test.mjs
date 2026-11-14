@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
-import { Workbook } from '../wrapper.ts';
+import { Workbook, rustMemoryResetPeak, rustMemoryStats } from '../wrapper.ts';
 import { cleanupTestOutput, createTestOutputDir } from './test-helpers.mjs';
 
 describe('Memory Modes', () => {
@@ -272,5 +272,26 @@ describe('Memory Modes', () => {
       expect(fs.existsSync(filename)).toBe(true);
       console.log(`      Wrote ${rowCount} rows in low memory mode: ${writeTime}ms`);
     });
+  });
+});
+
+describe('Rust allocator diagnostics', () => {
+  test('rustMemoryResetPeak lowers the peak to the current allocation', () => {
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet();
+    for (let row = 0; row < 20000; row++) {
+      worksheet.writeString(row, 0, `row ${row}`);
+    }
+    // Saving builds temporary XML and zip buffers, which raise the peak above
+    // the memory the workbook keeps afterwards.
+    workbook.saveToBuffer();
+    const [currentBefore, peakBefore] = rustMemoryStats();
+    expect(peakBefore).toBeGreaterThan(currentBefore);
+
+    rustMemoryResetPeak();
+
+    const [current, peak] = rustMemoryStats();
+    expect(peak).toBeLessThan(peakBefore);
+    expect(peak).toBeGreaterThanOrEqual(current);
   });
 });

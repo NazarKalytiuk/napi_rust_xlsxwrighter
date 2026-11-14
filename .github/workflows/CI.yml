@@ -126,6 +126,62 @@ jobs:
       - name: Run tests (Vitest)
         run: npm test
 
+  rust-coverage:
+    name: Rust coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: llvm-tools
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `npm run test:coverage` only measures wrapper.ts; this runs the suite
+      # against an instrumented build to measure the Rust sources it forwards to.
+      - name: Measure Rust coverage
+        run: npm run test:coverage:rust
+
+      - name: Summarize Rust coverage
+        if: always() && hashFiles('coverage/rust.txt') != ''
+        shell: bash
+        run: |
+          {
+            echo '### Rust line coverage'
+            echo '```'
+            cat coverage/rust.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Rust coverage
+        if: always() && hashFiles('coverage/rust.lcov') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: rust-coverage
+          path: |
+            coverage/rust.lcov
+            coverage/rust.txt
+
   release-bindings:
     name: Build ${{ matrix.settings.target }}
     if: startsWith(github.ref, 'refs/tags/v')

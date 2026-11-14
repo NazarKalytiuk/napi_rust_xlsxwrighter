@@ -19,6 +19,8 @@
 - Для enum variant з payload використовується один checkbox на capability; усі canonical symbol rows залишаються вкладеними.
 - При роботі над пунктом змінюйте status послідовно `MISSING` → `PARTIAL` → `FULL`; не ставте `[x]`, не змінивши label та evidence.
 - `tests:` виводяться з mapping: перші три call sites відповідних API у `tests/*.test.mjs` (для `JavaScript Error boundary` — перші три `toThrow` assertions).
+- Mapping з літеральним аргументом, напр. `Format.prototype.setAlign('left')` чи `Table.prototype.setStyle(0)`, рахує лише виклики, що передають цей літерал — прямо, через константу або через колонку таблиці `test.each`/`it.each`/`describe.each`. Так рядок enum variant посилається на тести саме цього значення.
+- `npm run coverage:check` падає, якщо `[x] FULL` рядок має API mapping, але жоден тест його не викликає.
 
 <a id="definition-of-done"></a>
 ### Definition of done для `[x] FULL`
@@ -33,8 +35,8 @@
 
 | Режим підрахунку | Усього rows/capabilities | N/A | Denominator | Full | Partial | Missing | Full % |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Symbol rows | 1673 | 202 | 1471 | 420 | 275 | 776 | 28.6% |
-| Grouped input capabilities | 1598 | 200 | 1398 | 397 | 242 | 759 | 28.4% |
+| Symbol rows | 1673 | 202 | 1471 | 423 | 270 | 778 | 28.8% |
+| Grouped input capabilities | 1598 | 200 | 1398 | 400 | 238 | 760 | 28.6% |
 
 ## Dashboard і group milestones
 
@@ -58,7 +60,7 @@
 | N/A | [Серіалізація](coverage-checklist/16-serializer.md) | 0 | 0 | 0 | 0 | 20 | 0.0% |
 | [ ] | [Фігури](coverage-checklist/17-shape.md) | 142 | 7 | 0 | 135 | 7 | 4.9% |
 | [ ] | [Спарклайни](coverage-checklist/18-sparkline.md) | 33 | 23 | 8 | 2 | 0 | 69.7% |
-| [ ] | [Таблиці](coverage-checklist/19-table.md) | 95 | 83 | 9 | 3 | 0 | 87.4% |
+| [ ] | [Таблиці](coverage-checklist/19-table.md) | 95 | 86 | 5 | 4 | 0 | 90.5% |
 | [ ] | [Гіперпосилання](coverage-checklist/20-url.md) | 4 | 0 | 3 | 1 | 0 | 0.0% |
 | [ ] | [Допоміжні функції](coverage-checklist/21-utility.md) | 12 | 0 | 0 | 12 | 2 | 0.0% |
 | [ ] | [Workbook](coverage-checklist/22-workbook.md) | 34 | 19 | 4 | 11 | 0 | 55.9% |

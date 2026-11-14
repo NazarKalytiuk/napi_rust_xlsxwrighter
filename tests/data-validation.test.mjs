@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Workbook, DataValidation } from '../wrapper.ts';
-import { cleanupTestOutput, createTestOutputDir } from './test-helpers.mjs';
+import { cleanupTestOutput, createTestOutputDir, readXlsxPart } from './test-helpers.mjs';
 
 describe('Data Validation', () => {
   let testOutputDir;
@@ -386,5 +386,36 @@ describe('Data Validation', () => {
       expect(buffer).toBeInstanceOf(Buffer);
       expect(buffer.length).toBeGreaterThan(0);
     });
+  });
+});
+
+/** The `<dataValidation>` element written for a validation on A1. */
+function validationXml(validation) {
+  const workbook = new Workbook();
+  workbook.addWorksheet().addDataValidation(0, 0, 0, 0, validation);
+  const sheet = readXlsxPart(workbook.saveToBuffer(), 'xl/worksheets/sheet1.xml');
+  return /<dataValidation [\s\S]*?<\/dataValidation>/.exec(sheet)?.[0];
+}
+
+describe('Data validation XLSX output', () => {
+  const RULES = [
+    'equal',
+    'notEqual',
+    'greaterThan',
+    'lessThan',
+    'greaterThanOrEqual',
+    'lessThanOrEqual',
+  ];
+
+  test.each(RULES)('writes the %s rule for whole numbers', (rule) => {
+    const xml = validationXml(new DataValidation().allowWholeNumber(rule, 5));
+    expect(xml).toContain(`type="whole" operator="${rule}"`);
+    expect(xml).toContain('<formula1>5</formula1>');
+  });
+
+  test.each(RULES)('writes the %s rule for decimal numbers', (rule) => {
+    const xml = validationXml(new DataValidation().allowDecimalNumber(rule, 2.5));
+    expect(xml).toContain(`type="decimal" operator="${rule}"`);
+    expect(xml).toContain('<formula1>2.5</formula1>');
   });
 });

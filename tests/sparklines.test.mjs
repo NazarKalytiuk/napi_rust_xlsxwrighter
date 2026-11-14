@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Workbook, Sparkline } from '../wrapper.ts';
 import fs from 'node:fs';
-import { cleanupTestOutput } from './test-helpers.mjs';
+import { cleanupTestOutput, readXlsxPart } from './test-helpers.mjs';
 
 describe('Sparklines', () => {
   let workbook, worksheet;
@@ -504,5 +504,74 @@ describe('Sparklines', () => {
         workbook.save('test-sparklines.xlsx');
       }).not.toThrow();
     });
+  });
+});
+
+/** Data range of each sparkline on a worksheet, keyed by the cell it is drawn in. */
+function sparklineRanges(workbook, sheetIndex = 1) {
+  const sheet = readXlsxPart(workbook.saveToBuffer(), `xl/worksheets/sheet${sheetIndex}.xml`);
+  const sparklines = sheet.matchAll(
+    /<x14:sparkline><xm:f>([^<]*)<\/xm:f><xm:sqref>([^<]*)<\/xm:sqref><\/x14:sparkline>/g,
+  );
+  return Object.fromEntries([...sparklines].map(([, range, cell]) => [cell, range]));
+}
+
+describe('Sparkline ranges in XLSX output', () => {
+  it('resolves a range without a sheet name against the worksheet it is added to', () => {
+    const workbook = new Workbook();
+    workbook.addWorksheet('Data').addSparkline(0, 5, new Sparkline().setRange('A1:E1'));
+
+    expect(sparklineRanges(workbook)).toEqual({ F1: 'Data!A1:E1' });
+  });
+
+  it('quotes the resolved worksheet name where Excel requires it', () => {
+    const workbook = new Workbook();
+    workbook.addWorksheet('My Data').addSparkline(0, 5, new Sparkline().setRange('A1:E1'));
+
+    expect(sparklineRanges(workbook)).toEqual({ F1: "'My Data'!A1:E1" });
+  });
+
+  it('resolves each row of a sparkline group against its worksheet', () => {
+    const workbook = new Workbook();
+    workbook.addWorksheet('Data').addSparklineGroup(0, 5, 1, 5, new Sparkline().setRange('A1:E2'));
+
+    expect(sparklineRanges(workbook)).toEqual({ F1: 'Data!A1:E1', F2: 'Data!A2:E2' });
+  });
+
+  it('resolves one sparkline separately for each worksheet it is added to', () => {
+    const workbook = new Workbook();
+    const sparkline = new Sparkline().setRange('A1:E1');
+    workbook.addWorksheet('North').addSparkline(0, 5, sparkline);
+    workbook.addWorksheet('South').addSparkline(0, 5, sparkline);
+
+    expect(sparklineRanges(workbook, 1)).toEqual({ F1: 'North!A1:E1' });
+    expect(sparklineRanges(workbook, 2)).toEqual({ F1: 'South!A1:E1' });
+  });
+
+  it('keeps a sheet-qualified range on another worksheet', () => {
+    const workbook = new Workbook();
+    workbook.addWorksheet('Source');
+    workbook.addWorksheet('Report').addSparkline(0, 0, new Sparkline().setRange('Source!B2:F2'));
+
+    expect(sparklineRanges(workbook, 2)).toEqual({ A1: 'Source!B2:F2' });
+  });
+
+  it('uses the range that was set last', () => {
+    const workbook = new Workbook();
+    workbook.addWorksheet('Source');
+    const worksheet = workbook.addWorksheet('Report');
+    worksheet.addSparkline(0, 0, new Sparkline().setRange('Source!A1:E1').setRange('B1:F1'));
+    worksheet.addSparkline(1, 0, new Sparkline().setRange('B1:F1').setRange('Source!A1:E1'));
+
+    expect(sparklineRanges(workbook, 2)).toEqual({ A1: 'Report!B1:F1', A2: 'Source!A1:E1' });
+  });
+
+  it.each([
+    ['A1', "Invalid cell range. Use 'A1:E1' format"],
+    ['Sheet1!A1:B1:C1', "Invalid cell range. Use 'A1:E1' format"],
+    ['A!B!A1:B1', "Invalid range format. Use 'Sheet!A1:B10' or 'A1:B10'"],
+    ['a1:b1', 'Invalid cell reference'],
+  ])('rejects the range %s', (range, message) => {
+    expect(() => new Sparkline().setRange(range)).toThrow(message);
   });
 });

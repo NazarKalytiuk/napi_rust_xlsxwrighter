@@ -175,16 +175,14 @@ impl RuscFormat {
     /// Set border style
     #[napi]
     pub fn set_border(&mut self, border: String) -> Result<()> {
-        match border.as_str() {
-            "thin" | "medium" | "thick" | "double" | "dotted" | "dashed" => {
-                self.border = Some(border);
-                Ok(())
-            }
-            _ => Err(Error::new(
+        if !is_valid_border(&border) {
+            return Err(Error::new(
                 Status::GenericFailure,
                 format!("Invalid border style: {}", border),
-            )),
+            ));
         }
+        self.border = Some(border);
+        Ok(())
     }
 
     /// Set number format

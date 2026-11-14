@@ -33,6 +33,79 @@ pub struct RuscWorksheet {
     pub(crate) index: usize,
 }
 
+/// A value written to one cell.
+enum CellValue {
+    String(String),
+    Number(f64),
+    Boolean(bool),
+}
+
+impl CellValue {
+    /// Reads a JavaScript cell value; `null` and `undefined` are no value, as
+    /// `None` is for `rust_xlsxwriter`'s `Option` cell data.
+    fn from_js(value: &Unknown<'_>) -> Result<Option<Self>> {
+        // SAFETY: each `cast` follows the `get_type()` check for its type.
+        let cell_value = match value.get_type()? {
+            ValueType::String => Self::String(unsafe { value.cast()? }),
+            ValueType::Number => Self::Number(unsafe { value.cast()? }),
+            ValueType::Boolean => Self::Boolean(unsafe { value.cast()? }),
+            ValueType::Null | ValueType::Undefined => return Ok(None),
+            value_type => return Err(unsupported_cell_value(value, value_type)?),
+        };
+        Ok(Some(cell_value))
+    }
+}
+
+/// The error for a JavaScript value that cannot be written to a cell.
+fn unsupported_cell_value(value: &Unknown<'_>, value_type: ValueType) -> Result<Error> {
+    if value.is_date()? {
+        return Ok(Error::new(
+            Status::InvalidArg,
+            "Unsupported cell value: Date. Use writeDatetime() for dates",
+        ));
+    }
+    let kind = match value_type {
+        ValueType::Object if value.is_array()? => "array",
+        ValueType::Object => "object",
+        ValueType::Function => "function",
+        ValueType::Symbol => "symbol",
+        ValueType::BigInt => "bigint",
+        _ => "unknown",
+    };
+    Ok(Error::new(
+        Status::InvalidArg,
+        format!("Unsupported cell value type: {kind}. Use a string, number, boolean or null"),
+    ))
+}
+
+/// Writes `value` like `rust_xlsxwriter` writes `Option` cell data: no value
+/// leaves the cell alone, or writes a blank cell when there is a format.
+fn write_cell(
+    worksheet: &mut rust_xlsxwriter::Worksheet,
+    row: u32,
+    col: u16,
+    value: Option<CellValue>,
+    format: Option<&Format>,
+) -> std::result::Result<(), rust_xlsxwriter::XlsxError> {
+    match (value, format) {
+        (Some(CellValue::String(s)), None) => worksheet.write_string(row, col, &s),
+        (Some(CellValue::Number(n)), None) => worksheet.write_number(row, col, n),
+        (Some(CellValue::Boolean(b)), None) => worksheet.write_boolean(row, col, b),
+        (Some(CellValue::String(s)), Some(f)) => {
+            worksheet.write_string_with_format(row, col, &s, f)
+        }
+        (Some(CellValue::Number(n)), Some(f)) => worksheet.write_number_with_format(row, col, n, f),
+        (Some(CellValue::Boolean(b)), Some(f)) => {
+            worksheet.write_boolean_with_format(row, col, b, f)
+        }
+        (None, Some(f)) => worksheet.write_blank(row, col, f),
+        (None, None) => return Ok(()),
+    }
+    .map(|_| ())
+}
+
+/// Writes `values` to consecutive cells of `row` the way `write` writes one
+/// value, so missing values leave a cell empty or write a formatted blank.
 fn write_array_values(
     worksheet: &mut rust_xlsxwriter::Worksheet,
     row: u32,
@@ -41,43 +114,18 @@ fn write_array_values(
     format: Option<&Format>,
 ) -> Result<()> {
     for index in 0..values.len() {
-        let Some(value) = values.get::<Unknown<'_>>(index)? else {
-            continue;
-        };
         let column = start_col + index as u16;
-
-        let write_result = match value.get_type()? {
-            ValueType::Number => {
-                // SAFETY: `get_type()` established that this is a JavaScript number.
-                let number = unsafe { value.cast::<f64>()? };
-                if let Some(format) = format {
-                    worksheet.write_number_with_format(row, column, number, format)
-                } else {
-                    worksheet.write_number(row, column, number)
-                }
-            }
-            ValueType::String => {
-                // SAFETY: `get_type()` established that this is a JavaScript string.
-                let string = unsafe { value.cast::<String>()? };
-                if let Some(format) = format {
-                    worksheet.write_string_with_format(row, column, &string, format)
-                } else {
-                    worksheet.write_string(row, column, &string)
-                }
-            }
-            ValueType::Boolean => {
-                // SAFETY: `get_type()` established that this is a JavaScript boolean.
-                let boolean = unsafe { value.cast::<bool>()? };
-                if let Some(format) = format {
-                    worksheet.write_boolean_with_format(row, column, boolean, format)
-                } else {
-                    worksheet.write_boolean(row, column, boolean)
-                }
-            }
-            _ => continue,
+        let value = match values.get::<Unknown<'_>>(index)? {
+            Some(value) => CellValue::from_js(&value).map_err(|error| {
+                Error::new(
+                    error.status,
+                    format!("Invalid value at row {row}, col {column}: {}", error.reason),
+                )
+            })?,
+            None => None,
         };
 
-        write_result.map_err(|error| {
+        write_cell(worksheet, row, column, value, format).map_err(|error| {
             Error::new(
                 Status::GenericFailure,
                 format!("Failed to write at row {row}, col {column}: {error}"),
@@ -90,15 +138,17 @@ fn write_array_values(
 
 #[napi]
 impl RuscWorksheet {
-    /// Write a value to a cell (auto-detects type)
+    /// Write a value to a cell (auto-detects type). `null` or `undefined`
+    /// writes nothing, or a blank cell with the format when one is given.
     #[napi]
     pub fn write(
         &self,
         row: u32,
         col: u16,
-        value: Either3<String, f64, bool>,
+        #[napi(ts_arg_type = "string | number | boolean | null | undefined")] value: Unknown,
         format: Option<&RuscFormat>,
     ) -> Result<()> {
+        let value = CellValue::from_js(&value)?;
         let mut wb = self.workbook.lock();
         let ws = wb.worksheet_from_index(self.index).map_err(|e| {
             Error::new(
@@ -107,30 +157,17 @@ impl RuscWorksheet {
             )
         })?;
 
-        if let Some(fmt) = format {
-            let f = fmt.to_format();
-            match value {
-                Either3::A(s) => ws.write_string_with_format(row, col, &s, &f),
-                Either3::B(n) => ws.write_number_with_format(row, col, n, &f),
-                Either3::C(b) => ws.write_boolean_with_format(row, col, b, &f),
-            }
-        } else {
-            match value {
-                Either3::A(s) => ws.write_string(row, col, &s),
-                Either3::B(n) => ws.write_number(row, col, n),
-                Either3::C(b) => ws.write_boolean(row, col, b),
-            }
-        }
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write: {}", e)))?;
-
-        Ok(())
+        let format = format.map(RuscFormat::to_format);
+        write_cell(ws, row, col, value, format.as_ref())
+            .map_err(|e| Error::new(Status::GenericFailure, format!("Failed to write: {}", e)))
     }
 
     /// Write an array of values as a row starting at the given column.
     /// Uses lazy Array iteration — reads one cell at a time from the JS array
     /// instead of deserializing the entire row into Rust memory.
-    /// Null/undefined values are skipped (preserving column positions).
-    #[napi]
+    /// Values are written as `write` writes them: `null`, `undefined` and
+    /// holes leave the cell empty, or write a blank cell with the format.
+    #[napi(strict)]
     pub fn write_row(
         &self,
         row: u32,
@@ -153,8 +190,9 @@ impl RuscWorksheet {
     /// Write a 2D array of values starting at the given position.
     /// Uses lazy Array iteration — reads one row/cell at a time from JS,
     /// never materializing the entire grid in Rust memory.
-    /// Null/undefined values are skipped (preserving column positions).
-    #[napi]
+    /// Values are written as `write` writes them: `null`, `undefined` and
+    /// holes leave the cell empty, or write a blank cell with the format.
+    #[napi(strict)]
     pub fn write_rows(
         &self,
         start_row: u32,
@@ -173,12 +211,18 @@ impl RuscWorksheet {
 
         for row_offset in 0..rows.len() {
             let row = start_row + row_offset;
-            let values: Array = rows.get(row_offset)?.ok_or_else(|| {
-                Error::new(
-                    Status::GenericFailure,
-                    format!("Missing row at index {}", row_offset),
-                )
-            })?;
+            let values = match rows.get::<Unknown<'_>>(row_offset)? {
+                // SAFETY: `is_array()` established that this is a JavaScript array.
+                Some(values) if values.is_array()? => unsafe { values.cast::<Array>()? },
+                _ => {
+                    return Err(Error::new(
+                        Status::InvalidArg,
+                        format!(
+                            "Invalid row at index {row_offset}: expected an array of cell values"
+                        ),
+                    ));
+                }
+            };
             write_array_values(ws, row, start_col, &values, format.as_ref())?;
         }
 
@@ -538,13 +582,14 @@ impl RuscWorksheet {
         Ok(())
     }
 
-    /// Write a value with formatting to a cell
+    /// Write a value with formatting to a cell; `null` or `undefined` writes
+    /// a blank cell with the format
     #[napi]
     pub fn write_with_format(
         &self,
         row: u32,
         col: u16,
-        value: Either3<String, f64, bool>,
+        #[napi(ts_arg_type = "string | number | boolean | null | undefined")] value: Unknown,
         format: &RuscFormat,
     ) -> Result<()> {
         self.write(row, col, value, Some(format))
@@ -2374,13 +2419,13 @@ impl RuscWorksheet {
             )
         })?;
 
-        ws.add_sparkline(row, col, sparkline.get_sparkline())
-            .map_err(|e| {
-                Error::new(
-                    Status::GenericFailure,
-                    format!("Failed to add sparkline: {}", e),
-                )
-            })?;
+        let sparkline = sparkline.for_worksheet(&ws.name());
+        ws.add_sparkline(row, col, &sparkline).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to add sparkline: {}", e),
+            )
+        })?;
 
         Ok(())
     }
@@ -2403,19 +2448,14 @@ impl RuscWorksheet {
             )
         })?;
 
-        ws.add_sparkline_group(
-            first_row,
-            first_col,
-            last_row,
-            last_col,
-            sparkline.get_sparkline(),
-        )
-        .map_err(|e| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Failed to add sparkline group: {}", e),
-            )
-        })?;
+        let sparkline = sparkline.for_worksheet(&ws.name());
+        ws.add_sparkline_group(first_row, first_col, last_row, last_col, &sparkline)
+            .map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add sparkline group: {}", e),
+                )
+            })?;
 
         Ok(())
     }

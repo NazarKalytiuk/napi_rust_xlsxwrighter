@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Workbook, Image } from '../wrapper.ts';
 import fs from 'node:fs';
-import { cleanupTestOutput } from './test-helpers.mjs';
+import { cleanupTestOutput, readXlsxPart } from './test-helpers.mjs';
 import path from 'node:path';
 
 describe('Images', () => {
@@ -249,5 +249,23 @@ describe('Images', () => {
         workbook.save('test-images.xlsx');
       }).not.toThrow();
     });
+  });
+});
+
+describe('Image object movement in XLSX output', () => {
+  // `moveAndSizeAfter` only differs from `moveAndSize` when rows or columns
+  // before the image are hidden, so both write an anchor without `editAs`.
+  it.each([
+    ['moveAndSize', '<xdr:twoCellAnchor>'],
+    ['moveOnly', '<xdr:twoCellAnchor editAs="oneCell">'],
+    ['none', '<xdr:twoCellAnchor editAs="absolute">'],
+    ['moveAndSizeAfter', '<xdr:twoCellAnchor>'],
+  ])('writes %s as %s', (option, anchor) => {
+    const workbook = new Workbook();
+    const image = new Image(path.join(import.meta.dirname, 'test-image.png'));
+    workbook.addWorksheet().insertImage(0, 0, image.setObjectMovement(option));
+
+    const drawing = readXlsxPart(workbook.saveToBuffer(), 'xl/drawings/drawing1.xml');
+    expect(drawing).toContain(`${anchor}<xdr:from>`);
   });
 });

@@ -3,9 +3,15 @@
  */
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import fs from 'node:fs';
 import path from 'node:path';
 import { Workbook, DocProperties, Button, Shape } from '../wrapper.ts';
-import { cleanupTestOutput, createTestOutputDir, readXlsxPart } from './test-helpers.mjs';
+import {
+  cleanupTestOutput,
+  createTestOutputDir,
+  readXlsxEntry,
+  readXlsxPart,
+} from './test-helpers.mjs';
 
 describe('VBA, Buttons, Shapes, and Metadata Features', () => {
   let testOutputDir;
@@ -338,6 +344,76 @@ describe('VBA, Buttons, Shapes, and Metadata Features', () => {
       expect(drawingXml).toContain('descr="Sales growth annotation"');
       expect(drawingXml).toContain(
         '<a:t>Note: Q2 sales increased by 53% due to new product launch</a:t>',
+      );
+    });
+  });
+
+  describe('VBA Projects', () => {
+    test('stores the VBA project and marks the workbook as macro-enabled', () => {
+      const vbaFile = path.join(testOutputDir, 'vbaProject.bin');
+      const vbaBytes = Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0x00]);
+      fs.writeFileSync(vbaFile, vbaBytes);
+      const workbook = new Workbook();
+      workbook.addWorksheet();
+
+      workbook.addVbaProject(vbaFile);
+
+      const xlsx = workbook.saveToBuffer();
+      expect(readXlsxEntry(xlsx, 'xl/vbaProject.bin')).toEqual(vbaBytes);
+      const contentTypes = readXlsxPart(xlsx, '[Content_Types].xml');
+      expect(contentTypes).toContain(
+        '<Default Extension="bin" ContentType="application/vnd.ms-office.vbaProject"/>',
+      );
+      expect(contentTypes).toContain(
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.ms-excel.sheet.macroEnabled.main+xml"/>',
+      );
+    });
+
+    test('rejects a VBA project file that does not exist', () => {
+      const workbook = new Workbook();
+      expect(() => workbook.addVbaProject(path.join(testOutputDir, 'missing.bin'))).toThrow(
+        'Failed to add VBA project',
+      );
+    });
+  });
+
+  describe('Object movement in XLSX output', () => {
+    // `moveAndSizeAfter` only differs from `moveAndSize` when rows or columns
+    // before the object are hidden, so both write an anchor without `editAs`.
+    test.each([
+      ['moveAndSize', '<xdr:twoCellAnchor>'],
+      ['moveOnly', '<xdr:twoCellAnchor editAs="oneCell">'],
+      ['none', '<xdr:twoCellAnchor editAs="absolute">'],
+      ['moveAndSizeAfter', '<xdr:twoCellAnchor>'],
+    ])('writes shape movement %s as %s', (option, anchor) => {
+      const workbook = new Workbook();
+      workbook.addWorksheet().insertShape(0, 0, Shape.textbox().setObjectMovement(option));
+
+      const drawing = readXlsxPart(workbook.saveToBuffer(), 'xl/drawings/drawing1.xml');
+      expect(drawing).toContain(`${anchor}<xdr:from>`);
+    });
+
+    // Buttons are VML objects whose anchor only changes around hidden rows or
+    // columns, so every option writes the same anchor here.
+    test.each(['moveAndSize', 'moveOnly', 'none', 'moveAndSizeAfter'])(
+      'writes a button anchor with movement %s',
+      (option) => {
+        const workbook = new Workbook();
+        workbook.addWorksheet().insertButton(2, 1, new Button().setObjectMovement(option));
+
+        const vml = readXlsxPart(workbook.saveToBuffer(), 'xl/drawings/vmlDrawing1.vml');
+        expect(vml).toContain(
+          '<x:ClientData ObjectType="Button"><x:Anchor>1, 0, 2, 0, 2, 0, 3, 0</x:Anchor>',
+        );
+      },
+    );
+
+    test.each([
+      [Button, () => new Button()],
+      [Shape, () => Shape.textbox()],
+    ])('%o rejects unknown object movement', (_type, create) => {
+      expect(() => create().setObjectMovement('sideways')).toThrow(
+        'Invalid object movement option: sideways',
       );
     });
   });
