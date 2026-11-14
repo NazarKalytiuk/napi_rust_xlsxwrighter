@@ -1402,6 +1402,282 @@ export class Worksheet {
   }
 
   /**
+   * Set the width of a column in pixels
+   * @param col - Column number (0-indexed)
+   * @param width - Width in pixels
+   */
+  setColumnWidthPixels(col: number, width: number): void {
+    return this._native.setColumnWidthPixels(col, width);
+  }
+
+  /**
+   * Set the width of a range of columns
+   * @param firstCol - First column (0-indexed)
+   * @param lastCol - Last column (0-indexed), inclusive
+   * @param width - Width in Excel units (approximately character width)
+   */
+  setColumnRangeWidth(firstCol: number, lastCol: number, width: number): void {
+    return this._native.setColumnRangeWidth(firstCol, lastCol, width);
+  }
+
+  /**
+   * Set the width of a range of columns in pixels
+   * @param firstCol - First column (0-indexed)
+   * @param lastCol - Last column (0-indexed), inclusive
+   * @param width - Width in pixels
+   */
+  setColumnRangeWidthPixels(firstCol: number, lastCol: number, width: number): void {
+    return this._native.setColumnRangeWidthPixels(firstCol, lastCol, width);
+  }
+
+  /**
+   * Set the width of a column in pixels in auto-fit mode. As with a column that
+   * Excel auto-fitted, Excel widens it when the user enters a number with more
+   * digits; a width from {@link Worksheet.setColumnWidthPixels} stays fixed.
+   * @param col - Column number (0-indexed)
+   * @param width - Width in pixels
+   */
+  setColumnAutofitWidth(col: number, width: number): void {
+    return this._native.setColumnAutofitWidth(col, width);
+  }
+
+  /**
+   * Set the default format of a column, used by its cells that have no format
+   * of their own
+   * @param col - Column number (0-indexed)
+   * @param format - Format for the column
+   * @example
+   * worksheet.setColumnFormat(2, new Format().setNumFormat('0.00%'));
+   */
+  setColumnFormat(col: number, format: Format): void {
+    return this._native.setColumnFormat(col, format._native);
+  }
+
+  /**
+   * Set the default format of a range of columns
+   * @param firstCol - First column (0-indexed)
+   * @param lastCol - Last column (0-indexed), inclusive
+   * @param format - Format for the columns
+   */
+  setColumnRangeFormat(firstCol: number, lastCol: number, format: Format): void {
+    return this._native.setColumnRangeFormat(firstCol, lastCol, format._native);
+  }
+
+  /**
+   * Hide a column
+   * @param col - Column number (0-indexed)
+   */
+  setColumnHidden(col: number): void {
+    return this._native.setColumnHidden(col);
+  }
+
+  /**
+   * Hide a range of columns
+   * @param firstCol - First column (0-indexed)
+   * @param lastCol - Last column (0-indexed), inclusive
+   */
+  setColumnRangeHidden(firstCol: number, lastCol: number): void {
+    return this._native.setColumnRangeHidden(firstCol, lastCol);
+  }
+
+  /**
+   * Set the height of a row in pixels
+   * @param row - Row number (0-indexed)
+   * @param height - Height in pixels
+   */
+  setRowHeightPixels(row: number, height: number): void {
+    return this._native.setRowHeightPixels(row, height);
+  }
+
+  /**
+   * Set the default height of all worksheet rows in pixels
+   * @param height - Height in pixels
+   */
+  setDefaultRowHeightPixels(height: number): void {
+    return this._native.setDefaultRowHeightPixels(height);
+  }
+
+  /**
+   * Set the default format of a row, used by its cells that have no format of
+   * their own
+   * @param row - Row number (0-indexed)
+   * @param format - Format for the row
+   * @example
+   * worksheet.setRowFormat(0, new Format().setBold());
+   */
+  setRowFormat(row: number, format: Format): void {
+    return this._native.setRowFormat(row, format._native);
+  }
+
+  /**
+   * Hide a row
+   * @param row - Row number (0-indexed)
+   */
+  setRowHidden(row: number): void {
+    return this._native.setRowHidden(row);
+  }
+
+  /**
+   * Unhide a row hidden with {@link Worksheet.setRowHidden}
+   * @param row - Row number (0-indexed)
+   */
+  setRowUnhidden(row: number): void {
+    return this._native.setRowUnhidden(row);
+  }
+
+  /**
+   * Hide every row that has no data, format or row settings. It uses a single
+   * worksheet setting, so it is much smaller and quicker than hiding each row.
+   * @param enable - True to hide the unused rows
+   */
+  hideUnusedRows(enable: boolean): void {
+    return this._native.hideUnusedRows(enable);
+  }
+
+  /**
+   * Group a range of rows into an outline level. A range inside an existing
+   * group adds a nested level; groups nest up to 7 deep.
+   * @param firstRow - First row (0-indexed)
+   * @param lastRow - Last row (0-indexed), inclusive
+   * @example
+   * worksheet.groupRows(1, 10);
+   * worksheet.groupRows(2, 5); // nested level
+   */
+  groupRows(firstRow: number, lastRow: number): void {
+    return this._native.groupRows(firstRow, lastRow);
+  }
+
+  /**
+   * Group a range of rows into a collapsed outline level, with the rows hidden
+   * @param firstRow - First row (0-indexed)
+   * @param lastRow - Last row (0-indexed), inclusive
+   */
+  groupRowsCollapsed(firstRow: number, lastRow: number): void {
+    return this._native.groupRowsCollapsed(firstRow, lastRow);
+  }
+
+  /**
+   * Group a range of columns into an outline level. A range inside an existing
+   * group adds a nested level; groups nest up to 7 deep.
+   * @param firstCol - First column (0-indexed)
+   * @param lastCol - Last column (0-indexed), inclusive
+   */
+  groupColumns(firstCol: number, lastCol: number): void {
+    return this._native.groupColumns(firstCol, lastCol);
+  }
+
+  /**
+   * Group a range of columns into a collapsed outline level, with the columns
+   * hidden
+   * @param firstCol - First column (0-indexed)
+   * @param lastCol - Last column (0-indexed), inclusive
+   */
+  groupColumnsCollapsed(firstCol: number, lastCol: number): void {
+    return this._native.groupColumnsCollapsed(firstCol, lastCol);
+  }
+
+  /**
+   * Show the row outline expand/collapse symbols above each group instead of
+   * below it
+   * @param enable - True to show the symbols above
+   */
+  groupSymbolsAbove(enable: boolean): void {
+    return this._native.groupSymbolsAbove(enable);
+  }
+
+  /**
+   * Show the column outline expand/collapse symbols to the left of each group
+   * instead of to the right
+   * @param enable - True to show the symbols to the left
+   */
+  groupSymbolsToLeft(enable: boolean): void {
+    return this._native.groupSymbolsToLeft(enable);
+  }
+
+  /**
+   * Set the format of a cell without changing its data; an empty cell becomes a
+   * formatted blank cell. In constant memory mode only cells of the row being
+   * written can be formatted: rows already written are left unchanged.
+   * @param row - Row number (0-indexed)
+   * @param col - Column number (0-indexed)
+   * @param format - Format for the cell
+   */
+  setCellFormat(row: number, col: number, format: Format): void {
+    return this._native.setCellFormat(row, col, format._native);
+  }
+
+  /**
+   * Set the format of every cell in a range without changing their data. In
+   * constant memory mode only cells of the row being written can be formatted.
+   * @param firstRow - First row (0-indexed)
+   * @param firstCol - First column (0-indexed)
+   * @param lastRow - Last row (0-indexed), inclusive
+   * @param lastCol - Last column (0-indexed), inclusive
+   * @param format - Format for the cells
+   * @example
+   * worksheet.writeRows(0, 0, rows);
+   * worksheet.setRangeFormat(0, 0, 0, 3, headerFormat);
+   */
+  setRangeFormat(
+    firstRow: number,
+    firstCol: number,
+    lastRow: number,
+    lastCol: number,
+    format: Format,
+  ): void {
+    return this._native.setRangeFormat(firstRow, firstCol, lastRow, lastCol, format._native);
+  }
+
+  /**
+   * Set the format of every cell in a range without changing their data, and
+   * draw the border of `borderFormat` around the outside of the range. In
+   * constant memory mode only cells of the row being written can be formatted.
+   * @param firstRow - First row (0-indexed)
+   * @param firstCol - First column (0-indexed)
+   * @param lastRow - Last row (0-indexed), inclusive
+   * @param lastCol - Last column (0-indexed), inclusive
+   * @param cellFormat - Format for the cells
+   * @param borderFormat - Format whose border is drawn around the range
+   * @example
+   * worksheet.setRangeFormatWithBorder(0, 0, 9, 3, new Format(), new Format().setBorder('thick'));
+   */
+  setRangeFormatWithBorder(
+    firstRow: number,
+    firstCol: number,
+    lastRow: number,
+    lastCol: number,
+    cellFormat: Format,
+    borderFormat: Format,
+  ): void {
+    return this._native.setRangeFormatWithBorder(
+      firstRow,
+      firstCol,
+      lastRow,
+      lastCol,
+      cellFormat._native,
+      borderFormat._native,
+    );
+  }
+
+  /**
+   * Remove the data and the format of a cell
+   * @param row - Row number (0-indexed)
+   * @param col - Column number (0-indexed)
+   */
+  clearCell(row: number, col: number): void {
+    return this._native.clearCell(row, col);
+  }
+
+  /**
+   * Remove the format of a cell without changing its data
+   * @param row - Row number (0-indexed)
+   * @param col - Column number (0-indexed)
+   */
+  clearCellFormat(row: number, col: number): void {
+    return this._native.clearCellFormat(row, col);
+  }
+
+  /**
    * Set the exclusive upper row bound inspected by autofit
    * @param maxRow - Rows at or above this zero-indexed bound are skipped
    */
