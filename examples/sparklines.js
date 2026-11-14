@@ -24,7 +24,7 @@ worksheet.write(1, 0, 'Sales');
 [120, 150, 130, 170, 160, 190].forEach((v, i) => worksheet.write(1, i + 1, v));
 
 const lineSpark = new Sparkline()
-  .setRange("Sparklines!B2:G2")
+  .setRange('Sparklines!B2:G2')
   .setType('line')
   .setSparklineColor('#4472C4')
   .showHighPoint(true)
@@ -39,7 +39,7 @@ worksheet.write(2, 0, 'Visitors');
 [300, 280, 350, 310, 400, 450].forEach((v, i) => worksheet.write(2, i + 1, v));
 
 const colSpark = new Sparkline()
-  .setRange("Sparklines!B3:G3")
+  .setRange('Sparklines!B3:G3')
   .setType('column')
   .setSparklineColor('#ED7D31')
   .showFirstPoint(true)
@@ -54,7 +54,7 @@ worksheet.write(3, 0, 'Profit/Loss');
 [10, -5, 15, -3, 20, 8].forEach((v, i) => worksheet.write(3, i + 1, v));
 
 const winLoseSpark = new Sparkline()
-  .setRange("Sparklines!B4:G4")
+  .setRange('Sparklines!B4:G4')
   .setType('winLose')
   .setSparklineColor('#70AD47')
   .showNegativePoints(true)
@@ -83,7 +83,7 @@ teams.forEach((team, i) => {
 });
 
 const groupSpark = new Sparkline()
-  .setRange("Sparklines!B7:G10")
+  .setRange('Sparklines!B7:G10')
   .setType('line')
   .setSparklineColor('#5B9BD5')
   .showMarkers(true)

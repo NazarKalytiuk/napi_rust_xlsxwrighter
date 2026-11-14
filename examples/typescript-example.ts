@@ -3,13 +3,13 @@ import {
   Worksheet,
   Format,
   Note,
-  Color,
-  HorizontalAlign,
-  VerticalAlign,
-  BorderStyle,
-  UnderlineStyle,
-  FillPattern,
-  FontScheme
+  type Color,
+  type HorizontalAlign,
+  type VerticalAlign,
+  type BorderStyle,
+  type UnderlineStyle,
+  type FillPattern,
+  type FontScheme,
 } from '@nazarkalytiuk/rusc-xlsx';
 
 // Type-safe example demonstrating IntelliSense support with fluent API
@@ -19,11 +19,7 @@ workbook.useExcel2023Theme();
 const worksheet: Worksheet = workbook.addWorksheet('TypeScript Demo');
 
 // Font styling with type safety and fluent API
-const headerFormat = new Format()
-  .setBold()
-  .setItalic()
-  .setFontSize(16)
-  .setFontName('Arial');
+const headerFormat = new Format().setBold().setItalic().setFontSize(16).setFontName('Arial');
 const fontScheme: FontScheme = 'none';
 headerFormat.setFontScheme(fontScheme);
 
@@ -58,9 +54,7 @@ worksheet.write(0, 2, 'Stock', headerFormat);
 
 // Underline with type safety and fluent API
 const underlineStyle: UnderlineStyle = 'double';
-const underlineFormat = new Format()
-  .setUnderline(underlineStyle)
-  .setFontColor('purple');
+const underlineFormat = new Format().setUnderline(underlineStyle).setFontColor('purple');
 
 worksheet.write(1, 0, 'Special Item', underlineFormat);
 
@@ -74,24 +68,17 @@ const patternFormat = new Format()
 worksheet.write(2, 0, 'Patterned Cell', patternFormat);
 
 // Text formatting with fluent API
-const textFormat = new Format()
-  .setTextWrap()
-  .setIndent(2)
-  .setRotation(45);
+const textFormat = new Format().setTextWrap().setIndent(2).setRotation(45);
 
 worksheet.setRowHeight(3, 50);
 worksheet.write(3, 0, 'Wrapped and rotated text', textFormat);
 
 // Number formatting with fluent API
-const currencyFormat = new Format()
-  .setNumFormat('$#,##0.00')
-  .setFontColor('green')
-  .setBold();
+const currencyFormat = new Format().setNumFormat('$#,##0.00').setFontColor('green').setBold();
 
 worksheet.write(1, 1, 1234.56, currencyFormat);
 
-const percentFormat = new Format()
-  .setNumFormat('0.00%');
+const percentFormat = new Format().setNumFormat('0.00%');
 
 worksheet.write(2, 2, 0.85, percentFormat);
 
@@ -107,9 +94,7 @@ const note = new Note('This is an important note')
 worksheet.insertNote(1, 0, note);
 
 // Cell protection with fluent API
-const protectedFormat = new Format()
-  .setUnlocked()
-  .setHidden();
+const protectedFormat = new Format().setUnlocked().setHidden();
 
 worksheet.write(4, 0, 'Protected cell', protectedFormat);
 
@@ -138,7 +123,9 @@ dataSheet.setDefaultNoteAuthor('Data Team');
 
 // Memory-optimized worksheets
 const largeDataSheet = workbook.addWorksheetWithConstantMemory('Large Data');
+largeDataSheet.write(0, 0, 'Rows are streamed to disk');
 const repeatedDataSheet = workbook.addWorksheetWithLowMemory('Repeated Data');
+repeatedDataSheet.write(0, 0, 'Strings are written inline');
 
 // Save to file
 workbook.save('typescript-demo.xlsx');

@@ -15,7 +15,6 @@ index.node
 
 # Testing
 coverage/
-tests/output/
 
 # Generated Excel files
 *.xlsx
@@ -31,6 +30,10 @@ tests/output/
 
 # TypeScript
 *.tsbuildinfo
+
+# Generated from wrapper.ts by tsdown (`npm run build:wrapper`)
+/wrapper.js
+/wrapper.d.ts
 
 # Reference repositories
 rust_xlsxwriter/

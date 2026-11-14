@@ -8,6 +8,12 @@ pub struct RuscButton {
     pub(crate) button: Button,
 }
 
+impl Default for RuscButton {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[napi]
 impl RuscButton {
     /// Create a new Button
@@ -63,7 +69,15 @@ impl RuscButton {
             "moveOnly" => ObjectMovement::MoveButDontSizeWithCells,
             "none" => ObjectMovement::DontMoveOrSizeWithCells,
             "moveAndSizeAfter" => ObjectMovement::MoveAndSizeWithCellsAfter,
-            _ => return Err(Error::new(Status::InvalidArg, format!("Invalid object movement option: {}. Use 'moveAndSize', 'moveOnly', 'none', or 'moveAndSizeAfter'", option))),
+            _ => {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!(
+                        "Invalid object movement option: {}. Use 'moveAndSize', 'moveOnly', 'none', or 'moveAndSizeAfter'",
+                        option
+                    ),
+                ));
+            }
         };
 
         self.button = self.button.clone().set_object_movement(movement);

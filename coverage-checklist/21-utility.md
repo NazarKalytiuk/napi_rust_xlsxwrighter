@@ -2,10 +2,10 @@
 
 [← Coverage dashboard](../rust-xlsxwriter-coverage-checklist.md)
 
-> Pinned baseline: `rust_xlsxwriter 0.97.1`; **13 grouped capabilities**, **13 canonical symbol rows**.
+> Pinned baseline: `rust_xlsxwriter 0.102.0`; **14 grouped capabilities**, **14 canonical symbol rows**.
 
-- Grouped: **0 full · 0 partial · 11 missing · 2 N/A**.
-- Symbol rows: **0 full · 0 partial · 11 missing · 2 N/A**.
+- Grouped: **0 full · 0 partial · 12 missing · 2 N/A**.
+- Symbol rows: **0 full · 0 partial · 12 missing · 2 N/A**.
 - `[x] FULL`; `[ ] PARTIAL`; `[ ] MISSING`; plain `N/A` is outside the compiled/runtime denominator.
 - Before marking `FULL`, satisfy the [shared definition of done](../rust-xlsxwriter-coverage-checklist.md#definition-of-done).
 
@@ -20,6 +20,10 @@
 ## `cell_range_absolute`
 
 - [ ] **MISSING** `rust_xlsxwriter::utility::cell_range_absolute#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::utility::cell_range_absolute#function --><!-- coverage-row:rust_xlsxwriter::utility::cell_range_absolute#function -->
+
+## `check_name`
+
+- [ ] **MISSING** `rust_xlsxwriter::utility::check_name#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::utility::check_name#function --><!-- coverage-row:rust_xlsxwriter::utility::check_name#function -->
 
 ## `check_sheet_name`
 
@@ -44,7 +48,6 @@
 ## `row_col_to_cell_absolute`
 
 - [ ] **MISSING** `rust_xlsxwriter::utility::row_col_to_cell_absolute#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::utility::row_col_to_cell_absolute#function --><!-- coverage-row:rust_xlsxwriter::utility::row_col_to_cell_absolute#function -->
-
 
 ## `serialize_datetime_to_excel`
 

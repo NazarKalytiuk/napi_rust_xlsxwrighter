@@ -2,6 +2,7 @@
   "name": "@nazarkalytiuk/rusc-xlsx",
   "version": "2.0.0",
   "description": "Fast Excel XLSX library for Node.js powered by rust_xlsxwriter",
+  "type": "commonjs",
   "main": "wrapper.js",
   "types": "wrapper.d.ts",
   "repository": {
@@ -32,14 +33,28 @@
     "artifacts": "napi artifacts",
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
+    "build:wrapper": "tsdown",
+    "prepare": "tsdown",
     "benchmark": "node benchmarks/compare-generation.js",
     "benchmark:languages": "node benchmarks/compare-languages.js",
-    "prepublishOnly": "napi prepublish -t npm",
-    "test": "jest",
+    "benchmark:runtimes": "node benchmarks/compare-runtimes.js",
+    "benchmark:runtimes:exceljs": "node benchmarks/compare-runtimes.js --library exceljs",
+    "prepublishOnly": "napi prepublish -t npm --no-gh-release",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "oxlint --deny-warnings",
+    "lint:rust": "cargo clippy --locked --all-targets -- -D warnings",
+    "fmt": "oxfmt && cargo fmt --all",
+    "fmt:check": "oxfmt --check && cargo fmt --all -- --check",
+    "lint:package": "publint --strict && attw --pack .",
     "typecheck": "tsc --project tsconfig.json",
+    "check": "npm run fmt:check && npm run lint && npm run lint:rust && npm run lint:package && npm run typecheck && npm run coverage:check",
     "universal": "napi universalize",
     "version": "napi version",
-    "clean": "cargo clean && rm -rf *.node"
+    "clean": "cargo clean && rm -rf *.node",
+    "coverage:sync": "node scripts/coverage-checklist/cli.mts",
+    "coverage:check": "node scripts/coverage-checklist/cli.mts --check"
   },
   "keywords": [
     "xlsx",
@@ -61,13 +76,24 @@
     "LICENSE"
   ],
   "devDependencies": {
-    "@napi-rs/cli": "^3.8.2",
-    "@types/node": "^24.13.3",
-    "adm-zip": "^0.6.0",
-    "jest": "^30.4.2",
-    "typescript": "^7.0.2"
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@napi-rs/cli": "^3.10.12",
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.0",
+    "adm-zip": "^0.6.1",
+    "exceljs": "^4.4.0",
+    "oxc-parser": "^0.158.0",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
+    "publint": "^0.3.25",
+    "tsdown": "^0.23.7",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   },
   "engines": {
     "node": ">=22.13.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

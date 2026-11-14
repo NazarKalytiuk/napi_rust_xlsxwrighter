@@ -1,7 +1,7 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use parking_lot::Mutex;
-use rust_xlsxwriter::Workbook;
+use rust_xlsxwriter::{CalculationMode, Workbook};
 use std::sync::Arc;
 
 use crate::format::RuscFormat;
@@ -12,6 +12,12 @@ use crate::worksheet::RuscWorksheet;
 #[napi]
 pub struct RuscWorkbook {
     pub(crate) workbook: Arc<Mutex<Workbook>>,
+}
+
+impl Default for RuscWorkbook {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[napi]
@@ -56,7 +62,12 @@ impl RuscWorkbook {
         let workbook = Arc::clone(&self.workbook);
         let index = {
             let mut wb = workbook.lock();
-            let worksheet = wb.add_worksheet_with_constant_memory();
+            let worksheet = wb.add_worksheet_with_constant_memory().map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add constant memory worksheet: {}", e),
+                )
+            })?;
 
             if let Some(n) = name {
                 worksheet.set_name(&n).map_err(|e| {
@@ -79,7 +90,12 @@ impl RuscWorkbook {
         let workbook = Arc::clone(&self.workbook);
         let index = {
             let mut wb = workbook.lock();
-            let worksheet = wb.add_worksheet_with_low_memory();
+            let worksheet = wb.add_worksheet_with_low_memory().map_err(|e| {
+                Error::new(
+                    Status::GenericFailure,
+                    format!("Failed to add low memory worksheet: {}", e),
+                )
+            })?;
 
             if let Some(n) = name {
                 worksheet.set_name(&n).map_err(|e| {
@@ -126,6 +142,59 @@ impl RuscWorkbook {
                     format!("Failed to set default format: {}", e),
                 )
             })?;
+        Ok(())
+    }
+
+    /// Set the zip compression level of the xlsx container (1-9, default 6).
+    /// Lower levels are faster, higher levels produce smaller files.
+    #[napi]
+    pub fn set_zip_compression_level(&self, level: u8) -> Result<()> {
+        if !(1..=9).contains(&level) {
+            return Err(Error::new(
+                Status::GenericFailure,
+                format!(
+                    "Zip compression level must be between 1 and 9, got {}",
+                    level
+                ),
+            ));
+        }
+
+        self.workbook.lock().set_zip_compression_level(level);
+        Ok(())
+    }
+
+    /// Set when Excel recalculates formulas: "automatic" (default), "manual",
+    /// or "partial" (automatic except for data tables).
+    #[napi]
+    pub fn set_calculation_mode(&self, mode: String) -> Result<()> {
+        let mode = match mode.as_str() {
+            "automatic" => CalculationMode::Automatic,
+            "manual" => CalculationMode::Manual,
+            "partial" => CalculationMode::Partial,
+            _ => {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!("Invalid calculation mode: {}", mode),
+                ));
+            }
+        };
+
+        self.workbook.lock().set_calculation_mode(mode);
+        Ok(())
+    }
+
+    /// Set the width of the worksheet tab bar as a percentage (0-100, default
+    /// 60) of the space it shares with the horizontal scroll bar.
+    #[napi]
+    pub fn set_tab_ratio(&self, ratio: u8) -> Result<()> {
+        if ratio > 100 {
+            return Err(Error::new(
+                Status::GenericFailure,
+                format!("Tab ratio must be between 0 and 100, got {}", ratio),
+            ));
+        }
+
+        self.workbook.lock().set_tab_ratio(ratio);
         Ok(())
     }
 

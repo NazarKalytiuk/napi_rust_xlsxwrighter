@@ -36,11 +36,9 @@ const headerFormat = new Format()
   .setFontColor('white')
   .setAlign('center');
 
-const currencyFormat = new Format()
-  .setNumFormat('$#,##0.00');
+const currencyFormat = new Format().setNumFormat('$#,##0.00');
 
-const dateFormat = new Format()
-  .setNumFormat('yyyy-mm-dd');
+const dateFormat = new Format().setNumFormat('yyyy-mm-dd');
 
 // Write headers (row 0)
 worksheet.write(0, 0, 'ID', headerFormat);
@@ -75,7 +73,7 @@ for (let row = 1; row <= numRows; row++) {
   worksheet.write(row, 2, quantity);
   worksheet.write(row, 3, price, currencyFormat);
   worksheet.write(row, 4, total, currencyFormat);
-  worksheet.write(row, 5, `2024-01-${String((row % 28) + 1).padStart(2, '0')}`);
+  worksheet.writeDatetime(row, 5, { year: 2024, month: 1, day: (row % 28) + 1 }, dateFormat);
 
   // Progress indicator
   if (row % 10000 === 0) {

@@ -52,10 +52,19 @@ row++;
 
 // From object with time components
 worksheet.write(row, 0, 'From object with time');
-worksheet.writeDatetime(row, 1, {
-  year: 2025, month: 11, day: 28,
-  hour: 8, min: 15, sec: 30
-}, dateTimeFmt);
+worksheet.writeDatetime(
+  row,
+  1,
+  {
+    year: 2025,
+    month: 11,
+    day: 28,
+    hour: 8,
+    min: 15,
+    sec: 30,
+  },
+  dateTimeFmt,
+);
 row++;
 
 // Time-only format

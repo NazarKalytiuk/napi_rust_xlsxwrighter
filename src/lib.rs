@@ -36,14 +36,25 @@ pub use worksheet::RuscWorksheet;
 
 use napi_derive::napi;
 
-/// Returns [currentBytes, peakBytes] of Rust allocator usage
+/// Returns [currentBytes, peakBytes] of Rust allocator usage.
+/// Useful for profiling memory consumption of the native layer.
+///
+/// @example
+/// const [current, peak] = rustMemoryStats();
+/// console.log(`Rust heap: ${(current / 1024 / 1024).toFixed(2)} MB (peak: ${(peak / 1024 / 1024).toFixed(2)} MB)`);
 #[napi]
-pub fn rust_memory_stats() -> Vec<f64> {
+pub fn rust_memory_stats() -> (f64, f64) {
     let (current, peak) = memory::get_stats();
-    vec![current as f64, peak as f64]
+    (current as f64, peak as f64)
 }
 
-/// Resets peak memory tracking to current usage
+/// Resets peak memory tracking to the current allocation level.
+/// Call before a section you want to measure.
+///
+/// @example
+/// rustMemoryResetPeak();
+/// // ... do work ...
+/// const [current, peak] = rustMemoryStats();
 #[napi]
 pub fn rust_memory_reset_peak() {
     memory::reset_peak();

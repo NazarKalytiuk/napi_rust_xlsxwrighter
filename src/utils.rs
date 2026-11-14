@@ -98,15 +98,16 @@ pub fn parse_color(color: &str) -> Option<Color> {
         "yellow" => Some(Color::Yellow),
         _ => {
             // Try to parse as hex color #RRGGBB
-            if color.starts_with('#') && color.len() == 7 {
-                if let (Ok(r), Ok(g), Ok(b)) = (
+            if color.starts_with('#')
+                && color.len() == 7
+                && let (Ok(r), Ok(g), Ok(b)) = (
                     u8::from_str_radix(&color[1..3], 16),
                     u8::from_str_radix(&color[3..5], 16),
                     u8::from_str_radix(&color[5..7], 16),
-                ) {
-                    let rgb_value: u32 = ((r as u32) << 16) | ((g as u32) << 8) | (b as u32);
-                    return Some(Color::RGB(rgb_value));
-                }
+                )
+            {
+                let rgb_value: u32 = ((r as u32) << 16) | ((g as u32) << 8) | (b as u32);
+                return Some(Color::RGB(rgb_value));
             }
             None
         }
@@ -135,13 +136,20 @@ pub fn parse_chart_type(chart_type: &str) -> Result<ChartType> {
         "radarfilled" | "radar_filled" => Ok(ChartType::RadarFilled),
         "scatter" => Ok(ChartType::Scatter),
         "scatterstraight" | "scatter_straight" => Ok(ChartType::ScatterStraight),
-        "scatterstraightwithmarkers" | "scatter_straight_with_markers" => Ok(ChartType::ScatterStraightWithMarkers),
+        "scatterstraightwithmarkers" | "scatter_straight_with_markers" => {
+            Ok(ChartType::ScatterStraightWithMarkers)
+        }
         "scattersmooth" | "scatter_smooth" => Ok(ChartType::ScatterSmooth),
-        "scattersmoothwithmarkers" | "scatter_smooth_with_markers" => Ok(ChartType::ScatterSmoothWithMarkers),
+        "scattersmoothwithmarkers" | "scatter_smooth_with_markers" => {
+            Ok(ChartType::ScatterSmoothWithMarkers)
+        }
         "stock" => Ok(ChartType::Stock),
         _ => Err(Error::new(
             Status::GenericFailure,
-            format!("Invalid chart type: {}. Valid types: area, bar, column, line, pie, scatter, doughnut, radar, stock", chart_type),
+            format!(
+                "Invalid chart type: {}. Valid types: area, bar, column, line, pie, scatter, doughnut, radar, stock",
+                chart_type
+            ),
         )),
     }
 }

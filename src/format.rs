@@ -21,7 +21,7 @@ pub struct RuscFormat {
     font_script: Option<FormatScript>,
     background_color: Option<String>,
     foreground_color: Option<String>,
-    pattern: Option<String>,
+    pattern: Option<FormatPattern>,
     align: Option<String>,
     vertical_align: Option<String>,
     text_wrap: bool,
@@ -46,6 +46,12 @@ pub struct RuscFormat {
     unlocked: bool,
     hidden: bool,
     quote_prefix: bool,
+}
+
+impl Default for RuscFormat {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[napi]
@@ -208,7 +214,7 @@ impl RuscFormat {
                         "Invalid font scheme: {}. Valid values: 'body', 'headings', 'none'",
                         scheme
                     ),
-                ))
+                ));
             }
         });
         Ok(())
@@ -222,7 +228,13 @@ impl RuscFormat {
                 self.underline = Some(underline);
                 Ok(())
             }
-            _ => Err(Error::new(Status::GenericFailure, format!("Invalid underline style: {}. Valid values: 'single', 'double', 'singleAccounting', 'doubleAccounting'", underline))),
+            _ => Err(Error::new(
+                Status::GenericFailure,
+                format!(
+                    "Invalid underline style: {}. Valid values: 'single', 'double', 'singleAccounting', 'doubleAccounting'",
+                    underline
+                ),
+            )),
         }
     }
 
@@ -246,19 +258,34 @@ impl RuscFormat {
     /// Set fill pattern
     #[napi]
     pub fn set_pattern(&mut self, pattern: String) -> Result<()> {
-        match pattern.as_str() {
-            "solid" | "mediumGray" | "darkGray" | "lightGray" | "darkHorizontal"
-            | "darkVertical" | "darkDown" | "darkUp" | "darkGrid" | "darkTrellis"
-            | "lightHorizontal" | "lightVertical" | "lightDown" | "lightUp" | "lightGrid"
-            | "lightTrellis" | "gray125" | "gray0625" => {
-                self.pattern = Some(pattern);
-                Ok(())
+        let pattern_enum = match pattern.as_str() {
+            "solid" => FormatPattern::Solid,
+            "mediumGray" => FormatPattern::MediumGray,
+            "darkGray" => FormatPattern::DarkGray,
+            "lightGray" => FormatPattern::LightGray,
+            "darkHorizontal" => FormatPattern::DarkHorizontal,
+            "darkVertical" => FormatPattern::DarkVertical,
+            "darkDown" => FormatPattern::DarkDown,
+            "darkUp" => FormatPattern::DarkUp,
+            "darkGrid" => FormatPattern::DarkGrid,
+            "darkTrellis" => FormatPattern::DarkTrellis,
+            "lightHorizontal" => FormatPattern::LightHorizontal,
+            "lightVertical" => FormatPattern::LightVertical,
+            "lightDown" => FormatPattern::LightDown,
+            "lightUp" => FormatPattern::LightUp,
+            "lightGrid" => FormatPattern::LightGrid,
+            "lightTrellis" => FormatPattern::LightTrellis,
+            "gray125" => FormatPattern::Gray125,
+            "gray0625" => FormatPattern::Gray0625,
+            _ => {
+                return Err(Error::new(
+                    Status::GenericFailure,
+                    format!("Invalid pattern: {}", pattern),
+                ));
             }
-            _ => Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid pattern: {}", pattern),
-            )),
-        }
+        };
+        self.pattern = Some(pattern_enum);
+        Ok(())
     }
 
     /// Enable text wrapping in the cell
@@ -284,7 +311,7 @@ impl RuscFormat {
     /// Set text rotation in degrees (-90 to 90, or 270 for vertical text)
     #[napi]
     pub fn set_rotation(&mut self, rotation: i32) -> Result<()> {
-        if (rotation < -90 || rotation > 90) && rotation != 270 {
+        if !(-90..=90).contains(&rotation) && rotation != 270 {
             return Err(Error::new(
                 Status::GenericFailure,
                 "Rotation must be between -90 and 90, or 270 for vertical text".to_string(),
@@ -437,7 +464,7 @@ impl RuscFormat {
                         "Invalid font script: {}. Use 'superscript' or 'subscript'",
                         script
                     ),
-                ))
+                ));
             }
         });
         Ok(())
@@ -478,7 +505,7 @@ impl RuscFormat {
                         "Invalid diagonal border type: {}. Use 'up', 'down', or 'both'",
                         border_type
                     ),
-                ))
+                ));
             }
         });
         Ok(())
@@ -532,10 +559,10 @@ impl RuscFormat {
         if let Some(scheme) = self.font_scheme {
             fmt = fmt.set_font_scheme(scheme);
         }
-        if let Some(ref color) = self.font_color {
-            if let Some(c) = parse_color(color) {
-                fmt = fmt.set_font_color(c);
-            }
+        if let Some(ref color) = self.font_color
+            && let Some(c) = parse_color(color)
+        {
+            fmt = fmt.set_font_color(c);
         }
 
         if let Some(ref underline) = self.underline {
@@ -550,27 +577,20 @@ impl RuscFormat {
         }
 
         // Fill/background properties
-        if let Some(ref color) = self.background_color {
-            if let Some(c) = parse_color(color) {
-                fmt = fmt.set_background_color(c);
-            }
+        if let Some(ref color) = self.background_color
+            && let Some(c) = parse_color(color)
+        {
+            fmt = fmt.set_background_color(c);
         }
 
-        if let Some(ref color) = self.foreground_color {
-            if let Some(c) = parse_color(color) {
-                fmt = fmt.set_foreground_color(c);
-            }
+        if let Some(ref color) = self.foreground_color
+            && let Some(c) = parse_color(color)
+        {
+            fmt = fmt.set_foreground_color(c);
         }
 
-        if let Some(ref pattern) = self.pattern {
-            let pattern_enum = match pattern.as_str() {
-                "solid" => FormatPattern::Solid,
-                "mediumGray" => FormatPattern::MediumGray,
-                "darkGray" => FormatPattern::DarkGray,
-                "lightGray" => FormatPattern::LightGray,
-                _ => FormatPattern::None,
-            };
-            fmt = fmt.set_pattern(pattern_enum);
+        if let Some(pattern) = self.pattern {
+            fmt = fmt.set_pattern(pattern);
         }
 
         // Alignment properties
@@ -617,64 +637,64 @@ impl RuscFormat {
         }
 
         // Border properties
-        if let Some(ref border) = self.border {
-            if let Some(border_enum) = parse_border(border) {
-                fmt = fmt.set_border(border_enum);
-            }
+        if let Some(ref border) = self.border
+            && let Some(border_enum) = parse_border(border)
+        {
+            fmt = fmt.set_border(border_enum);
         }
 
-        if let Some(ref border) = self.border_top {
-            if let Some(border_enum) = parse_border(border) {
-                fmt = fmt.set_border_top(border_enum);
-            }
+        if let Some(ref border) = self.border_top
+            && let Some(border_enum) = parse_border(border)
+        {
+            fmt = fmt.set_border_top(border_enum);
         }
 
-        if let Some(ref border) = self.border_bottom {
-            if let Some(border_enum) = parse_border(border) {
-                fmt = fmt.set_border_bottom(border_enum);
-            }
+        if let Some(ref border) = self.border_bottom
+            && let Some(border_enum) = parse_border(border)
+        {
+            fmt = fmt.set_border_bottom(border_enum);
         }
 
-        if let Some(ref border) = self.border_left {
-            if let Some(border_enum) = parse_border(border) {
-                fmt = fmt.set_border_left(border_enum);
-            }
+        if let Some(ref border) = self.border_left
+            && let Some(border_enum) = parse_border(border)
+        {
+            fmt = fmt.set_border_left(border_enum);
         }
 
-        if let Some(ref border) = self.border_right {
-            if let Some(border_enum) = parse_border(border) {
-                fmt = fmt.set_border_right(border_enum);
-            }
+        if let Some(ref border) = self.border_right
+            && let Some(border_enum) = parse_border(border)
+        {
+            fmt = fmt.set_border_right(border_enum);
         }
 
-        if let Some(ref color) = self.border_color {
-            if let Some(c) = parse_color(color) {
-                fmt = fmt.set_border_color(c);
-            }
+        if let Some(ref color) = self.border_color
+            && let Some(c) = parse_color(color)
+        {
+            fmt = fmt.set_border_color(c);
         }
 
-        if let Some(ref color) = self.border_top_color {
-            if let Some(c) = parse_color(color) {
-                fmt = fmt.set_border_top_color(c);
-            }
+        if let Some(ref color) = self.border_top_color
+            && let Some(c) = parse_color(color)
+        {
+            fmt = fmt.set_border_top_color(c);
         }
 
-        if let Some(ref color) = self.border_bottom_color {
-            if let Some(c) = parse_color(color) {
-                fmt = fmt.set_border_bottom_color(c);
-            }
+        if let Some(ref color) = self.border_bottom_color
+            && let Some(c) = parse_color(color)
+        {
+            fmt = fmt.set_border_bottom_color(c);
         }
 
-        if let Some(ref color) = self.border_left_color {
-            if let Some(c) = parse_color(color) {
-                fmt = fmt.set_border_left_color(c);
-            }
+        if let Some(ref color) = self.border_left_color
+            && let Some(c) = parse_color(color)
+        {
+            fmt = fmt.set_border_left_color(c);
         }
 
-        if let Some(ref color) = self.border_right_color {
-            if let Some(c) = parse_color(color) {
-                fmt = fmt.set_border_right_color(c);
-            }
+        if let Some(ref color) = self.border_right_color
+            && let Some(c) = parse_color(color)
+        {
+            fmt = fmt.set_border_right_color(c);
         }
 
         // Number format

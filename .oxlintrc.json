@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "node", "promise", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "env": {
+    "builtin": true,
+    "node": true
+  },
+  "rules": {
+    // `_native` is the documented handle from each wrapper class to its NAPI
+    // object; the underscore marks it as internal on purpose.
+    "eslint/no-underscore-dangle": "off"
+  },
+  "ignorePatterns": ["index.js", "index.d.ts", "wrapper.js", "wrapper.d.ts", "coverage/"]
+}

@@ -19,14 +19,9 @@ const headerFormat = new Format()
   .setAlign('center')
   .setVerticalAlign('center');
 
-const currencyFormat = new Format()
-  .setNumFormat('$#,##0.00');
+const currencyFormat = new Format().setNumFormat('$#,##0.00');
 
-const percentFormat = new Format()
-  .setNumFormat('0.00%');
-
-const dateFormat = new Format()
-  .setNumFormat('yyyy-mm-dd');
+const percentFormat = new Format().setNumFormat('0.00%');
 
 // Write headers
 console.log('Writing headers...');
@@ -79,10 +74,7 @@ worksheet.setColumnWidth(5, 12);
 
 // Add a summary section
 const summaryRow = products.length + 2;
-const summaryFormat = new Format()
-  .setBold()
-  .setBackgroundColor('#E7E6E6')
-  .setAlign('right');
+const summaryFormat = new Format().setBold().setBackgroundColor('#E7E6E6').setAlign('right');
 
 worksheet.write(summaryRow, 0, 'TOTAL ITEMS:', summaryFormat);
 const totalQuantity = products.reduce((sum, p) => sum + p.quantity, 0);

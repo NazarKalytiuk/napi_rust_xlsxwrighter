@@ -27,7 +27,7 @@ const salesData = [
   ['September', 59000],
   ['October', 44000],
   ['November', 77000],
-  ['December', 82000]
+  ['December', 82000],
 ];
 
 for (let i = 0; i < salesData.length; i++) {
@@ -60,7 +60,7 @@ const tempData = [
   ['San Antonio', 78],
   ['San Diego', 68],
   ['Dallas', 81],
-  ['San Jose', 65]
+  ['San Jose', 65],
 ];
 
 for (let i = 0; i < tempData.length; i++) {
@@ -91,7 +91,7 @@ const projectData = [
   ['Testing', 30],
   ['Documentation', 45],
   ['Deployment', 0],
-  ['User Training', 0]
+  ['User Training', 0],
 ];
 
 for (let i = 0; i < projectData.length; i++) {
@@ -124,7 +124,7 @@ const budgetData = [
   ['Sales', 80000, 65000, 15000],
   ['HR', 50000, 48000, 2000],
   ['Operations', 120000, 95000, 25000],
-  ['Research', 90000, 92000, -2000]
+  ['Research', 90000, 92000, -2000],
 ];
 
 for (let i = 0; i < budgetData.length; i++) {
@@ -135,18 +135,12 @@ for (let i = 0; i < budgetData.length; i++) {
 }
 
 // Highlight remaining budget < 10000 in red
-const alertFormat = new Format()
-  .setBold()
-  .setBackgroundColor('red')
-  .setFontColor('white');
+const alertFormat = new Format().setBold().setBackgroundColor('red').setFontColor('white');
 
 budgetSheet.addConditionalFormatCell(1, 3, 6, 3, 'lessThan', 10000, alertFormat);
 
 // Highlight over-budget (negative remaining) with special format
-const overBudgetFormat = new Format()
-  .setBold()
-  .setBackgroundColor('purple')
-  .setFontColor('white');
+const overBudgetFormat = new Format().setBold().setBackgroundColor('purple').setFontColor('white');
 
 budgetSheet.addConditionalFormatCell(1, 3, 6, 3, 'lessThan', 0, overBudgetFormat);
 
@@ -172,7 +166,7 @@ const statusData = [
   ['T005', 'Error Handling', 'In Progress'],
   ['T006', 'Documentation', 'Pending'],
   ['T007', 'Unit Tests', 'Completed'],
-  ['T008', 'Integration Tests', 'Pending']
+  ['T008', 'Integration Tests', 'Pending'],
 ];
 
 for (let i = 0; i < statusData.length; i++) {
@@ -182,23 +176,17 @@ for (let i = 0; i < statusData.length; i++) {
 }
 
 // Format completed tasks with green background
-const completedFormat = new Format()
-  .setBold()
-  .setBackgroundColor('green')
-  .setFontColor('white');
+const completedFormat = new Format().setBold().setBackgroundColor('green').setFontColor('white');
 
 statusSheet.addConditionalFormatText(1, 2, 8, 2, 'contains', 'Completed', completedFormat);
 
 // Format in-progress tasks with yellow background
-const inProgressFormat = new Format()
-  .setBold()
-  .setBackgroundColor('yellow');
+const inProgressFormat = new Format().setBold().setBackgroundColor('yellow');
 
 statusSheet.addConditionalFormatText(1, 2, 8, 2, 'contains', 'In Progress', inProgressFormat);
 
 // Format pending tasks with gray background
-const pendingFormat = new Format()
-  .setBackgroundColor('silver');
+const pendingFormat = new Format().setBackgroundColor('silver');
 
 statusSheet.addConditionalFormatText(1, 2, 8, 2, 'contains', 'Pending', pendingFormat);
 
@@ -236,7 +224,7 @@ const reportData = [
   ['Q1 2024', 250000, 180000, 70000],
   ['Q2 2024', 280000, 195000, 85000],
   ['Q3 2024', 310000, 210000, 100000],
-  ['Q4 2024', 340000, 225000, 115000]
+  ['Q4 2024', 340000, 225000, 115000],
 ];
 
 for (let i = 0; i < reportData.length; i++) {
@@ -273,10 +261,7 @@ dashboardSheet.setPrintGridlines(false);
 dashboardSheet.setPrintCenterHorizontally(true);
 
 // Title
-const titleFormat = new Format()
-  .setBold()
-  .setFontSize(16)
-  .setAlign('center');
+const titleFormat = new Format().setBold().setFontSize(16).setAlign('center');
 
 dashboardSheet.mergeRange(0, 0, 0, 3, 'Key Performance Indicators', titleFormat);
 dashboardSheet.setRowHeight(0, 30);
@@ -292,7 +277,7 @@ const kpiData = [
   ['Response Time (hrs)', 2.5, 2.0, 80.0],
   ['Sales Growth (%)', 15.5, 12.0, 129.2],
   ['Employee Retention (%)', 92.0, 95.0, 96.8],
-  ['Cost Reduction (%)', 8.5, 10.0, 85.0]
+  ['Cost Reduction (%)', 8.5, 10.0, 85.0],
 ];
 
 for (let i = 0; i < kpiData.length; i++) {
@@ -312,18 +297,12 @@ dashboardSheet.setColumnWidth(3, 15);
 dashboardSheet.addConditionalFormatDataBar(3, 3, 7, 3, 'green');
 
 // Highlight metrics below 90% target in orange
-const warningFormat = new Format()
-  .setBold()
-  .setBackgroundColor('orange')
-  .setFontColor('white');
+const warningFormat = new Format().setBold().setBackgroundColor('orange').setFontColor('white');
 
 dashboardSheet.addConditionalFormatCell(3, 3, 7, 3, 'lessThan', 90, warningFormat);
 
 // Highlight metrics above 120% target in bright green
-const excellentFormat = new Format()
-  .setBold()
-  .setBackgroundColor('green')
-  .setFontColor('white');
+const excellentFormat = new Format().setBold().setBackgroundColor('green').setFontColor('white');
 
 dashboardSheet.addConditionalFormatCell(3, 3, 7, 3, 'greaterThan', 120, excellentFormat);
 

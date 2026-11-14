@@ -1,0 +1,7 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": true,
+  "singleQuote": true,
+  "sortPackageJson": false,
+  "ignorePatterns": ["index.js", "index.d.ts", "wrapper.js", "wrapper.d.ts", "**/*.md"]
+}

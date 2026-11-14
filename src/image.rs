@@ -102,8 +102,11 @@ impl RuscImage {
             _ => {
                 return Err(Error::new(
                     Status::GenericFailure,
-                    format!("Invalid object movement option: {}. Valid values: 'moveAndSize', 'moveOnly', 'none', 'moveAndSizeAfter'", option),
-                ))
+                    format!(
+                        "Invalid object movement option: {}. Valid values: 'moveAndSize', 'moveOnly', 'none', 'moveAndSizeAfter'",
+                        option
+                    ),
+                ));
             }
         };
 

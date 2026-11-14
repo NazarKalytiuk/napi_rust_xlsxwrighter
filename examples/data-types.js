@@ -9,21 +9,15 @@ const workbook = new Workbook();
 const worksheet = workbook.addWorksheet('Data Types');
 
 // Create formats
-const headerFormat = new Format()
-  .setBold()
-  .setBackgroundColor('yellow');
+const headerFormat = new Format().setBold().setBackgroundColor('yellow');
 
-const numberFormat = new Format()
-  .setNumFormat('#,##0.00');
+const numberFormat = new Format().setNumFormat('#,##0.00');
 
-const integerFormat = new Format()
-  .setNumFormat('#,##0');
+const integerFormat = new Format().setNumFormat('#,##0');
 
-const percentFormat = new Format()
-  .setNumFormat('0.00%');
+const percentFormat = new Format().setNumFormat('0.00%');
 
-const scientificFormat = new Format()
-  .setNumFormat('0.00E+00');
+const scientificFormat = new Format().setNumFormat('0.00E+00');
 
 // Headers
 worksheet.write(0, 0, 'Data Type', headerFormat);
@@ -41,7 +35,7 @@ worksheet.write(2, 1, 42, integerFormat);
 worksheet.write(2, 2, 'Whole number');
 
 worksheet.write(3, 0, 'Float');
-worksheet.write(3, 1, 3.14159, numberFormat);
+worksheet.write(3, 1, Math.PI, numberFormat);
 worksheet.write(3, 2, 'Decimal number');
 
 worksheet.write(4, 0, 'Large Number');

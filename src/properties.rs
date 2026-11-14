@@ -7,6 +7,12 @@ pub struct RuscDocProperties {
     pub(crate) properties: DocProperties,
 }
 
+impl Default for RuscDocProperties {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[napi]
 impl RuscDocProperties {
     /// Create a new DocProperties struct
