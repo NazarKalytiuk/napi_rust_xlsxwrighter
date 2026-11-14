@@ -6,7 +6,14 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import AdmZip from 'adm-zip';
-import { Workbook, rustMemoryResetPeak, rustMemoryStats } from '../wrapper.ts';
+import {
+  Format,
+  Formula,
+  RichText,
+  Workbook,
+  rustMemoryResetPeak,
+  rustMemoryStats,
+} from '../wrapper.ts';
 import { cleanupTestOutput, createTestOutputDir } from './test-helpers.mjs';
 
 describe('Memory Modes', () => {
@@ -293,5 +300,37 @@ describe('Rust allocator diagnostics', () => {
     const [current, peak] = rustMemoryStats();
     expect(peak).toBeLessThan(peakBefore);
     expect(peak).toBeGreaterThanOrEqual(current);
+  });
+});
+
+// Rust memory owned by a JavaScript object is released only by its finalizer,
+// which runs after the event loop turns, and an export loop is usually
+// synchronous. Values created per row must therefore own no Rust memory.
+describe('Values created per row', () => {
+  const bold = new Format().setBold();
+
+  test.each([
+    [
+      'RichText',
+      (worksheet, row) => {
+        const richText = new RichText().addSegment(`Row ${row} `, bold).addSegment('tail');
+        worksheet.writeRichString(row, 0, richText);
+      },
+    ],
+    ['Formula', (worksheet, row) => worksheet.writeFormula(row, 0, new Formula(`=B${row + 1}*2`))],
+  ])('a %s per row retains no Rust memory in a synchronous loop', (_name, writeRow) => {
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheetWithConstantMemory('Data');
+    for (let row = 0; row < 10; row++) {
+      writeRow(worksheet, row);
+    }
+
+    const retainedBytesBefore = rustMemoryStats()[0];
+    for (let row = 10; row < 20000; row++) {
+      writeRow(worksheet, row);
+    }
+    const retainedBytesAfter = rustMemoryStats()[0];
+
+    expect(retainedBytesAfter - retainedBytesBefore).toBeLessThan(64 * 1024);
   });
 });

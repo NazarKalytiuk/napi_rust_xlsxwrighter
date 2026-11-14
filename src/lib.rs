@@ -21,7 +21,7 @@ mod worksheet;
 pub use button::RuscButton;
 pub use chart::RuscChart;
 pub use format::RuscFormat;
-pub use formula::RuscFormula;
+pub use formula::{RuscFormula, RuscFormulaData};
 pub use image::RuscImage;
 pub use note::RuscNote;
 pub use properties::RuscDocProperties;

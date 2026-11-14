@@ -15,11 +15,11 @@ use std::sync::Arc;
 use crate::button::RuscButton;
 use crate::chart::RuscChart;
 use crate::format::RuscFormat;
-use crate::formula::RuscFormula;
+use crate::formula::{RuscFormula, RuscFormulaData, to_formula};
 use crate::image::RuscImage;
 use crate::note::RuscNote;
 use crate::protection::RuscProtectionOptions;
-use crate::richtext::RuscRichText;
+use crate::richtext::{RuscRichText, rich_string_segments};
 use crate::shape::RuscShape;
 use crate::sparkline::RuscSparkline;
 use crate::table::RuscTable;
@@ -309,103 +309,35 @@ impl RuscWorksheet {
         Ok(())
     }
 
-    /// Write a rich text string (multi-format text) to a cell
+    /// Write a rich text string (multi-format text) to a cell.
+    ///
+    /// `richText` is `[text, format]` segments, or a deprecated `RuscRichText`; a
+    /// segment without a format uses the default cell font. Segments are plain data,
+    /// so nothing outlives the call. Empty segments are skipped, and a rich string
+    /// whose segments are all empty leaves the cell untouched.
     #[napi]
-    pub fn write_rich_string(&self, row: u32, col: u16, rich_text: &RuscRichText) -> Result<()> {
-        let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Failed to get worksheet: {}", e),
-            )
-        })?;
-
-        // Build the segments array for rust_xlsxwriter, filtering out empty strings
-        let segments = rich_text.get_segments();
-        let mut xlsxwriter_segments: Vec<(Format, String)> = Vec::new();
-        for (text, format) in segments {
-            if !text.is_empty() {
-                let fmt = format.to_format();
-                xlsxwriter_segments.push((fmt, text.clone()));
-            }
-        }
-
-        // If all segments were blank, silently skip (no-op)
-        if xlsxwriter_segments.is_empty() {
-            return Ok(());
-        }
-
-        // Convert to slice of references as required by rust_xlsxwriter
-        let segment_refs: Vec<(&Format, &str)> = xlsxwriter_segments
-            .iter()
-            .map(|(fmt, text)| (fmt, text.as_str()))
-            .collect();
-
-        ws.write_rich_string(row, col, &segment_refs).map_err(|e| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Failed to write rich string: {}", e),
-            )
-        })?;
-
-        Ok(())
+    pub fn write_rich_string(
+        &self,
+        row: u32,
+        col: u16,
+        rich_text: Either<&RuscRichText, Vec<(String, Option<&RuscFormat>)>>,
+    ) -> Result<()> {
+        self.write_rich_text(row, col, &rich_text, None)
     }
 
-    /// Write a rich text string with an additional cell format
+    /// Write a rich text string with an additional cell format.
+    ///
+    /// `richText` is as for `writeRichString`. A rich string whose segments are all
+    /// empty writes a blank cell with the cell format.
     #[napi]
     pub fn write_rich_string_with_format(
         &self,
         row: u32,
         col: u16,
-        rich_text: &RuscRichText,
+        rich_text: Either<&RuscRichText, Vec<(String, Option<&RuscFormat>)>>,
         cell_format: &RuscFormat,
     ) -> Result<()> {
-        let mut wb = self.workbook.lock();
-        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Failed to get worksheet: {}", e),
-            )
-        })?;
-
-        // Build the segments array, filtering out empty strings
-        let segments = rich_text.get_segments();
-        let mut xlsxwriter_segments: Vec<(Format, String)> = Vec::new();
-        for (text, format) in segments {
-            if !text.is_empty() {
-                let fmt = format.to_format();
-                xlsxwriter_segments.push((fmt, text.clone()));
-            }
-        }
-
-        // If all segments were blank, write a blank cell with the cell format instead
-        if xlsxwriter_segments.is_empty() {
-            let format = cell_format.to_format();
-            ws.write_blank(row, col, &format).map_err(|e| {
-                Error::new(
-                    Status::GenericFailure,
-                    format!("Failed to write blank cell: {}", e),
-                )
-            })?;
-            return Ok(());
-        }
-
-        // Convert to slice of references
-        let segment_refs: Vec<(&Format, &str)> = xlsxwriter_segments
-            .iter()
-            .map(|(fmt, text)| (fmt, text.as_str()))
-            .collect();
-
-        let format = cell_format.to_format();
-        ws.write_rich_string_with_format(row, col, &segment_refs, &format)
-            .map_err(|e| {
-                Error::new(
-                    Status::GenericFailure,
-                    format!("Failed to write rich string with format: {}", e),
-                )
-            })?;
-
-        Ok(())
+        self.write_rich_text(row, col, &rich_text, Some(cell_format))
     }
 
     /// Write a datetime from a Unix timestamp (seconds since 1970-01-01 UTC)
@@ -825,9 +757,10 @@ impl RuscWorksheet {
         &self,
         row: u32,
         col: u16,
-        formula: &RuscFormula,
+        formula: Either<&RuscFormula, RuscFormulaData>,
         format: Option<&RuscFormat>,
     ) -> Result<()> {
+        let formula = to_formula(formula);
         let mut wb = self.workbook.lock();
         let ws = wb.worksheet_from_index(self.index).map_err(|e| {
             Error::new(
@@ -838,9 +771,9 @@ impl RuscWorksheet {
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
-            ws.write_formula_with_format(row, col, formula.get_formula(), &f)
+            ws.write_formula_with_format(row, col, formula, &f)
         } else {
-            ws.write_formula(row, col, formula.get_formula())
+            ws.write_formula(row, col, formula)
         }
         .map_err(|e| {
             Error::new(
@@ -858,9 +791,10 @@ impl RuscWorksheet {
         &self,
         row: u32,
         col: u16,
-        formula: &RuscFormula,
+        formula: Either<&RuscFormula, RuscFormulaData>,
         format: Option<&RuscFormat>,
     ) -> Result<()> {
+        let formula = to_formula(formula);
         let mut wb = self.workbook.lock();
         let ws = wb.worksheet_from_index(self.index).map_err(|e| {
             Error::new(
@@ -871,16 +805,9 @@ impl RuscWorksheet {
 
         if let Some(fmt) = format {
             let f = fmt.to_format();
-            ws.write_dynamic_array_formula_with_format(
-                row,
-                col,
-                row,
-                col,
-                formula.get_formula(),
-                &f,
-            )
+            ws.write_dynamic_array_formula_with_format(row, col, row, col, formula, &f)
         } else {
-            ws.write_dynamic_array_formula(row, col, row, col, formula.get_formula())
+            ws.write_dynamic_array_formula(row, col, row, col, formula)
         }
         .map_err(|e| {
             Error::new(
@@ -900,9 +827,10 @@ impl RuscWorksheet {
         first_col: u16,
         last_row: u32,
         last_col: u16,
-        formula: &RuscFormula,
+        formula: Either<&RuscFormula, RuscFormulaData>,
         format: Option<&RuscFormat>,
     ) -> Result<()> {
+        let formula = to_formula(formula);
         let mut wb = self.workbook.lock();
         let ws = wb.worksheet_from_index(self.index).map_err(|e| {
             Error::new(
@@ -914,21 +842,10 @@ impl RuscWorksheet {
         if let Some(fmt) = format {
             let f = fmt.to_format();
             ws.write_array_formula_with_format(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                formula.get_formula(),
-                &f,
+                first_row, first_col, last_row, last_col, formula, &f,
             )
         } else {
-            ws.write_array_formula(
-                first_row,
-                first_col,
-                last_row,
-                last_col,
-                formula.get_formula(),
-            )
+            ws.write_array_formula(first_row, first_col, last_row, last_col, formula)
         }
         .map_err(|e| {
             Error::new(
@@ -2557,6 +2474,57 @@ impl RuscWorksheet {
                     format!("Failed to insert shape with offset: {}", e),
                 )
             })?;
+
+        Ok(())
+    }
+}
+
+impl RuscWorksheet {
+    /// Writes a rich string, with the cell format when one is given.
+    fn write_rich_text(
+        &self,
+        row: u32,
+        col: u16,
+        rich_text: &Either<&RuscRichText, Vec<(String, Option<&RuscFormat>)>>,
+        cell_format: Option<&RuscFormat>,
+    ) -> Result<()> {
+        let mut wb = self.workbook.lock();
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
+
+        let segments = rich_string_segments(rich_text);
+        let cell_format = cell_format.map(RuscFormat::to_format);
+
+        if segments.is_empty() {
+            if let Some(format) = &cell_format {
+                ws.write_blank(row, col, format).map_err(|e| {
+                    Error::new(
+                        Status::GenericFailure,
+                        format!("Failed to write blank cell: {}", e),
+                    )
+                })?;
+            }
+            return Ok(());
+        }
+
+        let rich_string: Vec<(&Format, &str)> = segments
+            .iter()
+            .map(|(format, text)| (format, *text))
+            .collect();
+        match &cell_format {
+            Some(format) => ws.write_rich_string_with_format(row, col, &rich_string, format),
+            None => ws.write_rich_string(row, col, &rich_string),
+        }
+        .map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to write rich string: {}", e),
+            )
+        })?;
 
         Ok(())
     }

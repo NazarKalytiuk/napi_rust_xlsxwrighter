@@ -5,8 +5,13 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { Workbook, Formula, Format } from '../wrapper.ts';
-import { cleanupTestOutput, createTestOutputDir } from './test-helpers.mjs';
+import { Workbook, Formula, Format, RuscFormula } from '../wrapper.ts';
+import { cleanupTestOutput, createTestOutputDir, readXlsxPart } from './test-helpers.mjs';
+
+/** The XML of a workbook's first worksheet. */
+function sheetXml(workbook) {
+  return readXlsxPart(workbook.saveToBuffer(), 'xl/worksheets/sheet1.xml');
+}
 
 describe('Formulas', () => {
   let testOutputDir;
@@ -21,7 +26,6 @@ describe('Formulas', () => {
     test('should create a new formula', () => {
       const formula = new Formula('=A1+B1');
       expect(formula).toBeInstanceOf(Formula);
-      expect(formula._native).toBeDefined();
     });
 
     test('should set result for formula', () => {
@@ -264,6 +268,52 @@ describe('Formulas', () => {
       workbook.save(outputPath);
 
       expect(fs.existsSync(outputPath)).toBe(true);
+    });
+  });
+
+  describe('Formula Strings and Cached Results', () => {
+    test('writes a formula string as a formula', () => {
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheet();
+
+      worksheet.writeFormula(0, 0, '=A2+B2');
+
+      expect(sheetXml(workbook)).toContain('<c r="A1"><f>A2+B2</f><v>0</v></c>');
+    });
+
+    test('writes the cached result set with setResult', () => {
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheet();
+
+      worksheet.writeFormula(0, 0, new Formula('=10*10').setResult('100'));
+
+      expect(sheetXml(workbook)).toContain('<c r="A1"><f>10*10</f><v>100</v></c>');
+    });
+
+    test('writes array and dynamic formula strings', () => {
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheet();
+
+      worksheet.writeArrayFormula(0, 0, 1, 0, '=B1:B2*2');
+      worksheet.writeDynamicFormula(2, 0, '=SORT(B1:B2)');
+
+      const xml = sheetXml(workbook);
+      expect(xml).toContain('<f t="array" ref="A1:A2">B1:B2*2</f>');
+      expect(xml).toContain('<c r="A3" cm="1"><f t="array" ref="A3">_xlfn._xlws.SORT(B1:B2)</f>');
+    });
+
+    test('native writers take formula data and the deprecated RuscFormula', () => {
+      const workbook = new Workbook();
+      const worksheet = workbook.addWorksheet();
+      const deprecated = new RuscFormula('=1+1');
+      deprecated.setResult('2');
+
+      worksheet._native.writeFormula(0, 0, { formula: '=3+3', result: '6' });
+      worksheet._native.writeFormula(1, 0, deprecated);
+
+      const xml = sheetXml(workbook);
+      expect(xml).toContain('<c r="A1"><f>3+3</f><v>6</v></c>');
+      expect(xml).toContain('<c r="A2"><f>1+1</f><v>2</v></c>');
     });
   });
 
