@@ -3,7 +3,7 @@
 > Внутрішній трекер повноти `@nazarkalytiuk/rusc-xlsx`. Пінований baseline аудиту — `rust_xlsxwriter 0.102.0` з resolved features `default + constant_memory + zmij`, згенерований з rustdoc JSON (`npm run coverage:sync`).
 
 - Аудит зафіксовано: **2026-11-14**.
-- Пакет: **@nazarkalytiuk/rusc-xlsx 2.3.0** / Cargo **rusc-xlsx 2.3.0**.
+- Пакет: **@nazarkalytiuk/rusc-xlsx 2.4.0** / Cargo **rusc-xlsx 2.4.0**.
 - Inventory SHA-256 (sorted canonical row ids): `83018e65c3d539594dbcd6a1cb4c3257852b81def10a47f71a8592ffd2e1d512`.
 - Міграція з попереднього baseline: **17 added · 4 changed · 2 removed** stable rows.
 - Це item-weighted API checklist, а не usage-weighted оцінка популярності функцій.

@@ -1,6 +1,6 @@
 [package]
 name = "rusc-xlsx"
-version = "2.3.0"
+version = "2.4.0"
 authors = ["Nazarii Kalytiuk <nazarkwork@gmail.com>"]
 edition = "2024"
 rust-version = "1.95"
