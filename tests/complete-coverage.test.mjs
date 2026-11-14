@@ -7,6 +7,27 @@ import path from 'node:path';
 import { Workbook, Format, Chart, Table, Sparkline } from '../wrapper.ts';
 import { cleanupTestOutput, createTestOutputDir, readXlsxPart } from './test-helpers.mjs';
 
+/** The `<tableStyleInfo>` element of a one-column table using `table`. */
+function tableStyleInfo(table) {
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet();
+  worksheet.write(0, 0, 'Header');
+  worksheet.write(1, 0, 'Data');
+  worksheet.addTable(0, 0, 1, 0, table);
+  const xml = readXlsxPart(workbook.saveToBuffer(), 'xl/tables/table1.xml');
+  return /<tableStyleInfo [^>]*\/>/.exec(xml)[0];
+}
+
+/** The chart XML from `<c:plotArea>` up to the first series' data references. */
+function plotAreaStart(chart) {
+  const workbook = new Workbook();
+  chart.addSeries({ categories: 'Data!$A$1:$A$3', values: 'Data!$B$1:$B$3' });
+  workbook.addWorksheet('Data').insertChart(4, 0, chart);
+  const xml = readXlsxPart(workbook.saveToBuffer(), 'xl/charts/chart1.xml');
+  const plotArea = xml.slice(xml.indexOf('<c:plotArea>')).replace('<c:layout/>', '');
+  return plotArea.slice(0, plotArea.search(/<c:(?:cat|xVal|val)>/));
+}
+
 describe('Complete Coverage - Edge Cases and Enum Variations', () => {
   let testOutputDir;
 
@@ -212,129 +233,110 @@ describe('Complete Coverage - Edge Cases and Enum Variations', () => {
   });
 
   describe('Chart - All Type Variations', () => {
-    test('should accept area_stacked (underscore variant)', () => {
-      const chart = new Chart('area_stacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept areaPercentStacked', () => {
-      const chart = new Chart('areaPercentStacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept area_percent_stacked (underscore variant)', () => {
-      const chart = new Chart('area_percent_stacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept bar_stacked (underscore variant)', () => {
-      const chart = new Chart('bar_stacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept barPercentStacked', () => {
-      const chart = new Chart('barPercentStacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept bar_percent_stacked (underscore variant)', () => {
-      const chart = new Chart('bar_percent_stacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept column_stacked (underscore variant)', () => {
-      const chart = new Chart('column_stacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept columnPercentStacked', () => {
-      const chart = new Chart('columnPercentStacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept column_percent_stacked (underscore variant)', () => {
-      const chart = new Chart('column_percent_stacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept line_stacked (underscore variant)', () => {
-      const chart = new Chart('line_stacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept linePercentStacked', () => {
-      const chart = new Chart('linePercentStacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept line_percent_stacked (underscore variant)', () => {
-      const chart = new Chart('line_percent_stacked');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept radarWithMarkers', () => {
-      const chart = new Chart('radarWithMarkers');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept radar_with_markers (underscore variant)', () => {
-      const chart = new Chart('radar_with_markers');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept radarFilled', () => {
-      const chart = new Chart('radarFilled');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept radar_filled (underscore variant)', () => {
-      const chart = new Chart('radar_filled');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept scatterStraight', () => {
-      const chart = new Chart('scatterStraight');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept scatter_straight (underscore variant)', () => {
-      const chart = new Chart('scatter_straight');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept scatterStraightWithMarkers', () => {
-      const chart = new Chart('scatterStraightWithMarkers');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept scatter_straight_with_markers (underscore variant)', () => {
-      const chart = new Chart('scatter_straight_with_markers');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept scatterSmooth', () => {
-      const chart = new Chart('scatterSmooth');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept scatter_smooth (underscore variant)', () => {
-      const chart = new Chart('scatter_smooth');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept scatterSmoothWithMarkers', () => {
-      const chart = new Chart('scatterSmoothWithMarkers');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept scatter_smooth_with_markers (underscore variant)', () => {
-      const chart = new Chart('scatter_smooth_with_markers');
-      expect(chart).toBeInstanceOf(Chart);
-    });
-
-    test('should accept stock chart type', () => {
-      const chart = new Chart('stock');
-      expect(chart).toBeInstanceOf(Chart);
+    // Each type is the plot element plus its grouping, bar direction or
+    // style; line-less and marker-less series override the type's default.
+    test.each([
+      ['area', '<c:areaChart><c:grouping val="standard"/>', ''],
+      ['areaStacked', '<c:areaChart><c:grouping val="stacked"/>', ''],
+      ['area_stacked', '<c:areaChart><c:grouping val="stacked"/>', ''],
+      ['areaPercentStacked', '<c:areaChart><c:grouping val="percentStacked"/>', ''],
+      ['area_percent_stacked', '<c:areaChart><c:grouping val="percentStacked"/>', ''],
+      ['bar', '<c:barChart><c:barDir val="bar"/><c:grouping val="clustered"/>', ''],
+      ['barStacked', '<c:barChart><c:barDir val="bar"/><c:grouping val="stacked"/>', ''],
+      ['bar_stacked', '<c:barChart><c:barDir val="bar"/><c:grouping val="stacked"/>', ''],
+      [
+        'barPercentStacked',
+        '<c:barChart><c:barDir val="bar"/><c:grouping val="percentStacked"/>',
+        '',
+      ],
+      [
+        'bar_percent_stacked',
+        '<c:barChart><c:barDir val="bar"/><c:grouping val="percentStacked"/>',
+        '',
+      ],
+      ['column', '<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/>', ''],
+      ['columnStacked', '<c:barChart><c:barDir val="col"/><c:grouping val="stacked"/>', ''],
+      ['column_stacked', '<c:barChart><c:barDir val="col"/><c:grouping val="stacked"/>', ''],
+      [
+        'columnPercentStacked',
+        '<c:barChart><c:barDir val="col"/><c:grouping val="percentStacked"/>',
+        '',
+      ],
+      [
+        'column_percent_stacked',
+        '<c:barChart><c:barDir val="col"/><c:grouping val="percentStacked"/>',
+        '',
+      ],
+      ['doughnut', '<c:doughnutChart><c:varyColors val="1"/>', ''],
+      [
+        'line',
+        '<c:lineChart><c:grouping val="standard"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      [
+        'lineStacked',
+        '<c:lineChart><c:grouping val="stacked"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      [
+        'line_stacked',
+        '<c:lineChart><c:grouping val="stacked"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      [
+        'linePercentStacked',
+        '<c:lineChart><c:grouping val="percentStacked"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      [
+        'line_percent_stacked',
+        '<c:lineChart><c:grouping val="percentStacked"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      ['pie', '<c:pieChart><c:varyColors val="1"/>', ''],
+      [
+        'radar',
+        '<c:radarChart><c:radarStyle val="marker"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      ['radarWithMarkers', '<c:radarChart><c:radarStyle val="marker"/>', ''],
+      ['radar_with_markers', '<c:radarChart><c:radarStyle val="marker"/>', ''],
+      ['radarFilled', '<c:radarChart><c:radarStyle val="filled"/>', ''],
+      ['radar_filled', '<c:radarChart><c:radarStyle val="filled"/>', ''],
+      [
+        'scatter',
+        '<c:scatterChart><c:scatterStyle val="lineMarker"/>',
+        '<c:spPr><a:ln w="28575"><a:noFill/></a:ln></c:spPr>',
+      ],
+      [
+        'scatterStraight',
+        '<c:scatterChart><c:scatterStyle val="lineMarker"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      [
+        'scatter_straight',
+        '<c:scatterChart><c:scatterStyle val="lineMarker"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      ['scatterStraightWithMarkers', '<c:scatterChart><c:scatterStyle val="lineMarker"/>', ''],
+      ['scatter_straight_with_markers', '<c:scatterChart><c:scatterStyle val="lineMarker"/>', ''],
+      [
+        'scatterSmooth',
+        '<c:scatterChart><c:scatterStyle val="smoothMarker"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      [
+        'scatter_smooth',
+        '<c:scatterChart><c:scatterStyle val="smoothMarker"/>',
+        '<c:marker><c:symbol val="none"/></c:marker>',
+      ],
+      ['scatterSmoothWithMarkers', '<c:scatterChart><c:scatterStyle val="smoothMarker"/>', ''],
+      ['scatter_smooth_with_markers', '<c:scatterChart><c:scatterStyle val="smoothMarker"/>', ''],
+      ['stock', '<c:stockChart>', ''],
+    ])('should write a %s chart', (chartType, plot, series) => {
+      expect(plotAreaStart(new Chart(chartType))).toBe(
+        `<c:plotArea>${plot}<c:ser><c:idx val="0"/><c:order val="0"/>${series}`,
+      );
     });
   });
 
@@ -367,6 +369,7 @@ describe('Complete Coverage - Edge Cases and Enum Variations', () => {
 
   describe('Conditional Formatting - All Icon Set Types', () => {
     test.each([
+      ['threeArrows', '3Arrows'],
       ['threeArrowsGray', '3ArrowsGray'],
       ['threeFlags', '3Flags'],
       ['threeTrafficLightsWithRim', '3TrafficLights2'],
@@ -375,10 +378,14 @@ describe('Complete Coverage - Edge Cases and Enum Variations', () => {
       ['threeSymbolsCircled', '3Symbols'],
       ['threeStars', '3Stars'],
       ['threeTriangles', '3Triangles'],
+      ['fourArrows', '4Arrows'],
       ['fourArrowsGray', '4ArrowsGray'],
       ['fourRedToBlack', '4RedToBlack'],
+      ['fourHistograms', '4Rating'],
       ['fourTrafficLights', '4TrafficLights'],
+      ['fiveArrows', '5Arrows'],
       ['fiveArrowsGray', '5ArrowsGray'],
+      ['fiveHistograms', '5Rating'],
       ['fiveQuadrants', '5Quarters'],
       ['fiveBoxes', '5Boxes'],
     ])('should add %s icon set', (iconType, excelIconSet) => {
@@ -389,6 +396,14 @@ describe('Complete Coverage - Edge Cases and Enum Variations', () => {
       const file = path.join(testOutputDir, `icons_${iconType}.xlsx`);
       workbook.save(file);
       expect(readXlsxPart(file, 'xl/worksheets/sheet1.xml')).toContain(`iconSet="${excelIconSet}"`);
+    });
+
+    test('should leave threeTrafficLights, the Excel default icon set, implicit', () => {
+      const workbook = new Workbook();
+      workbook.addWorksheet().addConditionalFormatIconSet(0, 0, 9, 0, 'threeTrafficLights');
+
+      const sheet = readXlsxPart(workbook.saveToBuffer(), 'xl/worksheets/sheet1.xml');
+      expect(sheet).toContain('<cfRule type="iconSet" priority="1"><iconSet><cfvo ');
     });
   });
 
@@ -417,50 +432,83 @@ describe('Complete Coverage - Edge Cases and Enum Variations', () => {
   });
 
   describe('Table - Style Variations', () => {
-    test('should accept table style 1 (light)', () => {
-      const workbook = new Workbook();
-      const worksheet = workbook.addWorksheet();
-      const table = new Table().setStyle(1);
+    // Style IDs number Excel's gallery: 0 is "None", then Light 1-21,
+    // Medium 1-28 and Dark 1-11.
+    test('writes table style 0 without a style name', () => {
+      expect(tableStyleInfo(new Table().setStyle(0))).not.toContain('name=');
+    });
 
-      worksheet.write(0, 0, 'Header');
-      worksheet.write(1, 0, 'Data');
-      worksheet.addTable(0, 0, 1, 0, table);
-
-      const file = path.join(testOutputDir, 'table_style_1.xlsx');
-      workbook.save(file);
-      expect(readXlsxPart(file, 'xl/tables/table1.xml')).toContain(
-        '<tableStyleInfo name="TableStyleLight1"',
+    test.each([
+      [1, 'TableStyleLight1'],
+      [2, 'TableStyleLight2'],
+      [3, 'TableStyleLight3'],
+      [4, 'TableStyleLight4'],
+      [5, 'TableStyleLight5'],
+      [6, 'TableStyleLight6'],
+      [7, 'TableStyleLight7'],
+      [8, 'TableStyleLight8'],
+      [9, 'TableStyleLight9'],
+      [10, 'TableStyleLight10'],
+      [11, 'TableStyleLight11'],
+      [12, 'TableStyleLight12'],
+      [13, 'TableStyleLight13'],
+      [14, 'TableStyleLight14'],
+      [15, 'TableStyleLight15'],
+      [16, 'TableStyleLight16'],
+      [17, 'TableStyleLight17'],
+      [18, 'TableStyleLight18'],
+      [19, 'TableStyleLight19'],
+      [20, 'TableStyleLight20'],
+      [21, 'TableStyleLight21'],
+      [22, 'TableStyleMedium1'],
+      [23, 'TableStyleMedium2'],
+      [24, 'TableStyleMedium3'],
+      [25, 'TableStyleMedium4'],
+      [26, 'TableStyleMedium5'],
+      [27, 'TableStyleMedium6'],
+      [28, 'TableStyleMedium7'],
+      [29, 'TableStyleMedium8'],
+      [30, 'TableStyleMedium9'],
+      [31, 'TableStyleMedium10'],
+      [32, 'TableStyleMedium11'],
+      [33, 'TableStyleMedium12'],
+      [34, 'TableStyleMedium13'],
+      [35, 'TableStyleMedium14'],
+      [36, 'TableStyleMedium15'],
+      [37, 'TableStyleMedium16'],
+      [38, 'TableStyleMedium17'],
+      [39, 'TableStyleMedium18'],
+      [40, 'TableStyleMedium19'],
+      [41, 'TableStyleMedium20'],
+      [42, 'TableStyleMedium21'],
+      [43, 'TableStyleMedium22'],
+      [44, 'TableStyleMedium23'],
+      [45, 'TableStyleMedium24'],
+      [46, 'TableStyleMedium25'],
+      [47, 'TableStyleMedium26'],
+      [48, 'TableStyleMedium27'],
+      [49, 'TableStyleMedium28'],
+      [50, 'TableStyleDark1'],
+      [51, 'TableStyleDark2'],
+      [52, 'TableStyleDark3'],
+      [53, 'TableStyleDark4'],
+      [54, 'TableStyleDark5'],
+      [55, 'TableStyleDark6'],
+      [56, 'TableStyleDark7'],
+      [57, 'TableStyleDark8'],
+      [58, 'TableStyleDark9'],
+      [59, 'TableStyleDark10'],
+      [60, 'TableStyleDark11'],
+    ])('writes table style %i as %s', (styleId, styleName) => {
+      expect(tableStyleInfo(new Table().setStyle(styleId))).toContain(
+        `<tableStyleInfo name="${styleName}" `,
       );
     });
 
-    test('should accept table style 5 (light)', () => {
-      const table = new Table().setStyle(5);
-      expect(table).toBeInstanceOf(Table);
-    });
-
-    test('should accept table style 25 (medium)', () => {
-      const table = new Table().setStyle(25);
-      expect(table).toBeInstanceOf(Table);
-    });
-
-    test('should accept table style 35 (medium)', () => {
-      const table = new Table().setStyle(35);
-      expect(table).toBeInstanceOf(Table);
-    });
-
-    test('should accept table style 50 (dark)', () => {
-      const table = new Table().setStyle(50);
-      expect(table).toBeInstanceOf(Table);
-    });
-
-    test('should accept table style 55 (dark)', () => {
-      const table = new Table().setStyle(55);
-      expect(table).toBeInstanceOf(Table);
-    });
-
-    test('should accept table style 60 (dark)', () => {
-      const table = new Table().setStyle(60);
-      expect(table).toBeInstanceOf(Table);
+    test('rejects style IDs outside 0-60', () => {
+      expect(() => new Table().setStyle(61)).toThrow(
+        'Invalid table style: 61. Use 0 (none) or 1-60',
+      );
     });
   });
 

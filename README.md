@@ -263,6 +263,8 @@ npm run build:wrapper
 npm test
 npm run test:watch      # re-run on change
 npm run test:coverage   # V8 coverage report for wrapper.ts
+npm run test:coverage:rust  # line coverage of src/*.rs via an instrumented addon;
+                            # needs cargo-llvm-cov and `rustup component add llvm-tools`
 
 # Format, lint (oxfmt, oxlint, rustfmt, clippy) and typecheck — same as CI
 npm run check

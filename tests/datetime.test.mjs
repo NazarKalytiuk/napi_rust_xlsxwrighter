@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Workbook, Format } from '../wrapper.ts';
 import fs from 'node:fs';
-import { cleanupTestOutput } from './test-helpers.mjs';
+import { cleanupTestOutput, readXlsxPart } from './test-helpers.mjs';
 
 describe('DateTime Functions', () => {
   let workbook, worksheet, dateFormat, datetimeFormat;
@@ -298,5 +298,26 @@ describe('DateTime Functions', () => {
         workbook.save('test-datetime.xlsx');
       }).not.toThrow();
     });
+  });
+});
+
+/** The serial date value written to A1. */
+function serialOf(datetime) {
+  const workbook = new Workbook();
+  const format = new Format().setNumFormat('yyyy-mm-dd hh:mm:ss');
+  workbook.addWorksheet().writeDatetime(0, 0, datetime, format);
+  const sheet = readXlsxPart(workbook.saveToBuffer(), 'xl/worksheets/sheet1.xml');
+  return Number(/<c r="A1"[^>]*><v>([^<]+)<\/v>/.exec(sheet)[1]);
+}
+
+describe('writeDatetime object values in XLSX output', () => {
+  // 2024-01-01 is Excel serial day 45292; a day has 1440 minutes and 86400 seconds.
+  it.each([
+    [{ year: 2024, month: 1, day: 1 }, 45292],
+    [{ year: 2024, month: 1, day: 1, hour: 6 }, 45292 + 360 / 1440],
+    [{ year: 2024, month: 1, day: 1, min: 30 }, 45292 + 30 / 1440],
+    [{ year: 2024, month: 1, day: 1, sec: 45 }, 45292 + 45 / 86400],
+  ])('writes %o as serial %d', (datetime, serial) => {
+    expect(serialOf(datetime)).toBeCloseTo(serial, 9);
   });
 });

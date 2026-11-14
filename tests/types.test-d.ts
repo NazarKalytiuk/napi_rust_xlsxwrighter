@@ -34,3 +34,6 @@ format.setFontColor('invalid-color');
 format.setBorder('wavy');
 // @ts-expect-error -- arrays are not cell values
 worksheet.write(0, 0, []);
+// A missing value leaves the cell empty.
+worksheet.write(0, 0, null);
+worksheet.write(0, 0, undefined, format);

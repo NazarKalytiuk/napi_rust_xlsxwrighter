@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, test } from 'vitest';
 import { Workbook, Table, TableColumn } from '../wrapper.ts';
 import fs from 'node:fs';
-import { cleanupTestOutput } from './test-helpers.mjs';
+import { cleanupTestOutput, readXlsxPart } from './test-helpers.mjs';
 
 describe('Tables', () => {
   let workbook, worksheet;
@@ -360,5 +360,53 @@ describe('Tables', () => {
         workbook.save('test-tables.xlsx');
       }).not.toThrow();
     });
+  });
+});
+
+/** Saves a two-column table over A1:B3 and returns the table and sheet XML. */
+function tableXml(table) {
+  const workbook = new Workbook();
+  const worksheet = workbook.addWorksheet();
+  worksheet.writeRow(0, 0, ['Item', 'Price']);
+  worksheet.writeRow(1, 0, ['Apple', 2]);
+  worksheet.addTable(0, 0, 2, 1, table);
+  const xlsx = workbook.saveToBuffer();
+  return {
+    table: readXlsxPart(xlsx, 'xl/tables/table1.xml'),
+    sheet: readXlsxPart(xlsx, 'xl/worksheets/sheet1.xml'),
+  };
+}
+
+describe('Table XLSX output', () => {
+  test.each([
+    ['average', 'average', 101],
+    ['count', 'count', 103],
+    ['countNumbers', 'countNums', 102],
+    ['max', 'max', 104],
+    ['min', 'min', 105],
+    ['stdDev', 'stdDev', 107],
+    ['sum', 'sum', 109],
+    ['var', 'var', 110],
+  ])('writes the %s total function as %s with SUBTOTAL(%i)', (func, excelName, code) => {
+    const table = new Table()
+      .setTotalRow(true)
+      .setColumns([new TableColumn().setHeader('Item'), new TableColumn().setTotalFunction(func)]);
+    const { table: xml, sheet } = tableXml(table);
+    expect(xml).toContain(`<tableColumn id="2" name="Price" totalsRowFunction="${excelName}"/>`);
+    expect(sheet).toContain(`<f>SUBTOTAL(${code},[Price])</f>`);
+  });
+
+  test('writes a calculated column formula with the @ reference expanded', () => {
+    const table = new Table().setColumns([
+      new TableColumn().setHeader('Item'),
+      new TableColumn().setFormula('[@Item]&"!"'),
+    ]);
+    const { table: xml, sheet } = tableXml(table);
+    expect(xml).toContain(
+      '<calculatedColumnFormula>[[#This Row],Item]&amp;"!"</calculatedColumnFormula>',
+    );
+    for (const cell of ['B2', 'B3']) {
+      expect(sheet).toContain(`<c r="${cell}"><f>[[#This Row],Item]&amp;"!"</f>`);
+    }
   });
 });

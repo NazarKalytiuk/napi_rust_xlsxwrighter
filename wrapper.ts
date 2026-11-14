@@ -1039,10 +1039,18 @@ export class Worksheet {
    * Write a value to a cell (auto-detects type)
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
-   * @param value - Value to write (string, number, or boolean)
+   * @param value - Value to write (string, number, or boolean); `null` or `undefined`
+   *   writes nothing, or a blank cell when a format is given
    * @param format - Optional format to apply
+   * @throws If the value is of another type, such as an object or a Date (use
+   *   {@link Worksheet.writeDatetime} for dates)
    */
-  write(row: number, col: number, value: string | number | boolean, format?: Format): void {
+  write(
+    row: number,
+    col: number,
+    value: string | number | boolean | null | undefined,
+    format?: Format,
+  ): void {
     if (format) {
       return this._native.write(row, col, value, format._native);
     }
@@ -1062,12 +1070,15 @@ export class Worksheet {
   /**
    * Write an array of values as a row starting at the given column.
    * Batches all writes into a single native call — much faster than calling write() in a loop.
-   * Null/undefined values are skipped (the cell is left empty).
+   * Each value is written as {@link Worksheet.write} writes it: `null`, `undefined` and
+   * array holes leave the cell empty, or write a blank cell when a format is given.
    *
    * @param row - Row number (0-indexed)
    * @param startCol - Starting column number (0-indexed)
    * @param values - Array of values to write
    * @param format - Optional format to apply to all cells in the row
+   * @throws If a value is of another type, such as an object or a Date; the
+   *   values before it are already written
    * @example
    * worksheet.writeRow(0, 0, ['Name', 'Age', 'Active'], headerFormat);
    * worksheet.writeRow(1, 0, ['Alice', 30, true]);
@@ -1075,7 +1086,7 @@ export class Worksheet {
   writeRow(
     row: number,
     startCol: number,
-    values: (string | number | boolean | null)[],
+    values: (string | number | boolean | null | undefined)[],
     format?: Format,
   ): void {
     return this._native.writeRow(row, startCol, values, format ? format._native : undefined);
@@ -1084,12 +1095,15 @@ export class Worksheet {
   /**
    * Write a 2D array of values starting at the given position.
    * Batches all writes — much faster than nested write() loops.
-   * Null/undefined values are skipped (the cell is left empty).
+   * Each value is written as {@link Worksheet.write} writes it: `null`, `undefined` and
+   * array holes leave the cell empty, or write a blank cell when a format is given.
    *
    * @param startRow - Starting row number (0-indexed)
    * @param startCol - Starting column number (0-indexed)
    * @param rows - 2D array of values to write
    * @param format - Optional format to apply to all cells
+   * @throws If a row is not an array or a value is of another type, such as an
+   *   object or a Date; the values before it are already written
    * @example
    * worksheet.writeRows(0, 0, [
    *   ['Name', 'Age', 'Active'],
@@ -1100,7 +1114,7 @@ export class Worksheet {
   writeRows(
     startRow: number,
     startCol: number,
-    rows: (string | number | boolean | null)[][],
+    rows: (string | number | boolean | null | undefined)[][],
     format?: Format,
   ): void {
     return this._native.writeRows(startRow, startCol, rows, format ? format._native : undefined);
@@ -1337,13 +1351,15 @@ export class Worksheet {
    * Write a value with formatting to a cell
    * @param row - Row number (0-indexed)
    * @param col - Column number (0-indexed)
-   * @param value - Value to write (string, number, or boolean)
+   * @param value - Value to write (string, number, or boolean); `null` or `undefined`
+   *   writes a blank cell with the format
    * @param format - Format to apply
+   * @throws If the value is of another type, such as an object or a Date
    */
   writeWithFormat(
     row: number,
     col: number,
-    value: string | number | boolean,
+    value: string | number | boolean | null | undefined,
     format: Format,
   ): void {
     return this._native.writeWithFormat(row, col, value, format._native);
@@ -2801,9 +2817,10 @@ export class Table {
 
   /**
    * Set the style of the table
-   * @param styleId - Table style ID (1-21: light, 22-49: medium, 50-60: dark)
+   * @param styleId - Table style ID (0: no style, 1-21: light, 22-49: medium, 50-60: dark)
+   * @throws If the ID is outside 0-60
    * @example
-   * table.setStyle(9); // Medium style 9 (default)
+   * table.setStyle(30); // Medium style 9, Excel's default
    */
   setStyle(styleId: number): this {
     this._native.setStyle(styleId);
@@ -2898,7 +2915,8 @@ export class Sparkline {
 
   /**
    * Set the data range for the sparkline
-   * @param range - Range string (e.g., 'Sheet1!A1:E1' or 'A1:E1')
+   * @param range - Range string (e.g., 'Sheet1!A1:E1' or 'A1:E1'); a range without a
+   *   sheet name refers to the worksheet the sparkline is added to
    */
   setRange(range: string): this {
     this._native.setRange(range);

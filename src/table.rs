@@ -86,10 +86,12 @@ impl RuscTable {
         self
     }
 
-    /// Set the style of the table (1-21 for light styles, 22-49 for medium styles, 50-61 for dark styles)
+    /// Set the style of the table: 0 for no style, 1-21 for light styles,
+    /// 22-49 for medium styles and 50-60 for dark styles
     #[napi]
-    pub fn set_style(&mut self, style_id: u8) -> &Self {
+    pub fn set_style(&mut self, style_id: u8) -> Result<&Self> {
         let style = match style_id {
+            0 => TableStyle::None,
             1 => TableStyle::Light1,
             2 => TableStyle::Light2,
             3 => TableStyle::Light3,
@@ -150,10 +152,15 @@ impl RuscTable {
             58 => TableStyle::Dark9,
             59 => TableStyle::Dark10,
             60 => TableStyle::Dark11,
-            _ => TableStyle::Medium9, // Default
+            _ => {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!("Invalid table style: {style_id}. Use 0 (none) or 1-60"),
+                ));
+            }
         };
         self.table = self.table.clone().set_style(style);
-        self
+        Ok(self)
     }
 
     /// Add columns to the table

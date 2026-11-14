@@ -37,6 +37,7 @@ import {
 } from './reports.mts';
 import { declaredFeatures, projectBaseline, rustdocJson } from './rustdoc.mts';
 import {
+  API_KEY,
   ERROR_BOUNDARY,
   type CallSite,
   collectCallSites,
@@ -303,18 +304,25 @@ export function validateMappings(groups: Iterable<Group>): void {
   for (const group of groups) {
     for (const capability of group.capabilities) {
       for (const target of capability.mapping) {
-        if (
-          /^\w+(?:\.(?:prototype|static)\.\w+|::constructor)$/.test(target) &&
-          !apis.has(target)
-        ) {
-          stale.push(`  ${capability.id} → ${target}`);
-        }
+        const api = API_KEY.exec(target)?.[1];
+        if (api && !apis.has(api)) stale.push(`  ${capability.id} → ${target}`);
       }
     }
   }
   if (stale.length) {
     throw new Error(`Checklist mappings reference APIs that do not exist:\n${stale.join('\n')}`);
   }
+}
+
+/** Call-site keys of a row: its API mappings and the error boundary. */
+function callSiteKeys(capability: Capability): string[] {
+  return capability.mapping.flatMap((target) =>
+    API_KEY.test(target)
+      ? [target]
+      : target === 'JavaScript Error boundary'
+        ? [ERROR_BOUNDARY]
+        : [],
+  );
 }
 
 /** Points every row at the first call sites of the APIs it maps to. */
@@ -330,21 +338,35 @@ export function refreshTests(groups: Iterable<Group>): void {
   const sites = collectCallSites(ROOT, testFiles, shapes);
   for (const group of groups) {
     for (const capability of group.capabilities) {
-      const keys = capability.mapping.flatMap((target) =>
-        /^\w+\.(?:prototype|static)\.\w+$/.test(target)
-          ? [target]
-          : target === 'JavaScript Error boundary'
-            ? [ERROR_BOUNDARY]
-            : [],
-      );
       const unique = new Map<string, CallSite>();
-      for (const site of keys.flatMap((key) => sites.get(key) ?? []))
+      for (const site of callSiteKeys(capability).flatMap((key) => sites.get(key) ?? []))
         unique.set(`${site.file}:${site.line}`, site);
       capability.tests = [...unique.entries()]
         .toSorted(([, a], [, b]) => compareIds(a.file, b.file) || a.line - b.line)
         .slice(0, TESTS_PER_ROW)
         .map(([key]) => key);
     }
+  }
+}
+
+/**
+ * Fails on `FULL` rows that map to an API no test calls, as the definition of
+ * done requires a regression test. Rows mapped only to descriptions (such as
+ * `Button class`) carry their evidence in prose and are not checked.
+ */
+export function requireTestedFullRows(groups: Iterable<Group>): void {
+  const untested: string[] = [];
+  for (const group of groups) {
+    for (const capability of group.capabilities) {
+      if (capability.status !== 'FULL' || capability.tests.length) continue;
+      const keys = callSiteKeys(capability);
+      if (keys.length) untested.push(`  ${capability.id} → ${keys.join(', ')}`);
+    }
+  }
+  if (untested.length) {
+    throw new Error(
+      `FULL rows need a test that calls what they map to (definition of done #4):\n${untested.join('\n')}`,
+    );
   }
 }
 
@@ -436,6 +458,7 @@ export function run({ check, rustdoc }: RunOptions): void {
   if (!check && (!pinned || rustdoc)) sync(checklist);
   validateMappings(checklist.groups.values());
   refreshTests(checklist.groups.values());
+  requireTestedFullRows(checklist.groups.values());
 
   const probed = probeTypescriptRuntime();
   if (probed) checklist.backlog.mismatches = probed;

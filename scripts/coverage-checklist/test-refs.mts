@@ -8,6 +8,12 @@
 // object literals keep their property types through destructuring.
 // Calls on receivers of unknown type are skipped rather than guessed from the
 // method name, because names such as `setWidth` exist on several classes.
+//
+// A call that passes a string or number literal is also recorded under the
+// API key with that argument, e.g. `Format.prototype.setAlign('left')`, so an
+// enum variant row can point at the calls that select it. Parameters of
+// `test.each`/`it.each`/`describe.each` callbacks stand for every literal in
+// their column of the table.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,6 +21,25 @@ import { parseSync } from 'oxc-parser';
 
 /** Call-site key for assertions that an operation throws. */
 export const ERROR_BOUNDARY = 'error-boundary';
+
+/**
+ * A public API key, optionally narrowed to calls passing one literal argument:
+ * `Format.prototype.setBold`, `Chart::constructor('radar')`, `Table.prototype.setStyle(30)`.
+ * The first group is the API without the argument.
+ */
+export const API_KEY: RegExp =
+  /^(\w+(?:\.(?:prototype|static)\.\w+|::constructor))(?:\((?:'(?:[^'\\]|\\.)*'|-?\d+(?:\.\d+)?)\))?$/;
+
+type Literal = string | number;
+
+/** The key suffix for calls passing `value`, e.g. `('left')` or `(30)`. */
+export function literalArgument(value: Literal): string {
+  return typeof value === 'number'
+    ? `(${value})`
+    : `('${value.replaceAll('\\', '\\\\').replaceAll("'", "\\'")}')`;
+}
+
+const EACH_RUNNERS = new Set(['test', 'it', 'describe']);
 
 export interface CallSite {
   file: string;
@@ -30,7 +55,9 @@ type ValueType =
   | { instance: string }
   | { klass: string }
   | { returns: ValueType | null }
-  | { fields: Map<string, ValueType | null> };
+  | { fields: Map<string, ValueType | null> }
+  | { literals: Literal[] }
+  | { elements: (ValueType | null)[] };
 
 /** Reads method return types of the exported classes in wrapper.ts. */
 export function readApiShapes(wrapperSource: string, fileName: string): Map<string, ClassShape> {
@@ -127,6 +154,8 @@ function walkFile(
 ): void {
   const scopes: Map<string, ValueType | null>[] = [];
   const functions: { start: number; returns: ValueType | null }[] = [];
+  // Parameter types of `.each` callbacks, keyed by the callback's start offset.
+  const eachParams = new Map<number, (ValueType | null)[]>();
   const lookup = (name: string): ValueType | null => {
     for (let i = scopes.length - 1; i >= 0; i--) {
       if (scopes[i]!.has(name)) return scopes[i]!.get(name) ?? null;
@@ -147,6 +176,18 @@ function walkFile(
     switch (node?.type) {
       case 'Identifier':
         return lookup(node.name);
+      case 'Literal':
+        return typeof node.value === 'string' || typeof node.value === 'number'
+          ? { literals: [node.value] }
+          : null;
+      case 'UnaryExpression':
+        return node.operator === '-' &&
+          node.argument.type === 'Literal' &&
+          typeof node.argument.value === 'number'
+          ? { literals: [-node.argument.value] }
+          : null;
+      case 'ArrayExpression':
+        return { elements: node.elements.map(typeOf) };
       case 'ParenthesizedExpression':
         return typeOf(node.expression);
       case 'AwaitExpression':
@@ -219,6 +260,41 @@ function walkFile(
     return owner && 'klass' in owner ? { instance: owner.klass } : null;
   };
 
+  /** Records `key` and, for each literal the call passes, `key('literal')`. */
+  const recordCall = (key: string, call: any): void => {
+    if (!record) return;
+    record(key, call.start);
+    const literals = new Set<Literal>();
+    for (const argument of call.arguments) {
+      const type = typeOf(argument);
+      if (type && 'literals' in type) for (const value of type.literals) literals.add(value);
+    }
+    for (const value of literals) record(`${key}${literalArgument(value)}`, call.start);
+  };
+
+  /**
+   * Types the callback parameters of `test.each(table)(name, callback)`: rows
+   * that are arrays spread into the parameters, other rows are the only one.
+   */
+  const bindEachParams = (call: any): void => {
+    const runner = call.callee;
+    if (runner.type !== 'CallExpression' || runner.callee.type !== 'MemberExpression') return;
+    const { object, property } = runner.callee;
+    if (object.type !== 'Identifier' || !EACH_RUNNERS.has(object.name)) return;
+    if (property.name !== 'each') return;
+    const table = typeOf(runner.arguments[0]);
+    const callback = call.arguments.find((argument: any) => FUNCTION_TYPES.has(argument.type));
+    if (!table || !('elements' in table) || !callback) return;
+    const columns = callback.params.map((_param: any, index: number): ValueType | null => {
+      const values = table.elements.flatMap((row) => {
+        const cell = row && 'elements' in row ? row.elements[index] : index === 0 ? row : null;
+        return cell && 'literals' in cell ? cell.literals : [];
+      });
+      return values.length ? { literals: values } : null;
+    });
+    eachParams.set(callback.start, columns);
+  };
+
   const hoist = (statements: any[]): void => {
     for (const statement of statements) {
       if (statement?.type === 'FunctionDeclaration' && statement.id) {
@@ -232,10 +308,12 @@ function walkFile(
     const isFunction = FUNCTION_TYPES.has(node.type);
     const opensScope = isFunction || node.type === 'BlockStatement' || node.type === 'Program';
     if (opensScope) {
-      // Parameters shadow outer bindings and have no inferable type.
+      // Parameters shadow outer bindings; only `.each` callbacks know their types.
       const scope = new Map<string, ValueType | null>();
-      for (const param of node.params ?? [])
-        if (param.type === 'Identifier') scope.set(param.name, null);
+      const preset = eachParams.get(node.start);
+      (node.params ?? []).forEach((param: any, index: number) => {
+        if (param.type === 'Identifier') scope.set(param.name, preset?.[index] ?? null);
+      });
       scopes.push(scope);
       if (!isFunction) hoist(node.body);
     }
@@ -271,6 +349,7 @@ function walkFile(
       }
       case 'CallExpression': {
         const callee = node.callee;
+        bindEachParams(node);
         if (record && callee.type === 'MemberExpression' && !callee.computed) {
           const member: string = callee.property.name;
           const negated =
@@ -278,10 +357,17 @@ function walkFile(
           if (member === 'toThrow' && !negated) record(ERROR_BOUNDARY, node.start);
           const receiver = typeOf(callee.object);
           if (receiver && 'klass' in receiver)
-            record(`${receiver.klass}.static.${member}`, node.start);
+            recordCall(`${receiver.klass}.static.${member}`, node);
           if (receiver && 'instance' in receiver) {
-            record(`${receiver.instance}.prototype.${member}`, node.start);
+            recordCall(`${receiver.instance}.prototype.${member}`, node);
           }
+        }
+        break;
+      }
+      case 'NewExpression': {
+        const constructed = typeOf(node.callee);
+        if (constructed && 'klass' in constructed) {
+          recordCall(`${constructed.klass}::constructor`, node);
         }
         break;
       }

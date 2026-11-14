@@ -43,6 +43,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:rust": "bash scripts/rust-coverage.sh",
     "lint": "oxlint --deny-warnings",
     "lint:rust": "cargo clippy --locked --all-targets -- -D warnings",
     "fmt": "oxfmt && cargo fmt --all",

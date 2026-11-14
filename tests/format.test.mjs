@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Workbook, Format } from '../wrapper.ts';
-import { cleanupTestOutput, createTestOutputDir } from './test-helpers.mjs';
+import { cleanupTestOutput, createTestOutputDir, readCellStyle } from './test-helpers.mjs';
 
 describe('Format', () => {
   let testOutputDir;
@@ -148,5 +148,100 @@ describe('Format', () => {
     const filename = path.join(testOutputDir, 'test-number-format.xlsx');
     workbook.save(filename);
     expect(fs.existsSync(filename)).toBe(true);
+  });
+});
+
+/** Style parts of A1 in a workbook whose only cell uses `format`. */
+function styleOf(format) {
+  const workbook = new Workbook();
+  workbook.addWorksheet().write(0, 0, 'x', format);
+  return readCellStyle(workbook.saveToBuffer(), 'A1');
+}
+
+describe('Format XLSX output', () => {
+  test.each([
+    ['left', 'left'],
+    ['center', 'center'],
+    ['right', 'right'],
+    ['fill', 'fill'],
+    ['justify', 'justify'],
+    ['centerAcross', 'centerContinuous'],
+    ['distributed', 'distributed'],
+  ])('writes horizontal alignment %s as %s', (align, horizontal) => {
+    expect(styleOf(new Format().setAlign(align)).xf).toContain(
+      `<alignment horizontal="${horizontal}"/>`,
+    );
+  });
+
+  test.each(['top', 'center', 'justify', 'distributed'])(
+    'writes vertical alignment %s',
+    (align) => {
+      expect(styleOf(new Format().setVerticalAlign(align)).xf).toContain(
+        `<alignment vertical="${align}"/>`,
+      );
+    },
+  );
+
+  test('leaves bottom, the Excel default vertical alignment, implicit', () => {
+    const { xf } = styleOf(new Format().setVerticalAlign('bottom'));
+    expect(xf).toContain('applyAlignment="1"');
+    expect(xf).not.toContain('vertical=');
+  });
+
+  test.each([
+    ['single', '<u/>'],
+    ['double', '<u val="double"/>'],
+    ['singleAccounting', '<u val="singleAccounting"/>'],
+    ['doubleAccounting', '<u val="doubleAccounting"/>'],
+  ])('writes %s underline', (underline, element) => {
+    expect(styleOf(new Format().setUnderline(underline)).font).toContain(element);
+  });
+
+  test.each([
+    ['black', '000000'],
+    ['blue', '0000FF'],
+    ['brown', '800000'],
+    ['cyan', '00FFFF'],
+    ['gray', '808080'],
+    ['green', '008000'],
+    ['lime', '00FF00'],
+    ['magenta', 'FF00FF'],
+    ['navy', '000080'],
+    ['orange', 'FF6600'],
+    ['pink', 'FFC0CB'],
+    ['purple', '800080'],
+    ['red', 'FF0000'],
+    ['silver', 'C0C0C0'],
+    ['white', 'FFFFFF'],
+    ['yellow', 'FFFF00'],
+    ['#1E90FF', '1E90FF'],
+  ])('writes font color %s as RGB %s', (color, rgb) => {
+    expect(styleOf(new Format().setFontColor(color)).font).toContain(`<color rgb="FF${rgb}"/>`);
+  });
+
+  test.each([
+    'thin',
+    'medium',
+    'thick',
+    'double',
+    'dotted',
+    'dashed',
+    'dashDot',
+    'dashDotDot',
+    'slantDashDot',
+    'mediumDashed',
+    'mediumDashDot',
+    'mediumDashDotDot',
+  ])('writes %s border on all four sides', (style) => {
+    const { border } = styleOf(new Format().setBorder(style).setBorderColor('navy'));
+    for (const side of ['left', 'right', 'top', 'bottom']) {
+      expect(border).toContain(`<${side} style="${style}"><color rgb="FF000080"/></${side}>`);
+    }
+  });
+
+  test('writes shrink-to-fit and hidden protection', () => {
+    const { xf } = styleOf(new Format().setAlign('center').setShrink().setHidden());
+    expect(xf).toContain('<alignment horizontal="center" shrinkToFit="1"/>');
+    expect(xf).toContain('<protection hidden="1"/>');
   });
 });
