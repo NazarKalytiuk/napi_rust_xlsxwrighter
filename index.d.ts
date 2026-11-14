@@ -497,9 +497,11 @@ export declare class RuscWorkbook {
 export declare class RuscWorksheet {
   /**
    * Write a value to a cell (auto-detects type). `null` or `undefined`
-   * writes nothing, or a blank cell with the format when one is given.
+   * writes nothing, or a blank cell with the format when one is given. A
+   * `Date` is written as a UTC datetime; without a number format of its own it
+   * gets Excel's built-in date or date-time format.
    */
-  write(row: number, col: number, value: string | number | boolean | null | undefined, format?: RuscFormat | undefined | null): void
+  write(row: number, col: number, value: string | number | boolean | Date | null | undefined, format?: RuscFormat | undefined | null): void
   /**
    * Write an array of values as a row starting at the given column.
    * Uses lazy Array iteration — reads one cell at a time from the JS array
@@ -552,7 +554,7 @@ export declare class RuscWorksheet {
    * Write a value with formatting to a cell; `null` or `undefined` writes
    * a blank cell with the format
    */
-  writeWithFormat(row: number, col: number, value: string | number | boolean | null | undefined, format: RuscFormat): void
+  writeWithFormat(row: number, col: number, value: string | number | boolean | Date | null | undefined, format: RuscFormat): void
   /** Set the width of a column */
   setColumnWidth(col: number, width: number): void
   /** Set the height of a row */

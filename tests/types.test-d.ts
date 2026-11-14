@@ -1,6 +1,7 @@
 // Type-level contract of the public API, enforced by `npm run typecheck`.
 import { expectTypeOf } from 'vitest';
 import {
+  type CellValue,
   Format,
   Formula,
   RichText,
@@ -18,6 +19,11 @@ expectTypeOf(format.setBold().setItalic()).toEqualTypeOf<Format>();
 
 // Allocator diagnostics are a [currentBytes, peakBytes] pair.
 expectTypeOf(rustMemoryStats).returns.toEqualTypeOf<[number, number]>();
+
+// Cell values include Dates.
+expectTypeOf(worksheet.write).toBeCallableWith(0, 0, new Date());
+expectTypeOf(worksheet.writeRow).toBeCallableWith(0, 0, ['a', 1, true, new Date(), null]);
+expectTypeOf<CellValue>().toEqualTypeOf<string | number | boolean | Date | null | undefined>();
 
 // Formula writers take a Formula or a formula string.
 expectTypeOf(worksheet.writeFormula).toBeCallableWith(0, 0, '=A1+B1');

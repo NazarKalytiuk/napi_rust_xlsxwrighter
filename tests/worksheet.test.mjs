@@ -218,12 +218,15 @@ describe('Worksheet.write with missing and unsupported values', () => {
   });
 
   test.each([
-    [{}, 'Unsupported cell value type: object. Use a string, number, boolean or null'],
-    [['a'], 'Unsupported cell value type: array. Use a string, number, boolean or null'],
-    [10n, 'Unsupported cell value type: bigint. Use a string, number, boolean or null'],
-    [Symbol('x'), 'Unsupported cell value type: symbol. Use a string, number, boolean or null'],
-    [() => 1, 'Unsupported cell value type: function. Use a string, number, boolean or null'],
-    [new Date(0), 'Unsupported cell value: Date. Use writeDatetime() for dates'],
+    [{}, 'Unsupported cell value type: object. Use a string, number, boolean, Date or null'],
+    [['a'], 'Unsupported cell value type: array. Use a string, number, boolean, Date or null'],
+    [10n, 'Unsupported cell value type: bigint. Use a string, number, boolean, Date or null'],
+    [
+      Symbol('x'),
+      'Unsupported cell value type: symbol. Use a string, number, boolean, Date or null',
+    ],
+    [() => 1, 'Unsupported cell value type: function. Use a string, number, boolean, Date or null'],
+    [new Date(Number.NaN), 'Unsupported cell value: Invalid Date'],
   ])('rejects %o with or without a format', (value, message) => {
     const worksheet = new Workbook().addWorksheet();
     expect(() => worksheet.write(0, 0, value)).toThrow(message);
@@ -266,10 +269,10 @@ describe('Worksheet.writeRow and writeRows with missing and unsupported values',
   ])('%s rejects unsupported values with their cell position', (_method, write) => {
     const worksheet = new Workbook().addWorksheet();
     expect(() => write(worksheet, { amount: 1 })).toThrow(
-      'Invalid value at row 3, col 2: Unsupported cell value type: object. Use a string, number, boolean or null',
+      'Invalid value at row 3, col 2: Unsupported cell value type: object. Use a string, number, boolean, Date or null',
     );
-    expect(() => write(worksheet, new Date(0))).toThrow(
-      'Invalid value at row 3, col 2: Unsupported cell value: Date. Use writeDatetime() for dates',
+    expect(() => write(worksheet, new Date(Number.NaN))).toThrow(
+      'Invalid value at row 3, col 2: Unsupported cell value: Invalid Date',
     );
   });
 

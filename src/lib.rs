@@ -1,6 +1,7 @@
 // Module declarations
 mod button;
 mod chart;
+mod datetime;
 mod format;
 mod formula;
 mod image;

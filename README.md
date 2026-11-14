@@ -185,8 +185,8 @@ workbook.save('output.xlsx');
 - `setProperties(props)` - Set document metadata
 
 ### Worksheet
-- **Writing**: `write()`, `writeString()`, `writeNumber()`, `writeBoolean()`, `writeBlank()`
-- **DateTime**: `writeDatetime()`, `writeDatetimeFromTimestamp()`, `writeDatetimeFromYmd()`, etc.
+- **Writing**: `write()`, `writeRow()`, `writeRows()` (strings, numbers, booleans and `Date`s), `writeString()`, `writeNumber()`, `writeBoolean()`, `writeBlank()`
+- **DateTime**: `writeDatetime()`, `writeDatetimeFromTimestamp()`, `writeDatetimeFromYmd()`, etc. A datetime written without a number format is shown with Excel's built-in date, date-time or time format, in the viewer's locale
 - **Formulas**: `writeFormula()`, `writeArrayFormula()`, `writeDynamicFormula()`
 - **Layout**: `setColumnWidth()`, `setColumnWidthPixels()`, `setColumnRangeWidth()`, `setColumnAutofitWidth()`, `setRowHeight()`, `setRowHeightPixels()`, `setDefaultRowHeight()`, `mergeRange()`, `setName()`, `autofit()`, `setAutofitMaxRow()`, `setAutofitMaxWidth()`
 - **Rows & columns**: `setColumnFormat()`, `setColumnRangeFormat()`, `setColumnHidden()`, `setColumnRangeHidden()`, `setRowFormat()`, `setRowHidden()`, `setRowUnhidden()`, `hideUnusedRows()`
