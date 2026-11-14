@@ -1,5 +1,5 @@
 use napi::bindgen_prelude::*;
-use rust_xlsxwriter::{ChartType, Color, DataValidationRule, FormatBorder};
+use rust_xlsxwriter::{ChartType, Color, DataValidationRule, FormatBorder, IgnoreError};
 
 /// Helper function to parse validation rules for integers
 pub fn parse_validation_rule_int(rule: String, value: i32) -> Result<DataValidationRule<i32>> {
@@ -152,4 +152,34 @@ pub fn parse_chart_type(chart_type: &str) -> Result<ChartType> {
             ),
         )),
     }
+}
+
+/// Parses an `IgnoreErrorType` of the JavaScript API.
+pub fn parse_ignore_error(error_type: &str) -> Result<IgnoreError> {
+    Ok(match error_type {
+        "numberStoredAsText" => IgnoreError::NumberStoredAsText,
+        "formulaError" => IgnoreError::FormulaError,
+        "formulaDiffers" => IgnoreError::FormulaDiffers,
+        "formulaRefersToEmptyCells" => IgnoreError::FormulaRefersToEmptyCells,
+        "formulaOmitsCells" => IgnoreError::FormulaOmitsCells,
+        "dataValidationError" => IgnoreError::DataValidationError,
+        "unlockedCellsWithFormula" => IgnoreError::UnlockedCellsWithFormula,
+        "inconsistentColumnFormula" => IgnoreError::InconsistentColumnFormula,
+        // rust_xlsxwriter 0.102.0 writes this rule as a `TwoDigitTextYear`
+        // attribute, which the file format doesn't define (it is
+        // `twoDigitTextYear`), so the rule would not take effect.
+        "twoDigitTextYear" => {
+            return Err(Error::new(
+                Status::InvalidArg,
+                "Unsupported ignore error type: twoDigitTextYear. rust_xlsxwriter 0.102.0 \
+                 writes it with an attribute name Excel doesn't define",
+            ));
+        }
+        _ => {
+            return Err(Error::new(
+                Status::InvalidArg,
+                format!("Invalid ignore error type: {error_type}"),
+            ));
+        }
+    })
 }

@@ -163,6 +163,13 @@ impl RuscWorkbook {
         Ok(())
     }
 
+    /// Allow the xlsx file and the files inside it to exceed the 4 GB zip limit
+    /// (ZIP64). Excel reads such files; some other readers don't support ZIP64.
+    #[napi]
+    pub fn use_zip_large_file(&self, enable: bool) {
+        self.workbook.lock().use_zip_large_file(enable);
+    }
+
     /// Set when Excel recalculates formulas: "automatic" (default), "manual",
     /// or "partial" (automatic except for data tables).
     #[napi]

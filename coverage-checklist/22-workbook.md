@@ -4,8 +4,8 @@
 
 > Pinned baseline: `rust_xlsxwriter 0.102.0`; **34 grouped capabilities**, **34 canonical symbol rows**.
 
-- Grouped: **19 full · 4 partial · 11 missing · 0 N/A**.
-- Symbol rows: **19 full · 4 partial · 11 missing · 0 N/A**.
+- Grouped: **20 full · 4 partial · 10 missing · 0 N/A**.
+- Symbol rows: **20 full · 4 partial · 10 missing · 0 N/A**.
 - `[x] FULL`; `[ ] PARTIAL`; `[ ] MISSING`; plain `N/A` is outside the compiled/runtime denominator.
 - Before marking `FULL`, satisfy the [shared definition of done](../rust-xlsxwriter-coverage-checklist.md#definition-of-done).
 
@@ -43,7 +43,7 @@
 - [ ] **PARTIAL** `rust_xlsxwriter::workbook::Workbook#struct::set_zip_compression_level#function` — → `Workbook.prototype.setZipCompressionLevel`, `RuscWorkbook.prototype.setZipCompressionLevel` — evidence: `runtime` — tests: `tests/rust-xlsxwriter-0102.test.mjs:59`, `tests/rust-xlsxwriter-0102.test.mjs:66`, `tests/rust-xlsxwriter-0102.test.mjs:69` — gap: Out-of-range values throw a JavaScript Error, whereas upstream prints a warning and keeps the previous value. <!-- coverage-capability:rust_xlsxwriter::workbook::Workbook#struct::set_zip_compression_level#function --><!-- coverage-row:rust_xlsxwriter::workbook::Workbook#struct::set_zip_compression_level#function -->
 - [x] **FULL** `rust_xlsxwriter::workbook::Workbook#struct::use_custom_theme#function` — → `Workbook.prototype.useCustomTheme`, `RuscWorkbook.prototype.useCustomTheme` — evidence: `runtime` — tests: `tests/rust-xlsxwriter-097.test.mjs:83`, `tests/rust-xlsxwriter-097.test.mjs:93` <!-- coverage-capability:rust_xlsxwriter::workbook::Workbook#struct::use_custom_theme#function --><!-- coverage-row:rust_xlsxwriter::workbook::Workbook#struct::use_custom_theme#function -->
 - [x] **FULL** `rust_xlsxwriter::workbook::Workbook#struct::use_excel_2023_theme#function` — → `Workbook.prototype.useExcel2023Theme`, `RuscWorkbook.prototype.useExcel2023Theme` — evidence: `runtime` — tests: `tests/rust-xlsxwriter-097.test.mjs:48`, `tests/rust-xlsxwriter-097.test.mjs:57` <!-- coverage-capability:rust_xlsxwriter::workbook::Workbook#struct::use_excel_2023_theme#function --><!-- coverage-row:rust_xlsxwriter::workbook::Workbook#struct::use_excel_2023_theme#function -->
-- [ ] **MISSING** `rust_xlsxwriter::workbook::Workbook#struct::use_zip_large_file#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::workbook::Workbook#struct::use_zip_large_file#function --><!-- coverage-row:rust_xlsxwriter::workbook::Workbook#struct::use_zip_large_file#function -->
+- [x] **FULL** `rust_xlsxwriter::workbook::Workbook#struct::use_zip_large_file#function` — → `Workbook.prototype.useZipLargeFile`, `RuscWorkbook.prototype.useZipLargeFile` — evidence: `runtime` — tests: `tests/ignore-error-zip64.test.mjs:95`, `tests/ignore-error-zip64.test.mjs:108`, `tests/ignore-error-zip64.test.mjs:109` <!-- coverage-capability:rust_xlsxwriter::workbook::Workbook#struct::use_zip_large_file#function --><!-- coverage-row:rust_xlsxwriter::workbook::Workbook#struct::use_zip_large_file#function -->
 - [ ] **MISSING** `rust_xlsxwriter::workbook::Workbook#struct::worksheet_from_index#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::workbook::Workbook#struct::worksheet_from_index#function --><!-- coverage-row:rust_xlsxwriter::workbook::Workbook#struct::worksheet_from_index#function -->
 - [ ] **MISSING** `rust_xlsxwriter::workbook::Workbook#struct::worksheet_from_name#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::workbook::Workbook#struct::worksheet_from_name#function --><!-- coverage-row:rust_xlsxwriter::workbook::Workbook#struct::worksheet_from_name#function -->
 - [ ] **MISSING** `rust_xlsxwriter::workbook::Workbook#struct::worksheets#function` — evidence: `runtime` <!-- coverage-capability:rust_xlsxwriter::workbook::Workbook#struct::worksheets#function --><!-- coverage-row:rust_xlsxwriter::workbook::Workbook#struct::worksheets#function -->

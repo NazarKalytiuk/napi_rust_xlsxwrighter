@@ -35,8 +35,8 @@
 
 | Режим підрахунку | Усього rows/capabilities | N/A | Denominator | Full | Partial | Missing | Full % |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Symbol rows | 1673 | 202 | 1471 | 448 | 272 | 751 | 30.5% |
-| Grouped input capabilities | 1598 | 200 | 1398 | 425 | 240 | 733 | 30.4% |
+| Symbol rows | 1673 | 202 | 1471 | 459 | 273 | 739 | 31.2% |
+| Grouped input capabilities | 1598 | 200 | 1398 | 436 | 241 | 721 | 31.2% |
 
 ## Dashboard і group milestones
 
@@ -63,8 +63,8 @@
 | [ ] | [Таблиці](coverage-checklist/19-table.md) | 95 | 86 | 5 | 4 | 0 | 90.5% |
 | [ ] | [Гіперпосилання](coverage-checklist/20-url.md) | 4 | 0 | 3 | 1 | 0 | 0.0% |
 | [ ] | [Допоміжні функції](coverage-checklist/21-utility.md) | 12 | 0 | 0 | 12 | 2 | 0.0% |
-| [ ] | [Workbook](coverage-checklist/22-workbook.md) | 34 | 19 | 4 | 11 | 0 | 55.9% |
-| [ ] | [Worksheet](coverage-checklist/23-worksheet.md) | 161 | 31 | 67 | 63 | 43 | 19.3% |
+| [ ] | [Workbook](coverage-checklist/22-workbook.md) | 34 | 20 | 4 | 10 | 0 | 58.8% |
+| [ ] | [Worksheet](coverage-checklist/23-worksheet.md) | 161 | 41 | 68 | 52 | 43 | 25.5% |
 
 ## Cross-cutting backlogs
 

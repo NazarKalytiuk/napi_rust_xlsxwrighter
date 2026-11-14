@@ -444,6 +444,11 @@ export declare class RuscWorkbook {
    */
   setZipCompressionLevel(level: number): void
   /**
+   * Allow the xlsx file and the files inside it to exceed the 4 GB zip limit
+   * (ZIP64). Excel reads such files; some other readers don't support ZIP64.
+   */
+  useZipLargeFile(enable: boolean): void
+  /**
    * Set when Excel recalculates formulas: "automatic" (default), "manual",
    * or "partial" (automatic except for data tables).
    */
@@ -629,6 +634,16 @@ export declare class RuscWorksheet {
   clearCell(row: number, col: number): void
   /** Remove the format of a cell, keeping its data */
   clearCellFormat(row: number, col: number): void
+  /**
+   * Turn off an Excel warning, such as "number stored as text", for a cell.
+   * Excel allows one rule per cell or range.
+   */
+  ignoreError(row: number, col: number, errorType: string): void
+  /**
+   * Turn off an Excel warning for a range of cells. Excel allows one rule per
+   * cell or range.
+   */
+  ignoreErrorRange(firstRow: number, firstCol: number, lastRow: number, lastCol: number, errorType: string): void
   /** Set the exclusive upper row bound inspected by autofit. */
   setAutofitMaxRow(maxRow: number): void
   /** Limit the autofitted column width in pixels. */
