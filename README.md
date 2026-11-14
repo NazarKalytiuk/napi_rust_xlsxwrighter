@@ -175,6 +175,7 @@ workbook.save('output.xlsx');
 - `useExcel2023Theme()` / `useCustomTheme(path)` - Select the workbook theme before adding worksheets
 - `setCalculationMode(mode)` - Formula recalculation: `'automatic'`, `'manual'` or `'partial'`
 - `setZipCompressionLevel(level)` - Trade file size for speed (1-9, default 6)
+- `useZipLargeFile(enable)` - Allow files over the 4 GB zip limit (ZIP64)
 - `setTabRatio(ratio)` - Width of the sheet tab bar vs. the horizontal scroll bar (0-100)
 - `save(filename)` - Save to file
 - `saveToBuffer()` - Save to Buffer
@@ -197,6 +198,7 @@ workbook.save('output.xlsx');
 - **Page Setup**: 26 methods for printing, margins, headers, etc.
 - **View**: `autofilter()`, `setFreezePanes()`, `setZoom()`, `setTabColor()`, `setHiddenZeroes()`, `setHidden()`
 - **Hyperlinks**: `writeUrl()`
+- **Warnings**: `ignoreError()`, `ignoreErrorRange()` turn off Excel warnings such as "number stored as text"
 - **Protection**: `protect()`, `protectWithPassword()`
 - **Rich Text**: `writeRichString()`
 

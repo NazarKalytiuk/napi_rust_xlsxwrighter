@@ -135,6 +135,32 @@ export type CellValue = string | number | boolean | Date | null | undefined;
 export type CalculationMode = 'automatic' | 'manual' | 'partial';
 
 /**
+ * An Excel warning (the green triangle in a cell's corner) that
+ * {@link Worksheet.ignoreError} turns off:
+ * - `numberStoredAsText`: a number stored as text
+ * - `formulaError`: a formula that evaluates to an error, such as `#DIV/0!`
+ * - `formulaDiffers`: a formula that differs from the formulas around it
+ * - `formulaRefersToEmptyCells`: a formula that refers to empty cells
+ * - `formulaOmitsCells`: a formula that omits cells next to its range
+ * - `dataValidationError`: a value that breaks the cell's data validation
+ * - `unlockedCellsWithFormula`: an unlocked cell that contains a formula
+ * - `inconsistentColumnFormula`: a table cell whose formula differs from its
+ *   column's formula
+ *
+ * Excel's two-digit text year warning is not available: rust_xlsxwriter
+ * 0.102.0 writes its rule with an attribute name Excel doesn't define.
+ */
+export type IgnoreErrorType =
+  | 'numberStoredAsText'
+  | 'formulaError'
+  | 'formulaDiffers'
+  | 'formulaRefersToEmptyCells'
+  | 'formulaOmitsCells'
+  | 'dataValidationError'
+  | 'unlockedCellsWithFormula'
+  | 'inconsistentColumnFormula';
+
+/**
  * Format class for cell styling with fluent API
  * All methods return `this` for method chaining
  *
@@ -1672,6 +1698,46 @@ export class Worksheet {
    */
   clearCellFormat(row: number, col: number): void {
     return this._native.clearCellFormat(row, col);
+  }
+
+  /**
+   * Turn off an Excel warning, such as "number stored as text", for a cell.
+   * Excel allows one rule per cell or range, so a cell or range that already
+   * has one can't get another.
+   * @param row - Row number (0-indexed)
+   * @param col - Column number (0-indexed)
+   * @param errorType - The warning to turn off
+   * @throws If the type is unknown, or the cell already has a rule
+   * @example
+   * worksheet.write(0, 0, '0123');
+   * worksheet.ignoreError(0, 0, 'numberStoredAsText');
+   */
+  ignoreError(row: number, col: number, errorType: IgnoreErrorType): void {
+    return this._native.ignoreError(row, col, errorType);
+  }
+
+  /**
+   * Turn off an Excel warning, such as "number stored as text", for a range of
+   * cells. Excel allows one rule per cell or range, so a range that already has
+   * one can't get another.
+   * @param firstRow - First row (0-indexed)
+   * @param firstCol - First column (0-indexed)
+   * @param lastRow - Last row (0-indexed), inclusive
+   * @param lastCol - Last column (0-indexed), inclusive
+   * @param errorType - The warning to turn off
+   * @throws If the type is unknown, the range is inverted, or the range already
+   *   has a rule
+   * @example
+   * worksheet.ignoreErrorRange(1, 0, 1000, 0, 'numberStoredAsText');
+   */
+  ignoreErrorRange(
+    firstRow: number,
+    firstCol: number,
+    lastRow: number,
+    lastCol: number,
+    errorType: IgnoreErrorType,
+  ): void {
+    return this._native.ignoreErrorRange(firstRow, firstCol, lastRow, lastCol, errorType);
   }
 
   /**
@@ -3773,6 +3839,19 @@ export class Workbook {
    */
   setZipCompressionLevel(level: number): void {
     return this._native.setZipCompressionLevel(level);
+  }
+
+  /**
+   * Allow the xlsx file, and the files inside it, to exceed the 4 GB limit of a
+   * standard zip file by using ZIP64. Without it, saving such a workbook fails.
+   * Worksheets reach the limit at roughly 150 million cells. Excel reads ZIP64
+   * files; some other readers don't.
+   * @param enable - True to use ZIP64
+   * @example
+   * workbook.useZipLargeFile(true);
+   */
+  useZipLargeFile(enable: boolean): void {
+    return this._native.useZipLargeFile(enable);
   }
 
   /**

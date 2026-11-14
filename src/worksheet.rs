@@ -24,7 +24,7 @@ use crate::richtext::{RuscRichText, rich_string_segments};
 use crate::shape::RuscShape;
 use crate::sparkline::RuscSparkline;
 use crate::table::RuscTable;
-use crate::utils::parse_color;
+use crate::utils::{parse_color, parse_ignore_error};
 use crate::validation::RuscDataValidation;
 
 /// Worksheet wrapper for Excel sheet manipulation
@@ -868,6 +868,35 @@ impl RuscWorksheet {
         self.with_worksheet(|ws| {
             ws.clear_cell_format(row, col);
             Ok(())
+        })
+    }
+
+    /// Turn off an Excel warning, such as "number stored as text", for a cell.
+    /// Excel allows one rule per cell or range.
+    #[napi]
+    pub fn ignore_error(&self, row: u32, col: u16, error_type: String) -> Result<()> {
+        let error_type = parse_ignore_error(&error_type)?;
+        self.with_worksheet(|ws| {
+            ws.ignore_error(row, col, error_type)
+                .or_js_error("ignore error")
+        })
+    }
+
+    /// Turn off an Excel warning for a range of cells. Excel allows one rule per
+    /// cell or range.
+    #[napi]
+    pub fn ignore_error_range(
+        &self,
+        first_row: u32,
+        first_col: u16,
+        last_row: u32,
+        last_col: u16,
+        error_type: String,
+    ) -> Result<()> {
+        let error_type = parse_ignore_error(&error_type)?;
+        self.with_worksheet(|ws| {
+            ws.ignore_error_range(first_row, first_col, last_row, last_col, error_type)
+                .or_js_error("ignore error")
         })
     }
 
