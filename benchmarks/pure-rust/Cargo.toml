@@ -4,11 +4,8 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 
+# Built from the workspace root, so the release profile and Cargo.lock are the
+# addon's: both sides of every comparison compile with the same settings.
 [dependencies]
 libc = "0.2"
-rust_xlsxwriter = { version = "=0.90.2", features = ["constant_memory"] }
-
-[profile.release]
-lto = true
-codegen-units = 1
-opt-level = 3
+rust_xlsxwriter = { workspace = true }

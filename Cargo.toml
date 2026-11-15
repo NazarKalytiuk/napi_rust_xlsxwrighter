@@ -15,10 +15,19 @@ crate-type = ["cdylib"]
 napi = { version = "3.16.2", features = ["async", "tokio_rt", "napi9"] }
 napi-derive = "3.7.1"
 parking_lot = "0.13.0"
-rust_xlsxwriter = { version = "0.102.0", features = ["constant_memory", "zmij"] }
+rust_xlsxwriter = { workspace = true }
 
 [build-dependencies]
 napi-build = "2.6.0"
+
+[workspace]
+members = ["benchmarks/pure-rust"]
+
+# The addon and the pure Rust benchmarks inherit this one declaration, so the
+# baseline they are compared against always compiles the same rust_xlsxwriter
+# release and features as the published package.
+[workspace.dependencies]
+rust_xlsxwriter = { version = "0.102.0", features = ["constant_memory", "zmij"] }
 
 [profile.release]
 lto = true

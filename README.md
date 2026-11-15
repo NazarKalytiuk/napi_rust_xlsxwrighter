@@ -327,6 +327,11 @@ builds both implementations in release mode, alternates their execution order
 across three runs, reports median throughput and peak RSS, and verifies that
 both worksheets have identical XML size and CRC.
 
+The pure Rust side (`benchmarks/pure-rust`) is a member of the root Cargo
+workspace and inherits the package's `rust_xlsxwriter` declaration, so it always
+compiles the same release, features, `Cargo.lock` and release profile as the
+N-API addon.
+
 Override the workload or reuse existing release builds:
 
 ```bash
@@ -363,6 +368,66 @@ for await (const item of cursor) {
 
 This keeps memory bounded to the current cursor item while retaining
 constant-memory worksheet generation.
+
+### rust_xlsxwriter `write_performance` Benchmark
+
+Runs the workloads of rust_xlsxwriter's own
+[`benches/write_performance.rs`](https://github.com/jmcnamara/rust_xlsxwriter/blob/v0.102.0/benches/write_performance.rs)
+through direct `rust_xlsxwriter` calls, this package, ExcelJS and SheetJS:
+
+```bash
+npm run benchmark:write-performance
+```
+
+Every implementation runs upstream's groups (`numbers`, `mixed`,
+`string_static`, `string_dynamic`), cell counts (1K to 1M cells in 50 columns)
+and sample sizes. Every iteration creates a workbook, populates it, saves it to
+a temporary file and removes the file. The Rust side is upstream's code run
+without Criterion, so every implementation is timed the same way; the report
+shows the median iteration time, its ratio to `rust_xlsxwriter`, and the extra
+time per cell this package spends crossing from JavaScript to Rust.
+
+Each memory mode is compared with the closest API of every library:
+
+| Mode | rust_xlsxwriter / this package | ExcelJS | SheetJS |
+|------|--------------------------------|---------|---------|
+| Default | `add_worksheet()` | `Workbook` + `xlsx.writeFile()` | `aoa_to_sheet()` + `writeFile()` |
+| Constant memory | `add_worksheet_with_constant_memory()` | `stream.xlsx.WorkbookWriter` (inline strings) | — |
+| Low memory | `add_worksheet_with_low_memory()` | `stream.xlsx.WorkbookWriter` with `useSharedStrings` | — |
+
+ExcelJS and SheetJS write row arrays, their bulk APIs. This package runs twice:
+with per-cell `writeNumber()`/`writeString()`, as upstream writes, and with
+`writeRow()`, the same row-array shape as ExcelJS and SheetJS. ExcelJS uses DEFLATE level 6
+like `rust_xlsxwriter`; SheetJS writes with `compression` and `bookSST`, so its
+strings go to a shared string table as `rust_xlsxwriter` writes them by default.
+
+After timing, every 1M-cell workbook is written once more in a fresh process to
+measure the peak RSS increase over the RSS before the workbook was created,
+along with the size of the file.
+
+Before measuring, each implementation writes all 16 workbooks of every mode
+once. Every workbook is read back and checked for the expected value and type
+of every cell, and this package's workbooks must be byte-identical to
+`rust_xlsxwriter`'s in every part except `docProps/core.xml` (the creation
+timestamp).
+
+A JavaScript `Workbook` keeps its Rust data until V8 collects it and Node runs
+its N-API finalizer, which happens only after the event loop turns. Rust drops
+each workbook at the end of its iteration, so the JavaScript runner collects
+garbage and yields once after every iteration, outside the timed region, and
+fails if this package's Rust heap does not return to where the configuration
+started.
+
+Select implementations, memory modes or this package's write APIs, skip the
+memory phase, print Markdown tables, or reuse existing release builds:
+
+```bash
+npm run benchmark:write-performance -- --implementations pure-rust,rusc-xlsx,exceljs
+npm run benchmark:write-performance -- --modes constant,low
+npm run benchmark:write-performance -- --rusc-xlsx-apis row
+npm run benchmark:write-performance -- --skip-memory --warm-up-ms 3000 --markdown
+npm run benchmark:write-performance -- --skip-build
+```
 
 ### Node.js vs Bun Benchmarks
 

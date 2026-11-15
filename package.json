@@ -40,13 +40,14 @@
     "benchmark:languages": "node benchmarks/compare-languages.js",
     "benchmark:runtimes": "node benchmarks/compare-runtimes.js",
     "benchmark:runtimes:exceljs": "node benchmarks/compare-runtimes.js --library exceljs",
+    "benchmark:write-performance": "node benchmarks/compare-write-performance.js",
     "prepublishOnly": "napi prepublish -t npm --no-gh-release",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:coverage:rust": "bash scripts/rust-coverage.sh",
     "lint": "oxlint --deny-warnings",
-    "lint:rust": "cargo clippy --locked --all-targets -- -D warnings",
+    "lint:rust": "cargo clippy --locked --workspace --all-targets -- -D warnings",
     "fmt": "oxfmt && cargo fmt --all",
     "fmt:check": "oxfmt --check && cargo fmt --all -- --check",
     "lint:package": "publint --strict && attw --pack .",
@@ -90,7 +91,8 @@
     "publint": "^0.3.25",
     "tsdown": "^0.23.7",
     "typescript": "^7.0.2",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "engines": {
     "node": ">=22.13.0"
