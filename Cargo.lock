@@ -416,6 +416,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "rusc-xlsx-pure-rust-benchmark"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "rust_xlsxwriter",
+]
+
+[[package]]
 name = "rust_xlsxwriter"
 version = "0.102.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

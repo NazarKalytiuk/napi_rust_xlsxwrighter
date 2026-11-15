@@ -6,15 +6,13 @@ const path = require('path');
 const { performance } = require('perf_hooks');
 const { spawnSync } = require('child_process');
 const AdmZip = require('adm-zip');
+const {
+  ROOT,
+  buildReleaseBinaries,
+  cargoMetadata,
+  pureRustBinary,
+} = require('./release-builds.js');
 
-const ROOT = path.resolve(__dirname, '..');
-const PURE_RUST_MANIFEST = path.join(__dirname, 'pure-rust', 'Cargo.toml');
-const PURE_RUST_TARGET = path.join(__dirname, 'pure-rust', 'target');
-const PURE_RUST_BINARY = path.join(
-  PURE_RUST_TARGET,
-  'release',
-  `rusc-xlsx-pure-rust-benchmark${process.platform === 'win32' ? '.exe' : ''}`,
-);
 const NODE_RUNNER = path.join(__dirname, 'node-package.js');
 const DEFAULT_ROWS = 200_000;
 const DEFAULT_COLUMNS = 20;
@@ -102,37 +100,6 @@ function printHelp() {
   );
 }
 
-function runInherited(command, args) {
-  const result = spawnSync(command, args, {
-    cwd: ROOT,
-    stdio: 'inherit',
-    env: process.env,
-  });
-
-  if (result.error) {
-    throw result.error;
-  }
-  if (result.status !== 0) {
-    throw new Error(`${command} ${args.join(' ')} exited with status ${result.status}`);
-  }
-}
-
-function buildReleaseBinaries() {
-  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  process.stdout.write('Building the N-API package in release mode...\n');
-  runInherited(npm, ['run', 'build']);
-
-  process.stdout.write('Building the pure Rust generator in release mode...\n');
-  runInherited('cargo', [
-    'build',
-    '--release',
-    '--manifest-path',
-    PURE_RUST_MANIFEST,
-    '--target-dir',
-    PURE_RUST_TARGET,
-  ]);
-}
-
 function executeRunner(command, args) {
   const processStart = performance.now();
   const result = spawnSync(command, args, {
@@ -164,7 +131,7 @@ function executeRunner(command, args) {
   return { ...parsed, processWallMs };
 }
 
-function runImplementation(implementation, config, output) {
+function runImplementation(implementation, config, output, pureRustGenerator) {
   const commonArgs = [
     '--rows',
     String(config.rows),
@@ -175,7 +142,7 @@ function runImplementation(implementation, config, output) {
   ];
 
   if (implementation === 'pure-rust') {
-    return executeRunner(PURE_RUST_BINARY, commonArgs);
+    return executeRunner(pureRustGenerator, commonArgs);
   }
   return executeRunner(process.execPath, [
     NODE_RUNNER,
@@ -311,8 +278,9 @@ function main() {
   if (!config.skipBuild) {
     buildReleaseBinaries();
   }
-  if (!fs.existsSync(PURE_RUST_BINARY)) {
-    throw new Error(`Pure Rust release binary not found: ${PURE_RUST_BINARY}`);
+  const pureRustGenerator = pureRustBinary(cargoMetadata(), 'rusc-xlsx-pure-rust-benchmark');
+  if (!fs.existsSync(pureRustGenerator)) {
+    throw new Error(`Pure Rust release binary not found: ${pureRustGenerator}`);
   }
 
   const workDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'rusc-xlsx-generation-benchmark-'));
@@ -349,7 +317,12 @@ function main() {
 
       for (const implementation of order) {
         process.stdout.write(`[run ${run + 1}/${config.runs}] ${implementation}... `);
-        pair[implementation] = runImplementation(implementation, config, files[implementation]);
+        pair[implementation] = runImplementation(
+          implementation,
+          config,
+          files[implementation],
+          pureRustGenerator,
+        );
         process.stdout.write(`${formatMilliseconds(pair[implementation].totalMs)}\n`);
       }
 
