@@ -1,4 +1,6 @@
-//! Helpers shared by the pure Rust benchmark binaries.
+//! Code shared by the pure Rust benchmark binaries.
+
+pub mod export;
 
 /// Peak resident set size of this process so far, in bytes.
 #[cfg(unix)]

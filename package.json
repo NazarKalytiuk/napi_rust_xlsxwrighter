@@ -41,6 +41,7 @@
     "benchmark:runtimes": "node benchmarks/compare-runtimes.js",
     "benchmark:runtimes:exceljs": "node benchmarks/compare-runtimes.js --library exceljs",
     "benchmark:write-performance": "node benchmarks/compare-write-performance.js",
+    "benchmark:export": "node benchmarks/compare-write-performance.js --workload export",
     "prepublishOnly": "napi prepublish -t npm --no-gh-release",
     "test": "vitest run",
     "test:watch": "vitest",

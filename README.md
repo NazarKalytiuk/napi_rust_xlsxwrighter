@@ -429,6 +429,36 @@ npm run benchmark:write-performance -- --skip-memory --warm-up-ms 3000 --markdow
 npm run benchmark:write-performance -- --skip-build
 ```
 
+#### Business-report export
+
+The same runner also writes a large worksheet shaped like a real export: a
+header row and 200,000 orders in 30 columns of integers, decimals, unique and
+repeated strings, datetimes, dates, booleans and empty cells
+([`benchmarks/export-workload.js`](benchmarks/export-workload.js), with a Rust
+copy in `benchmarks/pure-rust/src/export.rs`):
+
+```bash
+npm run benchmark:export
+npm run benchmark:export -- --rows 500000 --modes constant
+```
+
+Every value is computed from the row index with integer arithmetic, so both
+languages write the same numbers. Dates are JavaScript `Date`s in UTC; the Rust
+side writes them with `write_datetime_with_format()` and Excel's built-in date
+formats, as this package does for a `Date` without a format. The runners run
+with `TZ=UTC` because SheetJS converts Dates in local time, and ExcelJS's
+streaming writer writes styles so its dates get a date number format. Each
+workbook is validated like the others, including every empty cell and the
+serial value and number format of every date.
+
+At this size ExcelJS's in-memory `Workbook` exceeds Node's default heap limit;
+the report marks it as out of memory and carries on. Use `--node-heap-mib` to
+raise the limit of every JavaScript runner:
+
+```bash
+npm run benchmark:export -- --node-heap-mib 16384
+```
+
 ### Node.js vs Bun Benchmarks
 
 The runtime benchmark executes the same package workload through the same
