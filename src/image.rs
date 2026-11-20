@@ -24,11 +24,10 @@ impl RuscImage {
         Ok(RuscImage { image })
     }
 
-    /// Create an Image from a buffer (u8 array)
+    /// Create an Image from a buffer (a Buffer or any Uint8Array)
     #[napi(factory)]
-    pub fn new_from_buffer(buffer: Buffer) -> Result<RuscImage> {
-        let data = buffer.to_vec();
-        let image = Image::new_from_buffer(&data).map_err(|e| {
+    pub fn new_from_buffer(buffer: Uint8Array) -> Result<RuscImage> {
+        let image = Image::new_from_buffer(&buffer).map_err(|e| {
             Error::new(
                 Status::GenericFailure,
                 format!("Failed to load image from buffer: {}", e),

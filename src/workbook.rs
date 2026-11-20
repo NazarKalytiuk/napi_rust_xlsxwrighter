@@ -3,6 +3,8 @@ use napi_derive::napi;
 use parking_lot::Mutex;
 use rust_xlsxwriter::{CalculationMode, Workbook};
 use std::sync::Arc;
+#[cfg(target_os = "wasi")]
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::format::RuscFormat;
 use crate::properties::RuscDocProperties;
@@ -12,6 +14,10 @@ use crate::worksheet::RuscWorksheet;
 #[napi]
 pub struct RuscWorkbook {
     pub(crate) workbook: Arc<Mutex<Workbook>>,
+    /// Whether constant and low memory worksheets have a temporary directory;
+    /// see `ensure_tempdir`.
+    #[cfg(target_os = "wasi")]
+    tempdir_set: AtomicBool,
 }
 
 impl Default for RuscWorkbook {
@@ -27,7 +33,35 @@ impl RuscWorkbook {
     pub fn new() -> Self {
         RuscWorkbook {
             workbook: Arc::new(Mutex::new(Workbook::new())),
+            #[cfg(target_os = "wasi")]
+            tempdir_set: AtomicBool::new(false),
         }
+    }
+
+    /// rust_xlsxwriter puts the temporary files of constant and low memory
+    /// worksheets in `std::env::temp_dir()` unless `set_tempdir()` chose a
+    /// directory. On WASI that function panics, and a panic aborts the whole
+    /// WebAssembly instance, so the workbook picks the directory itself the
+    /// way std does on Unix: `$TMPDIR`, else `/tmp`. Where that directory
+    /// cannot be used, for example in a browser, which has no file system,
+    /// adding the worksheet fails with an error instead.
+    #[cfg(target_os = "wasi")]
+    fn ensure_tempdir(
+        &self,
+        wb: &mut Workbook,
+    ) -> std::result::Result<(), rust_xlsxwriter::XlsxError> {
+        if self.tempdir_set.load(Ordering::Acquire) {
+            return Ok(());
+        }
+        let dir = std::env::var_os("TMPDIR")
+            .filter(|dir| !dir.is_empty())
+            .map_or_else(
+                || std::path::PathBuf::from("/tmp"),
+                std::path::PathBuf::from,
+            );
+        wb.set_tempdir(dir)?;
+        self.tempdir_set.store(true, Ordering::Release);
+        Ok(())
     }
 
     /// Add a new worksheet to the workbook and return a reference to it
@@ -62,12 +96,15 @@ impl RuscWorkbook {
         let workbook = Arc::clone(&self.workbook);
         let index = {
             let mut wb = workbook.lock();
-            let worksheet = wb.add_worksheet_with_constant_memory().map_err(|e| {
+            let add_error = |e: rust_xlsxwriter::XlsxError| {
                 Error::new(
                     Status::GenericFailure,
                     format!("Failed to add constant memory worksheet: {}", e),
                 )
-            })?;
+            };
+            #[cfg(target_os = "wasi")]
+            self.ensure_tempdir(&mut wb).map_err(add_error)?;
+            let worksheet = wb.add_worksheet_with_constant_memory().map_err(add_error)?;
 
             if let Some(n) = name {
                 worksheet.set_name(&n).map_err(|e| {
@@ -90,12 +127,15 @@ impl RuscWorkbook {
         let workbook = Arc::clone(&self.workbook);
         let index = {
             let mut wb = workbook.lock();
-            let worksheet = wb.add_worksheet_with_low_memory().map_err(|e| {
+            let add_error = |e: rust_xlsxwriter::XlsxError| {
                 Error::new(
                     Status::GenericFailure,
                     format!("Failed to add low memory worksheet: {}", e),
                 )
-            })?;
+            };
+            #[cfg(target_os = "wasi")]
+            self.ensure_tempdir(&mut wb).map_err(add_error)?;
+            let worksheet = wb.add_worksheet_with_low_memory().map_err(add_error)?;
 
             if let Some(n) = name {
                 worksheet.set_name(&n).map_err(|e| {
@@ -122,6 +162,8 @@ impl RuscWorkbook {
                 format!("Failed to set tempdir: {}", e),
             )
         })?;
+        #[cfg(target_os = "wasi")]
+        self.tempdir_set.store(true, Ordering::Release);
         Ok(())
     }
     /// Set the default workbook format and row/column dimensions in pixels.

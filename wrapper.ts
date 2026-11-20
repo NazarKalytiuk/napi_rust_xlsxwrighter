@@ -1,16 +1,12 @@
 // Fluent, chainable JavaScript API over the native bindings in ./index.js.
-// tsdown compiles this file into the published wrapper.js and wrapper.d.ts.
+// tsdown compiles this file into the published wrapper.js and wrapper.d.ts,
+// and into wrapper.browser.mjs, the browser entry, which loads the WebAssembly
+// build through ./browser.js instead of ./index.js.
 
-import { randomBytes } from 'node:crypto';
-// `fs` and `os` stay namespace objects so their functions are looked up at call
-// time, which keeps them replaceable (tests stub `os.tmpdir`, for example).
-import fs from 'node:fs';
-import os from 'node:os';
-import { join } from 'node:path';
 import type { Writable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
 
 import {
+  __napiBindingTarget,
   RuscButton,
   RuscChart,
   RuscDataValidation,
@@ -29,6 +25,34 @@ import {
   RuscWorkbook,
   RuscWorksheet,
 } from './index.js';
+
+/**
+ * Returns `process` on Node.js and `undefined` in browsers.
+ *
+ * Node.js built-in modules are looked up with `process.getBuiltinModule()` when
+ * a method that needs them runs, instead of being imported, so this module also
+ * loads in browsers. It returns the same module objects an import would, which
+ * keeps their functions replaceable (tests stub `os.tmpdir`, for example).
+ */
+function nodeProcess(): NodeJS.Process | undefined {
+  const candidate = globalThis.process;
+  return typeof candidate?.getBuiltinModule === 'function' ? candidate : undefined;
+}
+
+/**
+ * Prepares a file path for the native binding.
+ *
+ * The WebAssembly build reaches the file system through WASI, which resolves a
+ * relative path against `/` instead of the working directory, so on Node.js the
+ * path is made absolute first. That gives relative paths the same meaning in
+ * both builds. The native addon gets the path unchanged.
+ */
+function bindingPath(path: string): string {
+  if (__napiBindingTarget === 'native') {
+    return path;
+  }
+  return nodeProcess()?.getBuiltinModule('node:path').resolve(path) ?? path;
+}
 
 function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && 'code' in error;
@@ -907,18 +931,23 @@ export class Image {
    * @throws Error if file cannot be read or format is unsupported
    */
   constructor(path: string) {
-    this._native = RuscImage.new(path);
+    this._native = RuscImage.new(bindingPath(path));
   }
 
   /**
    * Create an Image from a buffer
-   * @param buffer - Buffer containing image data
+   * @param buffer - Buffer or Uint8Array containing image data
    * @returns Image instance
    * @example
    * const buffer = fs.readFileSync('logo.png');
    * const image = Image.fromBuffer(buffer);
+   *
+   * @example
+   * // In a browser
+   * const response = await fetch('/logo.png');
+   * const image = Image.fromBuffer(new Uint8Array(await response.arrayBuffer()));
    */
-  static fromBuffer(buffer: Buffer): Image {
+  static fromBuffer(buffer: Uint8Array): Image {
     // Bypasses the path-based constructor; the native image comes from the buffer.
     const image: Image = Object.create(Image.prototype);
     image._native = RuscImage.newFromBuffer(buffer);
@@ -3807,7 +3836,7 @@ export class Workbook {
    * @param dir - Directory path for temporary files
    */
   setTempdir(dir: string): void {
-    return this._native.setTempdir(dir);
+    return this._native.setTempdir(bindingPath(dir));
   }
 
   /**
@@ -3881,7 +3910,7 @@ export class Workbook {
    * Must be called before adding worksheets.
    */
   useCustomTheme(path: string): void {
-    return this._native.useCustomTheme(path);
+    return this._native.useCustomTheme(bindingPath(path));
   }
 
   /**
@@ -3889,12 +3918,20 @@ export class Workbook {
    * @param filename - Path where the file should be saved
    */
   save(filename: string): void {
-    return this._native.save(filename);
+    return this._native.save(bindingPath(filename));
   }
 
   /**
    * Save the workbook to a Buffer
+   *
+   * In browsers the result is a `Buffer` from the `buffer` package, a
+   * `Uint8Array` subclass, so it can be passed to `Blob` directly.
    * @returns Buffer containing the Excel file data
+   * @example
+   * // In a browser
+   * const blob = new Blob([workbook.saveToBuffer()], {
+   *   type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+   * });
    */
   saveToBuffer(): Buffer {
     return this._native.saveToBuffer();
@@ -3907,6 +3944,7 @@ export class Workbook {
    * writable without buffering the entire XLSX file in JavaScript memory.
    * The temporary file is removed after the pipeline succeeds or fails.
    * The promise rejects on native save, read, writable, pipeline, or cleanup errors.
+   * Node.js only: in browsers the promise rejects; use {@link saveToBuffer} there.
    *
    * @param writable - A Node.js Writable stream (e.g., fs.createWriteStream, HTTP response)
    * @returns A promise that settles after streaming and temporary-file cleanup complete
@@ -3921,6 +3959,15 @@ export class Workbook {
    * await workbook.saveToStream(res);
    */
   async saveToStream(writable: Writable): Promise<void> {
+    const node = nodeProcess();
+    if (node === undefined) {
+      throw new Error('saveToStream() needs Node.js streams; use saveToBuffer() instead');
+    }
+    const fs = node.getBuiltinModule('node:fs');
+    const os = node.getBuiltinModule('node:os');
+    const { join } = node.getBuiltinModule('node:path');
+    const { randomBytes } = node.getBuiltinModule('node:crypto');
+    const { pipeline } = node.getBuiltinModule('node:stream/promises');
     const tmpFile = join(os.tmpdir(), `rusc-xlsx-${randomBytes(8).toString('hex')}.xlsx`);
     let operationError: unknown;
 
@@ -3980,7 +4027,7 @@ export class Workbook {
    * workbook.addVbaProject('./vbaProject.bin');
    */
   addVbaProject(path: string): void {
-    return this._native.addVbaProject(path);
+    return this._native.addVbaProject(bindingPath(path));
   }
 
   /**

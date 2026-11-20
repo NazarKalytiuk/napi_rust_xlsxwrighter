@@ -17,17 +17,20 @@ host="$(rustc -vV | sed -n 's/^host: //p')"
 
 # The instrumented addon replaces any build in the project root, where the
 # loader looks for it; the builds there are set aside and put back afterwards.
+# That includes the WebAssembly build (`npm run build:wasm`): napi-rs treats
+# the root loader next to its WASI loader as its own output, and a `--no-js`
+# build would delete index.js without writing a new one.
 shopt -s nullglob
 set_aside="$(mktemp -d)"
 restore_builds() {
   rm -f rusc_xlsx.*.node
-  for build in "$set_aside"/*.node; do
+  for build in "$set_aside"/*; do
     mv "$build" .
   done
   rmdir "$set_aside"
 }
 trap restore_builds EXIT
-for build in rusc_xlsx.*.node; do
+for build in rusc_xlsx.*.node rusc_xlsx.*.wasm rusc_xlsx.wasip1*; do
   mv "$build" "$set_aside/"
 done
 # The generated loader and type definitions stay as the release build made them.

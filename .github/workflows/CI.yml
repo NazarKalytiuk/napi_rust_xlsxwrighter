@@ -40,6 +40,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: rustfmt, clippy
+          targets: wasm32-wasip1
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
@@ -58,6 +59,13 @@ jobs:
 
       - name: Lint Rust (clippy)
         run: npm run lint:rust
+
+      # The WASI-only code (`cfg(target_os = "wasi")`) compiles only for this
+      # target; napi-build links against the emnapi archive npm installed.
+      - name: Lint Rust for WebAssembly (clippy)
+        run: cargo clippy --locked --target wasm32-wasip1 -- -D warnings
+        env:
+          EMNAPI_LINK_DIR: ${{ github.workspace }}/node_modules/emnapi/lib/wasm32-wasip1
 
       - name: Lint package (publint, attw)
         run: npm run lint:package
@@ -126,6 +134,56 @@ jobs:
       - name: Run tests (Vitest)
         run: npm test
 
+  wasm:
+    name: Test WebAssembly / Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Node.js 22's node:wasi crashes (SIGSEGV) in fd_write when the
+        # WebAssembly build writes a file; see "Browsers (WebAssembly)" in the
+        # README. Browsers do not use node:wasi.
+        node: [24, 26]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: wasm32-wasip1
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm32-wasip1
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build WebAssembly module
+        run: npm run build:wasm
+
+      # The whole library suite, against the WebAssembly build in Node.js.
+      - name: Run tests on WebAssembly (Vitest)
+        run: npm run test:wasm
+
+      - name: Install browsers
+        if: matrix.node == 26
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      # The browser entry in Chromium, Firefox and WebKit.
+      - name: Run browser tests (Vitest browser mode)
+        if: matrix.node == 26
+        run: npm run test:browser
+
   rust-coverage:
     name: Rust coverage
     runs-on: ubuntu-latest
@@ -185,7 +243,7 @@ jobs:
   release-bindings:
     name: Build ${{ matrix.settings.target }}
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [quality, msrv, test]
+    needs: [quality, msrv, test, wasm]
     runs-on: ${{ matrix.settings.host }}
     strategy:
       fail-fast: false
@@ -218,6 +276,9 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
             build: npm run build -- --target aarch64-unknown-linux-musl -x
+          - host: ubuntu-latest
+            target: wasm32-wasip1
+            build: npm run build -- --target wasm32-wasip1
 
     steps:
       - uses: actions/checkout@v7
@@ -260,10 +321,27 @@ jobs:
         shell: bash
 
       - name: Upload binding
+        if: matrix.settings.target != 'wasm32-wasip1'
         uses: actions/upload-artifact@v7
         with:
           name: bindings-${{ matrix.settings.target }}
           path: ${{ env.APP_NAME }}.*.node
+          if-no-files-found: error
+
+      # `napi artifacts` takes the loaders napi-rs writes next to the module
+      # from the same directory as the module.
+      - name: Upload WebAssembly binding
+        if: matrix.settings.target == 'wasm32-wasip1'
+        uses: actions/upload-artifact@v7
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: |
+            ${{ env.APP_NAME }}.wasm32-wasip1.wasm
+            ${{ env.APP_NAME }}.wasip1.cjs
+            ${{ env.APP_NAME }}.wasip1.d.cts
+            ${{ env.APP_NAME }}.wasip1-browser.js
+            ${{ env.APP_NAME }}.wasip1-deferred.js
+            ${{ env.APP_NAME }}.wasip1-deferred.d.ts
           if-no-files-found: error
 
   universal-macos:
@@ -311,7 +389,7 @@ jobs:
   publish:
     name: Publish npm package
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [quality, msrv, test, release-bindings, universal-macos]
+    needs: [quality, msrv, test, wasm, release-bindings, universal-macos]
     runs-on: ubuntu-latest
     environment: npm
     permissions:
@@ -345,6 +423,14 @@ jobs:
 
       - name: Move bindings into npm packages
         run: npm run artifacts
+
+      - name: Install browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      # Installs the root and WebAssembly packages into a Vite app and checks
+      # them in Chromium, Firefox, WebKit and Node.js before anything is published.
+      - name: Check WebAssembly packages
+        run: npm run test:wasm-package
 
       # `npm publish` first runs `napi prepublish` (prepublishOnly), which
       # publishes every platform package with a plain `npm publish`. Settings

@@ -4,7 +4,7 @@
 [![npm version](https://img.shields.io/npm/v/@nazarkalytiuk/rusc-xlsx.svg)]([https://www.npmjs.com/package/rusc-xlsx](https://www.npmjs.com/package/@nazarkalytiuk/rusc-xlsx))
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Fast, feature-complete Excel XLSX library for Node.js powered by [rust_xlsxwriter](https://github.com/jmcnamara/rust_xlsxwriter) and NAPI-RS.
+Fast, feature-complete Excel XLSX library for Node.js and browsers, powered by [rust_xlsxwriter](https://github.com/jmcnamara/rust_xlsxwriter) and NAPI-RS. In browsers it runs on WebAssembly; see [Browsers](#browsers-webassembly).
 
 ## Features
 
@@ -60,6 +60,7 @@ Fast, feature-complete Excel XLSX library for Node.js powered by [rust_xlsxwrite
   - **Constant Memory**: ~0.02 MB regardless of size (millions of rows)
   - **Low Memory**: Optimized for repeated strings
 - **TypeScript**: Complete type definitions with IntelliSense support
+- **Browsers**: The same API on WebAssembly, in the page or in a Web Worker
 
 ## Installation
 
@@ -95,6 +96,58 @@ worksheet.write(1, 1, 30);
 // Save file
 workbook.save('output.xlsx');
 ```
+
+## Browsers (WebAssembly)
+
+Bundlers that follow the `browser` field of `package.json` (Vite, webpack,
+esbuild, Rollup with `@rollup/plugin-node-resolve`) pick a browser build of
+the same API. It runs on the WebAssembly package
+`@nazarkalytiuk/rusc-xlsx-wasm32-wasip1`, which npm installs with the
+library. Vite needs no configuration, in development or in production builds.
+
+```javascript
+import { Format, Workbook } from '@nazarkalytiuk/rusc-xlsx';
+
+const workbook = new Workbook();
+const worksheet = workbook.addWorksheet('Report');
+worksheet.writeRow(0, 0, ['Name', 'Amount'], new Format().setBold());
+worksheet.writeRow(1, 0, ['Alice', 42]);
+
+const blob = new Blob([workbook.saveToBuffer()], {
+  type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+});
+const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = 'report.xlsx';
+link.click();
+```
+
+What differs from Node.js:
+
+- Browsers have no file system: use `saveToBuffer()` instead of `save()` or
+  `saveToStream()`, and `Image.fromBuffer(new Uint8Array(await response.arrayBuffer()))`
+  instead of `new Image(path)`. Methods that take a path (`save`,
+  `useCustomTheme`, `addVbaProject`, `setTempdir`) throw, and so do
+  `addWorksheetWithConstantMemory()` and `addWorksheetWithLowMemory()`, which
+  need temporary files; use the default mode.
+- `saveToBuffer()` returns a `Buffer` from the
+  [`buffer`](https://www.npmjs.com/package/buffer) package, a `Uint8Array`
+  subclass with the Node.js `Buffer` methods.
+- The module loads with top-level await, so the bundle must target browsers
+  that support it (current Chrome, Edge, Firefox and Safari do, and so do
+  Vite's default build targets).
+- It runs on any page, without cross-origin isolation headers, and in Web
+  Workers, which keeps a large export off the main thread.
+- TypeScript: the declarations mention Node.js types (`Buffer`, `Writable`),
+  so a browser project needs `@types/node` installed or `skipLibCheck: true`
+  (the default in Vite's templates).
+
+On Node.js the native addon is used. Where no prebuilt binary exists for the
+platform, Node.js falls back to the same WebAssembly package automatically;
+set `NAPI_RS_WASI_FLAVOR=wasm32-wasip1` to choose it on purpose. Use Node.js 24
+or newer for that: on Node.js 22 the process crashes (SIGSEGV in `node:wasi`'s
+`fd_write`) when the WebAssembly build writes a file, as `save()` and the
+constant and low memory modes do.
 
 ## Memory Modes for Large Datasets
 
@@ -265,6 +318,12 @@ npm run build
 
 # Rebuild the JavaScript wrapper after editing wrapper.ts
 npm run build:wrapper
+
+# Build the WebAssembly module and run the suite on it, and in browsers
+npm run build:wasm
+npm run test:wasm
+npx playwright install chromium firefox webkit
+npm run test:browser
 
 # Run tests (Vitest)
 npm test

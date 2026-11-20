@@ -5,6 +5,7 @@
   "type": "commonjs",
   "main": "wrapper.js",
   "types": "wrapper.d.ts",
+  "browser": "wrapper.browser.mjs",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/NazarKalytiuk/napi_rust_xlsxwrighter.git"
@@ -19,7 +20,8 @@
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",
       "x86_64-unknown-linux-musl",
-      "aarch64-unknown-linux-musl"
+      "aarch64-unknown-linux-musl",
+      "wasm32-wasip1"
     ],
     "darwin": {
       "universal": {
@@ -28,12 +30,20 @@
           "aarch64-apple-darwin"
         ]
       }
+    },
+    "wasm": {
+      "threadlessInitialMemory": 1024,
+      "cpu": false,
+      "browser": {
+        "buffer": true
+      }
     }
   },
   "scripts": {
     "artifacts": "napi artifacts",
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
+    "build:wasm": "napi build --platform --release --target wasm32-wasip1",
     "build:wrapper": "tsdown",
     "prepare": "tsdown",
     "benchmark": "node benchmarks/compare-generation.js",
@@ -43,6 +53,9 @@
     "prepublishOnly": "napi prepublish -t npm --no-gh-release",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:wasm": "vitest run --config vitest.wasm.config.mts",
+    "test:browser": "vitest run --config vitest.browser.config.mts",
+    "test:wasm-package": "node scripts/wasm-package-smoke.mts",
     "test:coverage": "vitest run --coverage",
     "test:coverage:rust": "bash scripts/rust-coverage.sh",
     "lint": "oxlint --deny-warnings",
@@ -72,24 +85,34 @@
   "files": [
     "index.js",
     "index.d.ts",
+    "browser.js",
     "wrapper.js",
     "wrapper.d.ts",
+    "wrapper.browser.mjs",
     "README.md",
     "LICENSE"
   ],
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
+    "@emnapi/core": "2.0.0-beta.3",
+    "@emnapi/runtime": "2.0.0-beta.3",
     "@napi-rs/cli": "^3.10.12",
+    "@napi-rs/wasm-runtime": "^1.2.7",
     "@types/node": "^26.6.6",
+    "@vitest/browser-playwright": "^5.1.0",
     "@vitest/coverage-v8": "^5.1.0",
     "adm-zip": "^0.6.1",
+    "buffer": "^6.0.3",
+    "emnapi": "2.0.0-beta.3",
     "exceljs": "^4.4.0",
     "oxc-parser": "^0.158.0",
     "oxfmt": "^0.78.0",
     "oxlint": "^1.93.0",
+    "playwright": "^1.65.1",
     "publint": "^0.3.25",
     "tsdown": "^0.23.7",
     "typescript": "^7.0.2",
+    "vite": "^8.3.8",
     "vitest": "^5.1.0"
   },
   "engines": {

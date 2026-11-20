@@ -15,6 +15,7 @@ index.node
 
 # Testing
 coverage/
+.vitest/
 
 # Generated Excel files
 *.xlsx
@@ -34,6 +35,13 @@ coverage/
 # Generated from wrapper.ts by tsdown (`npm run build:wrapper`)
 /wrapper.js
 /wrapper.d.ts
+/wrapper.browser.mjs
+
+# WebAssembly build (`npm run build:wasm`). CI publishes it in the
+# @nazarkalytiuk/rusc-xlsx-wasm32-wasip1 package; browser.js, the browser
+# counterpart of index.js, is committed.
+*.wasm
+/rusc_xlsx.wasip1*
 
 # Reference repositories
 rust_xlsxwriter/

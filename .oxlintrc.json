@@ -14,5 +14,14 @@
     // object; the underscore marks it as internal on purpose.
     "eslint/no-underscore-dangle": "off"
   },
-  "ignorePatterns": ["index.js", "index.d.ts", "wrapper.js", "wrapper.d.ts", "coverage/"]
+  "ignorePatterns": [
+    "index.js",
+    "index.d.ts",
+    "browser.js",
+    "rusc_xlsx.wasip1*",
+    "wrapper.js",
+    "wrapper.d.ts",
+    "wrapper.browser.mjs",
+    "coverage/"
+  ]
 }
