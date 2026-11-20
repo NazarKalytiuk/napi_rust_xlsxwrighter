@@ -208,8 +208,8 @@ export declare class RuscImage {
    * Supports PNG, JPG, GIF, and BMP formats
    */
   static new(path: string): RuscImage
-  /** Create an Image from a buffer (u8 array) */
-  static newFromBuffer(buffer: Buffer): RuscImage
+  /** Create an Image from a buffer (a Buffer or any Uint8Array) */
+  static newFromBuffer(buffer: Uint8Array): RuscImage
   /** Set the width of the image in pixels */
   setWidth(width: number): this
   /** Set the height of the image in pixels */

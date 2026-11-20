@@ -3,5 +3,14 @@
   "semi": true,
   "singleQuote": true,
   "sortPackageJson": false,
-  "ignorePatterns": ["index.js", "index.d.ts", "wrapper.js", "wrapper.d.ts", "**/*.md"]
+  "ignorePatterns": [
+    "index.js",
+    "index.d.ts",
+    "browser.js",
+    "rusc_xlsx.wasip1*",
+    "wrapper.js",
+    "wrapper.d.ts",
+    "wrapper.browser.mjs",
+    "**/*.md"
+  ]
 }
