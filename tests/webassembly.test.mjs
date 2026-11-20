@@ -4,37 +4,35 @@
  * addon and `npm run test:wasm` against the WebAssembly build.
  */
 
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { __napiBindingTarget } from '../index.js';
 import { Image, Workbook } from '../wrapper.ts';
-import { cleanupTestOutput, createTestOutputDir, readXlsxPart } from './test-helpers.mjs';
+import { readXlsxPart } from './test-helpers.mjs';
 
 describe('Native and WebAssembly builds', () => {
-  let testOutputDir;
-
-  beforeAll(() => {
-    testOutputDir = createTestOutputDir();
-  });
-
-  afterAll(() => cleanupTestOutput(testOutputDir));
-
   test('loads the build the test run asks for', () => {
     expect(__napiBindingTarget).toBe(process.env.NAPI_RS_WASI_FLAVOR ?? 'native');
   });
 
   test('resolves relative paths against the working directory', () => {
     // WASI resolves relative paths against `/`; the wrapper resolves them first.
-    const absolute = path.join(testOutputDir, 'relative.xlsx');
-    const relative = path.relative(process.cwd(), absolute);
-    expect(path.isAbsolute(relative)).toBe(false);
+    // The directory is inside the working directory because the temporary
+    // directory can be on another drive (Windows), with no relative path to it.
+    const directory = fs.mkdtempSync(path.join(process.cwd(), '.rusc-xlsx-relative-'));
+    try {
+      const relative = path.relative(process.cwd(), path.join(directory, 'relative.xlsx'));
+      expect(path.isAbsolute(relative)).toBe(false);
 
-    const workbook = new Workbook();
-    workbook.addWorksheet().writeString(0, 0, 'relative');
-    workbook.save(relative);
+      const workbook = new Workbook();
+      workbook.addWorksheet().writeString(0, 0, 'relative');
+      workbook.save(relative);
 
-    expect(readXlsxPart(absolute, 'xl/sharedStrings.xml')).toContain('relative');
+      expect(readXlsxPart(path.resolve(relative), 'xl/sharedStrings.xml')).toContain('relative');
+    } finally {
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   test('reads images from a relative path and from a plain Uint8Array', () => {

@@ -144,7 +144,10 @@ What differs from Node.js:
 
 On Node.js the native addon is used. Where no prebuilt binary exists for the
 platform, Node.js falls back to the same WebAssembly package automatically;
-set `NAPI_RS_WASI_FLAVOR=wasm32-wasip1` to choose it on purpose.
+set `NAPI_RS_WASI_FLAVOR=wasm32-wasip1` to choose it on purpose. Use Node.js 24
+or newer for that: on Node.js 22 the process crashes (SIGSEGV in `node:wasi`'s
+`fd_write`) when the WebAssembly build writes a file, as `save()` and the
+constant and low memory modes do.
 
 ## Memory Modes for Large Datasets
 

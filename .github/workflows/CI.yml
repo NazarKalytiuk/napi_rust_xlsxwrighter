@@ -140,7 +140,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [22, 24, 26]
+        # Node.js 22's node:wasi crashes (SIGSEGV) in fd_write when the
+        # WebAssembly build writes a file; see "Browsers (WebAssembly)" in the
+        # README. Browsers do not use node:wasi.
+        node: [24, 26]
     steps:
       - uses: actions/checkout@v7
 
