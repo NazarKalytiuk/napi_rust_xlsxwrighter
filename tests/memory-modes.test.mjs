@@ -14,7 +14,7 @@ import {
   rustMemoryResetPeak,
   rustMemoryStats,
 } from '../wrapper.ts';
-import { cleanupTestOutput, createTestOutputDir } from './test-helpers.mjs';
+import { cleanupTestOutput, createTestOutputDir, readXlsxPart } from './test-helpers.mjs';
 
 describe('Memory Modes', () => {
   let testOutputDir;
@@ -300,6 +300,79 @@ describe('Rust allocator diagnostics', () => {
     const [current, peak] = rustMemoryStats();
     expect(peak).toBeLessThan(peakBefore);
     expect(peak).toBeGreaterThanOrEqual(current);
+  });
+});
+
+const streamingModes = [
+  ['constant memory', (workbook) => workbook.addWorksheetWithConstantMemory()],
+  ['low memory', (workbook) => workbook.addWorksheetWithLowMemory()],
+];
+
+/** The `<sheetData>` element of a workbook's first worksheet. */
+function sheetDataXml(workbook) {
+  const sheet = readXlsxPart(workbook.saveToBuffer(), 'xl/worksheets/sheet1.xml');
+  return /<sheetData>.*<\/sheetData>/.exec(sheet)?.[0];
+}
+
+describe('Row metadata in constant and low memory mode', () => {
+  test.each(streamingModes)('writes each row with a height once in %s mode', (_mode, add) => {
+    const workbook = new Workbook();
+    const worksheet = add(workbook);
+    for (let row = 0; row < 3; row++) {
+      worksheet.setRowHeight(row, 50);
+      worksheet.write(row, 0, row);
+    }
+
+    const rows = [...sheetDataXml(workbook).matchAll(/<row r="(\d+)"/g)].map(([, row]) => row);
+    expect(rows).toEqual(['1', '2', '3']);
+    expect(sheetDataXml(workbook)).toMatch(
+      /<row r="3" ht="50\.25" customHeight="1"><c r="A3"[^>]*><v>2(?:\.0)?<\/v><\/c><\/row><\/sheetData>$/,
+    );
+  });
+
+  test.each(streamingModes)(
+    'writes rows whose height is set before earlier rows are written once in %s mode',
+    (_mode, add) => {
+      const workbook = new Workbook();
+      const worksheet = add(workbook);
+      worksheet.setRowHeight(4, 30);
+      worksheet.setRowHidden(5);
+      worksheet.write(0, 0, 'first');
+      worksheet.write(1, 0, 'second');
+
+      const rows = [...sheetDataXml(workbook).matchAll(/<row r="(\d+)"[^>]*>/g)].map(
+        ([tag]) => tag,
+      );
+      expect(rows).toEqual([
+        '<row r="1">',
+        '<row r="2">',
+        '<row r="5" ht="30" customHeight="1"/>',
+        '<row r="6" hidden="1"/>',
+      ]);
+    },
+  );
+
+  test.each(streamingModes)('rejects row groups in %s mode', (_mode, add) => {
+    const worksheet = add(new Workbook());
+    const message =
+      "Failed to group rows: row groups aren't supported in constant or low memory mode, where rust_xlsxwriter 0.104.0 writes rows without their outline level";
+
+    expect(() => worksheet.groupRows(1, 2)).toThrow(message);
+    expect(() => worksheet.groupRowsCollapsed(1, 2)).toThrow(message);
+  });
+
+  test.each(streamingModes)('still groups columns in %s mode', (_mode, add) => {
+    const workbook = new Workbook();
+    const worksheet = add(workbook);
+    worksheet.groupColumns(1, 2);
+    worksheet.groupColumns(1, 1);
+    worksheet.write(0, 1, 'grouped');
+
+    const sheet = readXlsxPart(workbook.saveToBuffer(), 'xl/worksheets/sheet1.xml');
+    expect(sheet).toContain('<sheetFormatPr defaultRowHeight="15" outlineLevelCol="2"/>');
+    expect(sheet).toContain(
+      '<cols><col min="2" max="2" width="9.140625" outlineLevel="2"/><col min="3" max="3" width="9.140625" outlineLevel="1"/></cols>',
+    );
   });
 });
 

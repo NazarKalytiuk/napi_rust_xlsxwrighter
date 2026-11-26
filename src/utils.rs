@@ -190,16 +190,7 @@ pub fn parse_ignore_error(error_type: &str) -> Result<IgnoreError> {
         "dataValidationError" => IgnoreError::DataValidationError,
         "unlockedCellsWithFormula" => IgnoreError::UnlockedCellsWithFormula,
         "inconsistentColumnFormula" => IgnoreError::InconsistentColumnFormula,
-        // rust_xlsxwriter 0.102.0 writes this rule as a `TwoDigitTextYear`
-        // attribute, which the file format doesn't define (it is
-        // `twoDigitTextYear`), so the rule would not take effect.
-        "twoDigitTextYear" => {
-            return Err(Error::new(
-                Status::InvalidArg,
-                "Unsupported ignore error type: twoDigitTextYear. rust_xlsxwriter 0.102.0 \
-                 writes it with an attribute name Excel doesn't define",
-            ));
-        }
+        "twoDigitTextYear" => IgnoreError::TwoDigitTextYear,
         _ => {
             return Err(Error::new(
                 Status::InvalidArg,

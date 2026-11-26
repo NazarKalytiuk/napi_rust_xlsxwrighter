@@ -49,7 +49,7 @@ Fast, feature-complete Excel XLSX library for Node.js and browsers, powered by [
 - **Named Ranges**: Global and worksheet-scoped named ranges
 - **VBA Macros**: Add VBA projects from binary files
 - **Form Controls**: Interactive buttons with macro assignments
-- **Shapes**: Textbox annotations with positioning
+- **Shapes**: Textboxes with solid or pattern fills, border lines, fonts, alignment and rotated text
 - **Document Metadata**: Author, title, subject, company, manager, keywords, etc.
 - **Protection**: Worksheet protection with granular permissions
 - **Memory Modes**: Constant and low memory modes for massive datasets
@@ -170,7 +170,7 @@ const worksheet = workbook.addWorksheetWithConstantMemory('Large');
 
 - **Use when**: Millions of rows with memory constraints
 - **Memory**: Constant ~0.02 MB (regardless of size!)
-- **Limitations**: Sequential row writing only, no tables
+- **Limitations**: Sequential row writing only, no tables, no row groups (`groupRows()` throws)
 
 > **Important:** For large exports, use `save(filename)` or `await saveToStream(writable)` instead of `saveToBuffer()`. `saveToStream()` is temp-file-backed: it saves to the operating system's temporary directory, pipes the file into the writable, waits for completion, and removes the temporary file. It avoids buffering the entire XLSX file in JavaScript memory, but it does use temporary disk I/O.
 
@@ -197,6 +197,7 @@ const worksheet = workbook.addWorksheetWithLowMemory('Sales');
 - **Use when**: Large datasets with repeated strings
 - **Memory**: Scales with unique strings
 - **Best for**: Categorical data, status fields, repeated names
+- **Limitations**: Sequential row writing only, no row groups (`groupRows()` throws)
 
 ## TypeScript Support
 
@@ -277,7 +278,11 @@ workbook.save('output.xlsx');
 - **ProtectionOptions**: 16 granular permissions
 - **DocProperties**: 10 metadata fields
 - **Button**: Form controls with VBA macros
-- **Shape**: Textbox shapes for annotations
+- **Shape**: Textboxes with `setFormat()`, `setFont()` and `setTextOptions()`
+- **ShapeFormat**: `setSolidFill()`, `setPatternFill()`, `setNoFill()`, `setLine()`, `setNoLine()`
+- **ShapeSolidFill** / **ShapePatternFill** / **ShapeLine**: colors (named, `#RRGGBB`, `theme:<color>:<shade>`), transparency, 48 patterns, line width and 8 dash types
+- **ShapeFont**: name, size, bold, italic, underline, color
+- **ShapeText**: horizontal and vertical alignment, text direction (`rotate90`, `rotate270`, `stacked`, ...)
 
 ## Examples
 
@@ -509,7 +514,8 @@ the workload sequentially by row.
 ## Limitations
 
 - ❌ **Read-only**: Cannot read existing Excel files (rust_xlsxwriter is write-only)
-- ❌ **Memory mode constraints**: Constant/low memory modes require sequential row writing
+- ❌ **Memory mode constraints**: Constant/low memory modes require sequential row writing and don't support row groups (rust_xlsxwriter 0.104.0 writes their rows without an outline level)
+- ❌ **Shape text strikethrough**: rust_xlsxwriter 0.104.0 doesn't write it, so `ShapeFont` has no `setStrikethrough()`
 
 ## Contributing
 

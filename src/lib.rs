@@ -28,7 +28,10 @@ pub use note::RuscNote;
 pub use properties::RuscDocProperties;
 pub use protection::RuscProtectionOptions;
 pub use richtext::RuscRichText;
-pub use shape::RuscShape;
+pub use shape::{
+    RuscShape, RuscShapeFont, RuscShapeFormat, RuscShapeLine, RuscShapePatternFill,
+    RuscShapeSolidFill, RuscShapeText,
+};
 pub use sparkline::RuscSparkline;
 pub use table::{RuscTable, RuscTableColumn};
 pub use validation::RuscDataValidation;

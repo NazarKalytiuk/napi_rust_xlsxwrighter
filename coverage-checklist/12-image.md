@@ -2,7 +2,7 @@
 
 [← Coverage dashboard](../rust-xlsxwriter-coverage-checklist.md)
 
-> Pinned baseline: `rust_xlsxwriter 0.102.0`; **25 grouped capabilities**, **25 canonical symbol rows**.
+> Pinned baseline: `rust_xlsxwriter 0.104.0`; **25 grouped capabilities**, **25 canonical symbol rows**.
 
 - Grouped: **16 full · 1 partial · 8 missing · 0 N/A**.
 - Symbol rows: **16 full · 1 partial · 8 missing · 0 N/A**.

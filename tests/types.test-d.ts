@@ -9,6 +9,12 @@ import {
   Note,
   RichText,
   Shape,
+  ShapeFont,
+  ShapeFormat,
+  ShapeLine,
+  ShapePatternFill,
+  ShapeSolidFill,
+  ShapeText,
   Workbook,
   Worksheet,
   rustMemoryStats,
@@ -57,6 +63,32 @@ expectTypeOf(
 ).toEqualTypeOf<DataValidation>();
 expectTypeOf(new Note('note').setFontName('Arial').setFontSize(10)).toEqualTypeOf<Note>();
 expectTypeOf(worksheet.setScreenGridlines).returns.toEqualTypeOf<void>();
+
+// Shape formatting setters chain, and the shape setters take each kind.
+const shapeFormat = new ShapeFormat()
+  .setSolidFill(new ShapeSolidFill().setColor('theme:4:1').setTransparency(20))
+  .setLine(new ShapeLine().setColor('#000000').setWidth(0.75).setDashType('dash'));
+expectTypeOf(shapeFormat).toEqualTypeOf<ShapeFormat>();
+expectTypeOf(
+  new ShapePatternFill().setPattern('dotted20Percent').setForegroundColor('gray'),
+).toEqualTypeOf<ShapePatternFill>();
+expectTypeOf(
+  new ShapeFont().setName('Arial').setSize(8).setBold().setColor('red'),
+).toEqualTypeOf<ShapeFont>();
+expectTypeOf(
+  new ShapeText().setHorizontalAlignment('center').setDirection('rotate270'),
+).toEqualTypeOf<ShapeText>();
+expectTypeOf(
+  Shape.textbox().setFormat(shapeFormat).setFont(new ShapeFont()).setTextOptions(new ShapeText()),
+).toEqualTypeOf<Shape>();
+// @ts-expect-error -- shapes take a ShapeFormat, not a Format
+Shape.textbox().setFormat(format);
+// @ts-expect-error -- not a shape pattern
+new ShapePatternFill().setPattern('dotted15Percent');
+// @ts-expect-error -- shape text aligns with 'middle', not 'center'
+new ShapeText().setVerticalAlignment('center');
+// @ts-expect-error -- not a shape text direction
+new ShapeText().setDirection('rotate180');
 
 // String-literal unions reject unknown values.
 // @ts-expect-error -- not a calculation mode

@@ -32,6 +32,9 @@ use crate::validation::RuscDataValidation;
 pub struct RuscWorksheet {
     pub(crate) workbook: Arc<Mutex<Workbook>>,
     pub(crate) index: usize,
+    /// Whether the worksheet is in constant or low memory mode, where
+    /// rust_xlsxwriter streams each finished row to a temporary file.
+    pub(crate) streams_rows: bool,
 }
 
 /// A value written to one cell.
@@ -744,15 +747,18 @@ impl RuscWorksheet {
     }
 
     /// Group a range of rows into an outline level; a range inside an existing
-    /// group adds a nested level
+    /// group adds a nested level. Not available in constant or low memory mode.
     #[napi]
     pub fn group_rows(&self, first_row: u32, last_row: u32) -> Result<()> {
+        self.check_row_groups_supported()?;
         self.with_worksheet(|ws| ws.group_rows(first_row, last_row).or_js_error("group rows"))
     }
 
-    /// Group a range of rows into a collapsed outline level
+    /// Group a range of rows into a collapsed outline level. Not available in
+    /// constant or low memory mode.
     #[napi]
     pub fn group_rows_collapsed(&self, first_row: u32, last_row: u32) -> Result<()> {
+        self.check_row_groups_supported()?;
         self.with_worksheet(|ws| {
             ws.group_rows_collapsed(first_row, last_row)
                 .or_js_error("group rows")
@@ -2780,6 +2786,21 @@ impl RuscWorksheet {
 }
 
 impl RuscWorksheet {
+    /// Rejects row groups on a worksheet that streams its rows:
+    /// rust_xlsxwriter 0.104.0 writes streamed rows without their
+    /// `outlineLevel` and `collapsed` attributes, so the groups would be
+    /// silently lost.
+    fn check_row_groups_supported(&self) -> Result<()> {
+        if self.streams_rows {
+            return Err(Error::new(
+                Status::GenericFailure,
+                "Failed to group rows: row groups aren't supported in constant or low memory \
+                 mode, where rust_xlsxwriter 0.104.0 writes rows without their outline level",
+            ));
+        }
+        Ok(())
+    }
+
     /// Writes a rich string, with the cell format when one is given.
     fn write_rich_text(
         &self,
