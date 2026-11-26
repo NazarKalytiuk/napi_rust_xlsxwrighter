@@ -1,9 +1,15 @@
 use napi::bindgen_prelude::*;
-use rust_xlsxwriter::{ChartType, Color, DataValidationRule, FormatBorder, IgnoreError};
+use rust_xlsxwriter::{
+    ChartType, Color, DataValidationRule, FormatBorder, IgnoreError, IntoDataValidationValue,
+};
 
-/// Helper function to parse validation rules for integers
-pub fn parse_validation_rule_int(rule: String, value: i32) -> Result<DataValidationRule<i32>> {
-    match rule.as_str() {
+/// Parses a single-value `ValidationRule` of the JavaScript API, comparing
+/// cell input with `value`.
+pub fn parse_validation_rule<T: IntoDataValidationValue>(
+    rule: &str,
+    value: T,
+) -> Result<DataValidationRule<T>> {
+    match rule {
         "equal" => Ok(DataValidationRule::EqualTo(value)),
         "notEqual" => Ok(DataValidationRule::NotEqualTo(value)),
         "greaterThan" => Ok(DataValidationRule::GreaterThan(value)),
@@ -20,66 +26,66 @@ pub fn parse_validation_rule_int(rule: String, value: i32) -> Result<DataValidat
     }
 }
 
-/// Helper function to parse validation rules for floats
-pub fn parse_validation_rule_float(rule: String, value: f64) -> Result<DataValidationRule<f64>> {
-    match rule.as_str() {
-        "equal" => Ok(DataValidationRule::EqualTo(value)),
-        "notEqual" => Ok(DataValidationRule::NotEqualTo(value)),
-        "greaterThan" => Ok(DataValidationRule::GreaterThan(value)),
-        "lessThan" => Ok(DataValidationRule::LessThan(value)),
-        "greaterThanOrEqual" => Ok(DataValidationRule::GreaterThanOrEqualTo(value)),
-        "lessThanOrEqual" => Ok(DataValidationRule::LessThanOrEqualTo(value)),
-        _ => Err(Error::new(
-            Status::GenericFailure,
-            format!(
-                "Invalid validation rule: {}. Valid values: 'equal', 'notEqual', 'greaterThan', 'lessThan', 'greaterThanOrEqual', 'lessThanOrEqual'",
-                rule
-            ),
+/// Parses a `BorderStyle` of the JavaScript API.
+pub fn parse_border(border: &str) -> Result<FormatBorder> {
+    Ok(match border {
+        "thin" => FormatBorder::Thin,
+        "medium" => FormatBorder::Medium,
+        "thick" => FormatBorder::Thick,
+        "double" => FormatBorder::Double,
+        "dotted" => FormatBorder::Dotted,
+        "dashed" => FormatBorder::Dashed,
+        "dashDot" => FormatBorder::DashDot,
+        "dashDotDot" => FormatBorder::DashDotDot,
+        "slantDashDot" => FormatBorder::SlantDashDot,
+        "mediumDashed" => FormatBorder::MediumDashed,
+        "mediumDashDot" => FormatBorder::MediumDashDot,
+        "mediumDashDotDot" => FormatBorder::MediumDashDotDot,
+        "hair" => FormatBorder::Hair,
+        _ => {
+            return Err(Error::new(
+                Status::GenericFailure,
+                format!("Invalid border style: {border}"),
+            ));
+        }
+    })
+}
+
+/// Parses a `Color` of the JavaScript API: a named color, `#RRGGBB`, or a
+/// theme palette color `theme:<color>:<shade>`.
+///
+/// Excel writes theme colors only where a color is part of a cell style or
+/// the worksheet tab, so other colors are parsed with [`parse_rgb_color`].
+pub fn parse_color(color: &str) -> Result<Color> {
+    parse_labeled_color("color", color)
+}
+
+/// Parses a named or `#RRGGBB` color for a property that rust_xlsxwriter
+/// stores as an RGB value, such as a note background or a conditional format
+/// color, where it would silently replace a theme color with a default one.
+/// `label` names the color in errors, e.g. `"min color"`.
+pub fn parse_rgb_color(label: &str, color: &str) -> Result<Color> {
+    match parse_labeled_color(label, color)? {
+        Color::Theme(_, _) => Err(invalid_color(
+            label,
+            color,
+            "Theme colors aren't supported here; use a named or #RRGGBB color",
         )),
+        rgb => Ok(rgb),
     }
 }
 
-/// Helper function to validate border styles
-pub fn is_valid_border(border: &str) -> bool {
-    matches!(
-        border,
-        "thin"
-            | "medium"
-            | "thick"
-            | "double"
-            | "dotted"
-            | "dashed"
-            | "dashDot"
-            | "dashDotDot"
-            | "slantDashDot"
-            | "mediumDashed"
-            | "mediumDashDot"
-            | "mediumDashDotDot"
-    )
-}
-
-/// Helper function to parse border strings
-pub fn parse_border(border: &str) -> Option<FormatBorder> {
-    match border {
-        "thin" => Some(FormatBorder::Thin),
-        "medium" => Some(FormatBorder::Medium),
-        "thick" => Some(FormatBorder::Thick),
-        "double" => Some(FormatBorder::Double),
-        "dotted" => Some(FormatBorder::Dotted),
-        "dashed" => Some(FormatBorder::Dashed),
-        "dashDot" => Some(FormatBorder::DashDot),
-        "dashDotDot" => Some(FormatBorder::DashDotDot),
-        "slantDashDot" => Some(FormatBorder::SlantDashDot),
-        "mediumDashed" => Some(FormatBorder::MediumDashed),
-        "mediumDashDot" => Some(FormatBorder::MediumDashDot),
-        "mediumDashDotDot" => Some(FormatBorder::MediumDashDotDot),
-        _ => None,
+fn parse_labeled_color(label: &str, color: &str) -> Result<Color> {
+    if let Some(theme) = color.strip_prefix("theme:") {
+        return parse_theme_color(theme).ok_or_else(|| {
+            invalid_color(
+                label,
+                color,
+                "Theme colors are 'theme:<color>:<shade>' with a color of 0-9 and a shade of 0-5",
+            )
+        });
     }
-}
-
-/// Helper function to parse color strings
-pub fn parse_color(color: &str) -> Option<Color> {
-    match color.to_lowercase().as_str() {
+    let named = match color.to_lowercase().as_str() {
         "black" => Some(Color::Black),
         "blue" => Some(Color::Blue),
         "brown" => Some(Color::Brown),
@@ -96,21 +102,40 @@ pub fn parse_color(color: &str) -> Option<Color> {
         "silver" => Some(Color::Silver),
         "white" => Some(Color::White),
         "yellow" => Some(Color::Yellow),
-        _ => {
-            // Try to parse as hex color #RRGGBB
-            if color.starts_with('#')
-                && color.len() == 7
-                && let (Ok(r), Ok(g), Ok(b)) = (
-                    u8::from_str_radix(&color[1..3], 16),
-                    u8::from_str_radix(&color[3..5], 16),
-                    u8::from_str_radix(&color[5..7], 16),
-                )
-            {
-                let rgb_value: u32 = ((r as u32) << 16) | ((g as u32) << 8) | (b as u32);
-                return Some(Color::RGB(rgb_value));
-            }
-            None
-        }
+        _ => None,
+    };
+    named
+        .or_else(|| parse_hex_color(color))
+        .ok_or_else(|| Error::new(Status::GenericFailure, format!("Invalid {label}: {color}")))
+}
+
+fn invalid_color(label: &str, color: &str, detail: &str) -> Error {
+    Error::new(
+        Status::GenericFailure,
+        format!("Invalid {label}: {color}. {detail}"),
+    )
+}
+
+/// Parses the `#RRGGBB` form of a color.
+fn parse_hex_color(color: &str) -> Option<Color> {
+    let hex = color.strip_prefix('#')?;
+    if hex.len() != 6 || !hex.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        return None;
+    }
+    u32::from_str_radix(hex, 16).ok().map(Color::RGB)
+}
+
+/// Parses the `<color>:<shade>` part of a `theme:<color>:<shade>` color.
+fn parse_theme_color(theme: &str) -> Option<Color> {
+    let index = |part: Option<&str>, max: u8| {
+        part.filter(|digits| !digits.is_empty() && digits.bytes().all(|byte| byte.is_ascii_digit()))
+            .and_then(|digits| digits.parse::<u8>().ok())
+            .filter(|value| *value <= max)
+    };
+    let mut parts = theme.split(':');
+    match (index(parts.next(), 9), index(parts.next(), 5), parts.next()) {
+        (Some(color), Some(shade), None) => Some(Color::Theme(color, shade)),
+        _ => None,
     }
 }
 

@@ -35,8 +35,8 @@
 
 | Режим підрахунку | Усього rows/capabilities | N/A | Denominator | Full | Partial | Missing | Full % |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Symbol rows | 1673 | 202 | 1471 | 459 | 273 | 739 | 31.2% |
-| Grouped input capabilities | 1598 | 200 | 1398 | 436 | 241 | 721 | 31.2% |
+| Symbol rows | 1673 | 202 | 1471 | 467 | 274 | 730 | 31.7% |
+| Grouped input capabilities | 1598 | 200 | 1398 | 442 | 242 | 714 | 31.6% |
 
 ## Dashboard і group milestones
 
@@ -44,17 +44,17 @@
 |---|---|---:|---:|---:|---:|---:|---:|
 | [x] | [Кнопки](coverage-checklist/01-button.md) | 8 | 8 | 0 | 0 | 0 | 100.0% |
 | [ ] | [Діаграми](coverage-checklist/02-chart.md) | 404 | 30 | 16 | 358 | 15 | 7.4% |
-| [ ] | [Кольори](coverage-checklist/03-color.md) | 21 | 17 | 3 | 1 | 0 | 81.0% |
+| [ ] | [Кольори](coverage-checklist/03-color.md) | 21 | 18 | 3 | 0 | 0 | 85.7% |
 | [ ] | [Comment API](coverage-checklist/04-comment.md) | 1 | 0 | 0 | 1 | 0 | 0.0% |
 | [ ] | [Умовне форматування](coverage-checklist/05-conditional-format.md) | 181 | 52 | 53 | 76 | 51 | 28.7% |
-| [ ] | [Валідація даних](coverage-checklist/06-data-validation.md) | 39 | 26 | 3 | 10 | 17 | 66.7% |
+| [ ] | [Валідація даних](coverage-checklist/06-data-validation.md) | 39 | 26 | 5 | 8 | 17 | 66.7% |
 | [ ] | [Дата й час](coverage-checklist/07-datetime.md) | 10 | 0 | 5 | 5 | 16 | 0.0% |
 | [ ] | [Помилки](coverage-checklist/08-error.md) | 36 | 0 | 36 | 0 | 2 | 0.0% |
 | [ ] | [Фільтри](coverage-checklist/09-filter.md) | 22 | 0 | 0 | 22 | 5 | 0.0% |
-| [ ] | [Форматування](coverage-checklist/10-format.md) | 121 | 70 | 35 | 16 | 0 | 57.9% |
+| [ ] | [Форматування](coverage-checklist/10-format.md) | 121 | 72 | 34 | 15 | 0 | 59.5% |
 | [x] | [Формули](coverage-checklist/11-formula.md) | 3 | 3 | 0 | 0 | 0 | 100.0% |
 | [ ] | [Зображення](coverage-checklist/12-image.md) | 25 | 16 | 1 | 8 | 0 | 64.0% |
-| [ ] | [Нотатки / коментарі](coverage-checklist/13-note.md) | 13 | 7 | 1 | 5 | 0 | 53.8% |
+| [ ] | [Нотатки / коментарі](coverage-checklist/13-note.md) | 13 | 9 | 1 | 3 | 0 | 69.2% |
 | [ ] | [Властивості документа](coverage-checklist/14-properties.md) | 15 | 12 | 0 | 3 | 22 | 80.0% |
 | [x] | [Захист аркуша](coverage-checklist/15-protection.md) | 18 | 18 | 0 | 0 | 0 | 100.0% |
 | N/A | [Серіалізація](coverage-checklist/16-serializer.md) | 0 | 0 | 0 | 0 | 20 | 0.0% |
@@ -64,7 +64,7 @@
 | [ ] | [Гіперпосилання](coverage-checklist/20-url.md) | 4 | 0 | 3 | 1 | 0 | 0.0% |
 | [ ] | [Допоміжні функції](coverage-checklist/21-utility.md) | 12 | 0 | 0 | 12 | 2 | 0.0% |
 | [ ] | [Workbook](coverage-checklist/22-workbook.md) | 34 | 20 | 4 | 10 | 0 | 58.8% |
-| [ ] | [Worksheet](coverage-checklist/23-worksheet.md) | 161 | 41 | 68 | 52 | 43 | 25.5% |
+| [ ] | [Worksheet](coverage-checklist/23-worksheet.md) | 161 | 42 | 68 | 51 | 43 | 26.1% |
 
 ## Cross-cutting backlogs
 

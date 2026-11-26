@@ -24,7 +24,7 @@ use crate::richtext::{RuscRichText, rich_string_segments};
 use crate::shape::RuscShape;
 use crate::sparkline::RuscSparkline;
 use crate::table::RuscTable;
-use crate::utils::{parse_color, parse_ignore_error};
+use crate::utils::{parse_color, parse_ignore_error, parse_rgb_color};
 use crate::validation::RuscDataValidation;
 
 /// Worksheet wrapper for Excel sheet manipulation
@@ -1350,18 +1350,8 @@ impl RuscWorksheet {
             )
         })?;
 
-        let min = parse_color(&min_color).ok_or_else(|| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Invalid min color: {}", min_color),
-            )
-        })?;
-        let max = parse_color(&max_color).ok_or_else(|| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Invalid max color: {}", max_color),
-            )
-        })?;
+        let min = parse_rgb_color("min color", &min_color)?;
+        let max = parse_rgb_color("max color", &max_color)?;
 
         let format = ConditionalFormat2ColorScale::new()
             .set_minimum_color(min)
@@ -1400,24 +1390,9 @@ impl RuscWorksheet {
             )
         })?;
 
-        let min = parse_color(&min_color).ok_or_else(|| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Invalid min color: {}", min_color),
-            )
-        })?;
-        let mid = parse_color(&mid_color).ok_or_else(|| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Invalid mid color: {}", mid_color),
-            )
-        })?;
-        let max = parse_color(&max_color).ok_or_else(|| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Invalid max color: {}", max_color),
-            )
-        })?;
+        let min = parse_rgb_color("min color", &min_color)?;
+        let mid = parse_rgb_color("mid color", &mid_color)?;
+        let max = parse_rgb_color("max color", &max_color)?;
 
         let format = ConditionalFormat3ColorScale::new()
             .set_minimum_color(min)
@@ -1453,12 +1428,7 @@ impl RuscWorksheet {
             )
         })?;
 
-        let color = parse_color(&bar_color).ok_or_else(|| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Invalid bar color: {}", bar_color),
-            )
-        })?;
+        let color = parse_rgb_color("bar color", &bar_color)?;
 
         let format = ConditionalFormatDataBar::new().set_fill_color(color);
 
@@ -2085,6 +2055,21 @@ impl RuscWorksheet {
         Ok(())
     }
 
+    /// Show or hide the gridlines of the worksheet on screen
+    #[napi]
+    pub fn set_screen_gridlines(&self, enable: bool) -> Result<()> {
+        let mut wb = self.workbook.lock();
+        let ws = wb.worksheet_from_index(self.index).map_err(|e| {
+            Error::new(
+                Status::GenericFailure,
+                format!("Failed to get worksheet: {}", e),
+            )
+        })?;
+
+        ws.set_screen_gridlines(enable);
+        Ok(())
+    }
+
     /// Center content horizontally on the page when printing
     #[napi]
     pub fn set_print_center_horizontally(&self, enable: bool) -> Result<()> {
@@ -2286,11 +2271,7 @@ impl RuscWorksheet {
             )
         })?;
 
-        let color_obj = parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-
-        ws.set_tab_color(color_obj);
+        ws.set_tab_color(parse_color(&color)?);
         Ok(())
     }
 

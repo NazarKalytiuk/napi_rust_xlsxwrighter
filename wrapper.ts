@@ -58,8 +58,8 @@ function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && 'code' in error;
 }
 
-/** Color value - can be a named color or hex code */
-export type Color =
+/** A color stored as an RGB value: a named color or a `#RRGGBB` hex code */
+export type RgbColor =
   | 'black'
   | 'blue'
   | 'brown'
@@ -77,6 +77,22 @@ export type Color =
   | 'white'
   | 'yellow'
   | `#${string}`; // Hex colors like #FF0000
+
+/**
+ * A color on the workbook theme's palette, as shown in Excel's color picker:
+ * `theme:<color>:<shade>` with a column `color` from 0 to 9 and a `shade` row
+ * from 0 (the theme color itself) to 5. For example, `'theme:4:0'` is
+ * "Blue, Accent 1" in the default Office theme and `'theme:4:2'` is
+ * "Blue, Accent 1, Lighter 60%".
+ */
+export type ThemeColor = `theme:${number}:${number}`;
+
+/**
+ * Color value - a named color, a `#RRGGBB` hex code, or a theme color.
+ * Theme colors are accepted by cell formats (font, fill and border colors)
+ * and worksheet tab colors.
+ */
+export type Color = RgbColor | ThemeColor;
 
 /** Horizontal alignment options */
 export type HorizontalAlign =
@@ -104,7 +120,8 @@ export type BorderStyle =
   | 'slantDashDot'
   | 'mediumDashed'
   | 'mediumDashDot'
-  | 'mediumDashDotDot';
+  | 'mediumDashDotDot'
+  | 'hair';
 
 /** Underline style options */
 export type UnderlineStyle = 'single' | 'double' | 'singleAccounting' | 'doubleAccounting';
@@ -498,11 +515,29 @@ export class Note {
   }
 
   /**
-   * Set the background color of the note
+   * Set the background color of the note. Notes don't take theme colors.
    * @param color - Color name or hex code
    */
-  setBackgroundColor(color: Color): this {
+  setBackgroundColor(color: RgbColor): this {
     this._native.setBackgroundColor(color);
+    return this;
+  }
+
+  /**
+   * Set the font of the note text (Tahoma by default)
+   * @param name - Font name, e.g. 'Arial'
+   */
+  setFontName(name: string): this {
+    this._native.setFontName(name);
+    return this;
+  }
+
+  /**
+   * Set the font size of the note text (8 by default)
+   * @param size - Font size in points
+   */
+  setFontSize(size: number): this {
+    this._native.setFontSize(size);
     return this;
   }
 
@@ -627,6 +662,40 @@ export class DataValidation {
    */
   allowDecimalNumberBetween(min: number, max: number): this {
     this._native.allowDecimalNumberBetween(min, max);
+    return this;
+  }
+
+  /**
+   * Allow text whose length (number of characters) matches a rule.
+   * Excel shows this as a "Text length" validation.
+   * @param rule - Validation rule type
+   * @param length - Length to compare with (a non-negative integer)
+   * @example
+   * new DataValidation().allowTextLength('lessThanOrEqual', 40);
+   */
+  allowTextLength(rule: ValidationRule, length: number): this {
+    this._native.allowTextLength(rule, length);
+    return this;
+  }
+
+  /**
+   * Allow text whose length is between min and max
+   * @param min - Minimum length (inclusive, a non-negative integer)
+   * @param max - Maximum length (inclusive, a non-negative integer)
+   */
+  allowTextLengthBetween(min: number, max: number): this {
+    this._native.allowTextLengthBetween(min, max);
+    return this;
+  }
+
+  /**
+   * Allow text whose length matches a rule against a formula, such as a cell
+   * reference holding the limit
+   * @param rule - Validation rule type
+   * @param formula - Formula giving the length (e.g., '=$B$1')
+   */
+  allowTextLengthFormula(rule: ValidationRule, formula: string): this {
+    this._native.allowTextLengthFormula(rule, formula);
     return this;
   }
 
@@ -2013,8 +2082,8 @@ export class Worksheet {
     firstCol: number,
     lastRow: number,
     lastCol: number,
-    minColor: Color,
-    maxColor: Color,
+    minColor: RgbColor,
+    maxColor: RgbColor,
   ): void {
     return this._native.addConditionalFormat2ColorScale(
       firstRow,
@@ -2041,9 +2110,9 @@ export class Worksheet {
     firstCol: number,
     lastRow: number,
     lastCol: number,
-    minColor: Color,
-    midColor: Color,
-    maxColor: Color,
+    minColor: RgbColor,
+    midColor: RgbColor,
+    maxColor: RgbColor,
   ): void {
     return this._native.addConditionalFormat3ColorScale(
       firstRow,
@@ -2069,7 +2138,7 @@ export class Worksheet {
     firstCol: number,
     lastRow: number,
     lastCol: number,
-    barColor: Color,
+    barColor: RgbColor,
   ): void {
     return this._native.addConditionalFormatDataBar(firstRow, firstCol, lastRow, lastCol, barColor);
   }
@@ -2461,6 +2530,14 @@ export class Worksheet {
    */
   setPrintGridlines(enable: boolean): void {
     return this._native.setPrintGridlines(enable);
+  }
+
+  /**
+   * Show or hide the gridlines of the worksheet on screen (shown by default)
+   * @param enable - True to show gridlines, false to hide
+   */
+  setScreenGridlines(enable: boolean): void {
+    return this._native.setScreenGridlines(enable);
   }
 
   /**

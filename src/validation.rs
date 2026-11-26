@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use rust_xlsxwriter::{DataValidation, DataValidationErrorStyle, DataValidationRule, Formula};
 
-use crate::utils::{parse_validation_rule_float, parse_validation_rule_int};
+use crate::utils::parse_validation_rule;
 
 #[napi]
 pub struct RuscDataValidation {
@@ -28,7 +28,7 @@ impl RuscDataValidation {
     /// Allow whole number validation
     #[napi]
     pub fn allow_whole_number(&mut self, rule: String, value: i32) -> Result<()> {
-        let rule_enum = parse_validation_rule_int(rule, value)?;
+        let rule_enum = parse_validation_rule(&rule, value)?;
         self.validation = DataValidation::new().allow_whole_number(rule_enum);
         Ok(())
     }
@@ -44,7 +44,7 @@ impl RuscDataValidation {
     /// Allow decimal number validation
     #[napi]
     pub fn allow_decimal_number(&mut self, rule: String, value: f64) -> Result<()> {
-        let rule_enum = parse_validation_rule_float(rule, value)?;
+        let rule_enum = parse_validation_rule(&rule, value)?;
         self.validation = DataValidation::new().allow_decimal_number(rule_enum);
         Ok(())
     }
@@ -54,6 +54,33 @@ impl RuscDataValidation {
     pub fn allow_decimal_number_between(&mut self, min: f64, max: f64) -> Result<()> {
         self.validation =
             DataValidation::new().allow_decimal_number(DataValidationRule::Between(min, max));
+        Ok(())
+    }
+
+    /// Allow text whose length (number of characters) matches a rule
+    #[napi]
+    pub fn allow_text_length(&mut self, rule: String, length: f64) -> Result<()> {
+        let rule_enum = parse_validation_rule(&rule, text_length("Text length", length)?)?;
+        self.validation = DataValidation::new().allow_text_length(rule_enum);
+        Ok(())
+    }
+
+    /// Allow text whose length is between two lengths (inclusive)
+    #[napi]
+    pub fn allow_text_length_between(&mut self, min: f64, max: f64) -> Result<()> {
+        let rule = DataValidationRule::Between(
+            text_length("Minimum text length", min)?,
+            text_length("Maximum text length", max)?,
+        );
+        self.validation = DataValidation::new().allow_text_length(rule);
+        Ok(())
+    }
+
+    /// Allow text whose length matches a rule against a formula, e.g. a cell reference
+    #[napi]
+    pub fn allow_text_length_formula(&mut self, rule: String, formula: String) -> Result<()> {
+        let rule_enum = parse_validation_rule(&rule, Formula::new(formula))?;
+        self.validation = DataValidation::new().allow_text_length_formula(rule_enum);
         Ok(())
     }
 
@@ -233,4 +260,14 @@ impl RuscDataValidation {
     }
 }
 
-// Helper function to parse validation rules for integers
+/// Converts a JavaScript number to a text length, which Excel stores as a
+/// non-negative integer. `name` names the value in errors.
+fn text_length(name: &str, length: f64) -> Result<u32> {
+    if length.fract() != 0.0 || !(0.0..=f64::from(u32::MAX)).contains(&length) {
+        return Err(Error::new(
+            Status::InvalidArg,
+            format!("{name} must be a non-negative integer, got {length}"),
+        ));
+    }
+    Ok(length as u32)
+}

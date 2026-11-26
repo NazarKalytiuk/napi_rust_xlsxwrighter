@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Workbook, Note } from '../wrapper.ts';
-import { cleanupTestOutput, createTestOutputDir } from './test-helpers.mjs';
+import { cleanupTestOutput, createTestOutputDir, readXlsxPart } from './test-helpers.mjs';
 
 describe('Notes (Comments)', () => {
   let testOutputDir;
@@ -219,5 +219,44 @@ describe('Notes (Comments)', () => {
 
       expect(fs.existsSync(outputPath)).toBe(true);
     });
+  });
+});
+
+/** The `comments1.xml` and `vmlDrawing1.vml` parts written for a note on A1. */
+function noteParts(note) {
+  const workbook = new Workbook();
+  workbook.addWorksheet().insertNote(0, 0, note);
+  const xlsx = workbook.saveToBuffer();
+  return {
+    comments: readXlsxPart(xlsx, 'xl/comments1.xml'),
+    vml: readXlsxPart(xlsx, 'xl/drawings/vmlDrawing1.vml'),
+  };
+}
+
+describe('Note XLSX output', () => {
+  test('writes the font name and size of the note text', () => {
+    const { comments } = noteParts(
+      new Note('Check the part number').setFontName('Arial').setFontSize(10.5),
+    );
+    expect(comments).toContain(
+      '<rPr><sz val="10.5"/><color indexed="81"/><rFont val="Arial"/><family val="2"/></rPr>',
+    );
+  });
+
+  test('writes Tahoma 8 by default', () => {
+    const { comments } = noteParts(new Note('Default font'));
+    expect(comments).toContain('<sz val="8"/>');
+    expect(comments).toContain('<rFont val="Tahoma"/>');
+  });
+
+  test('writes the background color into the VML shape', () => {
+    const { vml } = noteParts(new Note('Colored').setBackgroundColor('#FFB6C1'));
+    expect(vml).toContain('fillcolor="#ffb6c1"');
+  });
+
+  test('rejects a theme background color, which notes store as RGB', () => {
+    expect(() => new Note('Theme').setBackgroundColor('theme:4:2')).toThrow(
+      "Invalid color: theme:4:2. Theme colors aren't supported here; use a named or #RRGGBB color",
+    );
   });
 });

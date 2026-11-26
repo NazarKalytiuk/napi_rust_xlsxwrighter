@@ -4,8 +4,8 @@
 
 > Pinned baseline: `rust_xlsxwriter 0.102.0`; **21 grouped capabilities**, **24 canonical symbol rows**.
 
-- Grouped: **17 full · 3 partial · 1 missing · 0 N/A**.
-- Symbol rows: **18 full · 3 partial · 3 missing · 0 N/A**.
+- Grouped: **18 full · 3 partial · 0 missing · 0 N/A**.
+- Symbol rows: **21 full · 3 partial · 0 missing · 0 N/A**.
 - `[x] FULL`; `[ ] PARTIAL`; `[ ] MISSING`; plain `N/A` is outside the compiled/runtime denominator.
 - Before marking `FULL`, satisfy the [shared definition of done](../rust-xlsxwriter-coverage-checklist.md#definition-of-done).
 
@@ -31,9 +31,9 @@
   - **FULL** `rust_xlsxwriter::color::Color#enum::RGB#variant::0#field` <!-- coverage-row:rust_xlsxwriter::color::Color#enum::RGB#variant::0#field -->
 - [x] **FULL** `rust_xlsxwriter::color::Color#enum::Red#variant` — → `Format.prototype.setFontColor('red')`, `RuscFormat.prototype.setFontColor('red')` — evidence: `static-forwarding` — tests: `tests/100-percent-coverage.test.mjs:370`, `tests/advanced-styling.test.mjs:262`, `tests/fluent-api.test.mjs:53` <!-- coverage-capability:rust_xlsxwriter::color::Color#enum::Red#variant --><!-- coverage-row:rust_xlsxwriter::color::Color#enum::Red#variant -->
 - [x] **FULL** `rust_xlsxwriter::color::Color#enum::Silver#variant` — → `Format.prototype.setFontColor('silver')`, `RuscFormat.prototype.setFontColor('silver')` — evidence: `static-forwarding` — tests: `tests/format.test.mjs:219` <!-- coverage-capability:rust_xlsxwriter::color::Color#enum::Silver#variant --><!-- coverage-row:rust_xlsxwriter::color::Color#enum::Silver#variant -->
-- [ ] **MISSING** `rust_xlsxwriter::color::Color#enum::Theme#variant` — evidence: `runtime` — note: Explicit no-match: the loaded native/facade option parsers expose no Color path for this variant. <!-- coverage-capability:rust_xlsxwriter::color::Color#enum::Theme#variant -->
-  - **MISSING** `rust_xlsxwriter::color::Color#enum::Theme#variant` <!-- coverage-row:rust_xlsxwriter::color::Color#enum::Theme#variant -->
-  - **MISSING** `rust_xlsxwriter::color::Color#enum::Theme#variant::0#field` <!-- coverage-row:rust_xlsxwriter::color::Color#enum::Theme#variant::0#field -->
-  - **MISSING** `rust_xlsxwriter::color::Color#enum::Theme#variant::1#field` <!-- coverage-row:rust_xlsxwriter::color::Color#enum::Theme#variant::1#field -->
+- [x] **FULL** `rust_xlsxwriter::color::Color#enum::Theme#variant` — → `Format.prototype.setFontColor('theme:4:2')`, `RuscFormat.prototype.setFontColor('theme:4:2')` — evidence: `runtime` — tests: `tests/format.test.mjs:266` — note: Passed as a `theme:<color>:<shade>` string to cell format colors and `Worksheet.setTabColor`. Note backgrounds and conditional formats throw on theme colors, because rust_xlsxwriter writes them there as a default RGB color. <!-- coverage-capability:rust_xlsxwriter::color::Color#enum::Theme#variant -->
+  - **FULL** `rust_xlsxwriter::color::Color#enum::Theme#variant` <!-- coverage-row:rust_xlsxwriter::color::Color#enum::Theme#variant -->
+  - **FULL** `rust_xlsxwriter::color::Color#enum::Theme#variant::0#field` <!-- coverage-row:rust_xlsxwriter::color::Color#enum::Theme#variant::0#field -->
+  - **FULL** `rust_xlsxwriter::color::Color#enum::Theme#variant::1#field` <!-- coverage-row:rust_xlsxwriter::color::Color#enum::Theme#variant::1#field -->
 - [x] **FULL** `rust_xlsxwriter::color::Color#enum::White#variant` — → `Format.prototype.setFontColor('white')`, `RuscFormat.prototype.setFontColor('white')` — evidence: `static-forwarding` — tests: `tests/100-percent-coverage.test.mjs:50`, `tests/100-percent-coverage.test.mjs:109`, `tests/100-percent-coverage.test.mjs:128` <!-- coverage-capability:rust_xlsxwriter::color::Color#enum::White#variant --><!-- coverage-row:rust_xlsxwriter::color::Color#enum::White#variant -->
 - [x] **FULL** `rust_xlsxwriter::color::Color#enum::Yellow#variant` — → `Format.prototype.setFontColor('yellow')`, `RuscFormat.prototype.setFontColor('yellow')` — evidence: `static-forwarding` — tests: `tests/format.test.mjs:219` <!-- coverage-capability:rust_xlsxwriter::color::Color#enum::Yellow#variant --><!-- coverage-row:rust_xlsxwriter::color::Color#enum::Yellow#variant -->

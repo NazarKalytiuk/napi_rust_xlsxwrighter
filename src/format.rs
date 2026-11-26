@@ -5,7 +5,7 @@ use rust_xlsxwriter::{
     FormatScript, FormatUnderline,
 };
 
-use crate::utils::{is_valid_border, parse_border, parse_color};
+use crate::utils::{parse_border, parse_color};
 
 #[napi]
 #[derive(Clone)]
@@ -15,12 +15,12 @@ pub struct RuscFormat {
     font_size: Option<f64>,
     font_name: Option<String>,
     font_scheme: Option<FontScheme>,
-    font_color: Option<String>,
+    font_color: Option<Color>,
     underline: Option<String>,
     strikethrough: bool,
     font_script: Option<FormatScript>,
-    background_color: Option<String>,
-    foreground_color: Option<String>,
+    background_color: Option<Color>,
+    foreground_color: Option<Color>,
     pattern: Option<FormatPattern>,
     align: Option<String>,
     vertical_align: Option<String>,
@@ -29,17 +29,17 @@ pub struct RuscFormat {
     rotation: Option<i16>,
     shrink: bool,
     reading_direction: Option<u8>,
-    border: Option<String>,
-    border_top: Option<String>,
-    border_bottom: Option<String>,
-    border_left: Option<String>,
-    border_right: Option<String>,
+    border: Option<FormatBorder>,
+    border_top: Option<FormatBorder>,
+    border_bottom: Option<FormatBorder>,
+    border_left: Option<FormatBorder>,
+    border_right: Option<FormatBorder>,
     border_diagonal: Option<FormatBorder>,
-    border_color: Option<String>,
-    border_top_color: Option<String>,
-    border_bottom_color: Option<String>,
-    border_left_color: Option<String>,
-    border_right_color: Option<String>,
+    border_color: Option<Color>,
+    border_top_color: Option<Color>,
+    border_bottom_color: Option<Color>,
+    border_left_color: Option<Color>,
+    border_right_color: Option<Color>,
     border_diagonal_color: Option<Color>,
     border_diagonal_type: Option<FormatDiagonalBorder>,
     num_format: Option<String>,
@@ -123,22 +123,14 @@ impl RuscFormat {
     /// Set font color
     #[napi]
     pub fn set_font_color(&mut self, color: String) -> Result<()> {
-        // Validate color
-        parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-        self.font_color = Some(color);
+        self.font_color = Some(parse_color(&color)?);
         Ok(())
     }
 
     /// Set background color
     #[napi]
     pub fn set_background_color(&mut self, color: String) -> Result<()> {
-        // Validate color
-        parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-        self.background_color = Some(color);
+        self.background_color = Some(parse_color(&color)?);
         Ok(())
     }
 
@@ -175,13 +167,7 @@ impl RuscFormat {
     /// Set border style
     #[napi]
     pub fn set_border(&mut self, border: String) -> Result<()> {
-        if !is_valid_border(&border) {
-            return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid border style: {}", border),
-            ));
-        }
-        self.border = Some(border);
+        self.border = Some(parse_border(&border)?);
         Ok(())
     }
 
@@ -246,10 +232,7 @@ impl RuscFormat {
     /// Set foreground color (for patterns)
     #[napi]
     pub fn set_foreground_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-        self.foreground_color = Some(color);
+        self.foreground_color = Some(parse_color(&color)?);
         Ok(())
     }
 
@@ -329,102 +312,63 @@ impl RuscFormat {
     /// Set top border style
     #[napi]
     pub fn set_border_top(&mut self, border: String) -> Result<()> {
-        if !is_valid_border(&border) {
-            return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid border style: {}", border),
-            ));
-        }
-        self.border_top = Some(border);
+        self.border_top = Some(parse_border(&border)?);
         Ok(())
     }
 
     /// Set bottom border style
     #[napi]
     pub fn set_border_bottom(&mut self, border: String) -> Result<()> {
-        if !is_valid_border(&border) {
-            return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid border style: {}", border),
-            ));
-        }
-        self.border_bottom = Some(border);
+        self.border_bottom = Some(parse_border(&border)?);
         Ok(())
     }
 
     /// Set left border style
     #[napi]
     pub fn set_border_left(&mut self, border: String) -> Result<()> {
-        if !is_valid_border(&border) {
-            return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid border style: {}", border),
-            ));
-        }
-        self.border_left = Some(border);
+        self.border_left = Some(parse_border(&border)?);
         Ok(())
     }
 
     /// Set right border style
     #[napi]
     pub fn set_border_right(&mut self, border: String) -> Result<()> {
-        if !is_valid_border(&border) {
-            return Err(Error::new(
-                Status::GenericFailure,
-                format!("Invalid border style: {}", border),
-            ));
-        }
-        self.border_right = Some(border);
+        self.border_right = Some(parse_border(&border)?);
         Ok(())
     }
 
     /// Set color for all borders
     #[napi]
     pub fn set_border_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-        self.border_color = Some(color);
+        self.border_color = Some(parse_color(&color)?);
         Ok(())
     }
 
     /// Set top border color
     #[napi]
     pub fn set_border_top_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-        self.border_top_color = Some(color);
+        self.border_top_color = Some(parse_color(&color)?);
         Ok(())
     }
 
     /// Set bottom border color
     #[napi]
     pub fn set_border_bottom_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-        self.border_bottom_color = Some(color);
+        self.border_bottom_color = Some(parse_color(&color)?);
         Ok(())
     }
 
     /// Set left border color
     #[napi]
     pub fn set_border_left_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-        self.border_left_color = Some(color);
+        self.border_left_color = Some(parse_color(&color)?);
         Ok(())
     }
 
     /// Set right border color
     #[napi]
     pub fn set_border_right_color(&mut self, color: String) -> Result<()> {
-        parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-        self.border_right_color = Some(color);
+        self.border_right_color = Some(parse_color(&color)?);
         Ok(())
     }
 
@@ -471,21 +415,14 @@ impl RuscFormat {
     /// Set diagonal border style
     #[napi]
     pub fn set_border_diagonal(&mut self, border: String) -> Result<()> {
-        self.border_diagonal = parse_border(&border)
-            .ok_or_else(|| {
-                Error::new(
-                    Status::GenericFailure,
-                    format!("Invalid border style: {}", border),
-                )
-            })?
-            .into();
+        self.border_diagonal = Some(parse_border(&border)?);
         Ok(())
     }
 
     /// Set diagonal border color
     #[napi]
     pub fn set_border_diagonal_color(&mut self, color: String) -> Result<()> {
-        self.border_diagonal_color = parse_color(&color);
+        self.border_diagonal_color = Some(parse_color(&color)?);
         Ok(())
     }
 
@@ -562,10 +499,8 @@ impl RuscFormat {
         if let Some(scheme) = self.font_scheme {
             fmt = fmt.set_font_scheme(scheme);
         }
-        if let Some(ref color) = self.font_color
-            && let Some(c) = parse_color(color)
-        {
-            fmt = fmt.set_font_color(c);
+        if let Some(color) = self.font_color {
+            fmt = fmt.set_font_color(color);
         }
 
         if let Some(ref underline) = self.underline {
@@ -580,16 +515,12 @@ impl RuscFormat {
         }
 
         // Fill/background properties
-        if let Some(ref color) = self.background_color
-            && let Some(c) = parse_color(color)
-        {
-            fmt = fmt.set_background_color(c);
+        if let Some(color) = self.background_color {
+            fmt = fmt.set_background_color(color);
         }
 
-        if let Some(ref color) = self.foreground_color
-            && let Some(c) = parse_color(color)
-        {
-            fmt = fmt.set_foreground_color(c);
+        if let Some(color) = self.foreground_color {
+            fmt = fmt.set_foreground_color(color);
         }
 
         if let Some(pattern) = self.pattern {
@@ -640,64 +571,44 @@ impl RuscFormat {
         }
 
         // Border properties
-        if let Some(ref border) = self.border
-            && let Some(border_enum) = parse_border(border)
-        {
-            fmt = fmt.set_border(border_enum);
+        if let Some(border) = self.border {
+            fmt = fmt.set_border(border);
         }
 
-        if let Some(ref border) = self.border_top
-            && let Some(border_enum) = parse_border(border)
-        {
-            fmt = fmt.set_border_top(border_enum);
+        if let Some(border) = self.border_top {
+            fmt = fmt.set_border_top(border);
         }
 
-        if let Some(ref border) = self.border_bottom
-            && let Some(border_enum) = parse_border(border)
-        {
-            fmt = fmt.set_border_bottom(border_enum);
+        if let Some(border) = self.border_bottom {
+            fmt = fmt.set_border_bottom(border);
         }
 
-        if let Some(ref border) = self.border_left
-            && let Some(border_enum) = parse_border(border)
-        {
-            fmt = fmt.set_border_left(border_enum);
+        if let Some(border) = self.border_left {
+            fmt = fmt.set_border_left(border);
         }
 
-        if let Some(ref border) = self.border_right
-            && let Some(border_enum) = parse_border(border)
-        {
-            fmt = fmt.set_border_right(border_enum);
+        if let Some(border) = self.border_right {
+            fmt = fmt.set_border_right(border);
         }
 
-        if let Some(ref color) = self.border_color
-            && let Some(c) = parse_color(color)
-        {
-            fmt = fmt.set_border_color(c);
+        if let Some(color) = self.border_color {
+            fmt = fmt.set_border_color(color);
         }
 
-        if let Some(ref color) = self.border_top_color
-            && let Some(c) = parse_color(color)
-        {
-            fmt = fmt.set_border_top_color(c);
+        if let Some(color) = self.border_top_color {
+            fmt = fmt.set_border_top_color(color);
         }
 
-        if let Some(ref color) = self.border_bottom_color
-            && let Some(c) = parse_color(color)
-        {
-            fmt = fmt.set_border_bottom_color(c);
+        if let Some(color) = self.border_bottom_color {
+            fmt = fmt.set_border_bottom_color(color);
         }
 
-        if let Some(ref color) = self.border_left_color
-            && let Some(c) = parse_color(color)
-        {
-            fmt = fmt.set_border_left_color(c);
+        if let Some(color) = self.border_left_color {
+            fmt = fmt.set_border_left_color(color);
         }
 
-        if let Some(ref color) = self.border_right_color
-            && let Some(c) = parse_color(color)
-        {
-            fmt = fmt.set_border_right_color(c);
+        if let Some(color) = self.border_right_color {
+            fmt = fmt.set_border_right_color(color);
         }
 
         // Number format
