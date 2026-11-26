@@ -1,6 +1,6 @@
 {
   "name": "@nazarkalytiuk/rusc-xlsx",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Fast Excel XLSX library for Node.js powered by rust_xlsxwriter",
   "type": "commonjs",
   "main": "wrapper.js",
