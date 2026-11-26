@@ -328,6 +328,111 @@ export declare class RuscShape {
   setAltText(altText: string): this
   /** Set how the shape moves and sizes with cells */
   setObjectMovement(option: string): this
+  /**
+   * Set the fill and line of the shape. The shape keeps a copy, so later
+   * changes to `format` don't affect it.
+   */
+  setFormat(format: RuscShapeFormat): this
+  /** Set the font of the shape text. The shape keeps a copy. */
+  setFont(font: RuscShapeFont): this
+  /**
+   * Set the alignment and direction of the shape text. The shape keeps a
+   * copy.
+   */
+  setTextOptions(options: RuscShapeText): this
+}
+
+/** The font of shape text. */
+export declare class RuscShapeFont {
+  /** Create a shape font: the theme font at 11 pt */
+  constructor()
+  /** Set the font name, e.g. "Arial" */
+  setName(name: string): this
+  /** Set the font size in points, from 1 to 4000 in steps of 0.5 */
+  setSize(size: number): this
+  /** Make the text bold */
+  setBold(): this
+  /** Make the text italic */
+  setItalic(): this
+  /** Underline the text with a single line */
+  setUnderline(): this
+  /** Set the text color: a color name, `#RRGGBB` or `theme:<color>:<shade>` */
+  setColor(color: string): this
+}
+
+/** The fill and line of a shape. */
+export declare class RuscShapeFormat {
+  /** Create a shape format with Excel's default fill and line */
+  constructor()
+  /** Fill the shape with a solid color. The format keeps a copy. */
+  setSolidFill(fill: RuscShapeSolidFill): this
+  /** Fill the shape with a pattern. The format keeps a copy. */
+  setPatternFill(fill: RuscShapePatternFill): this
+  /** Give the shape no fill, so the cells behind it show through */
+  setNoFill(): this
+  /** Set the border line of the shape. The format keeps a copy. */
+  setLine(line: RuscShapeLine): this
+  /** Give the shape no border line */
+  setNoLine(): this
+}
+
+/** The border line of a shape. */
+export declare class RuscShapeLine {
+  /** Create a shape line: a solid 0.75 pt line in the theme color */
+  constructor()
+  /** Set the line color: a color name, `#RRGGBB` or `theme:<color>:<shade>` */
+  setColor(color: string): this
+  /**
+   * Set the line width in points, from 0 to 1584. Excel rounds it to the
+   * nearest quarter point.
+   */
+  setWidth(width: number): this
+  /** Set the dash style of the line */
+  setDashType(dashType: string): this
+  /** Set the line transparency in percent, from 0 (opaque) to 100 */
+  setTransparency(transparency: number): this
+  /** Hide the line, or show it again */
+  setHidden(hidden: boolean): this
+}
+
+/** A pattern fill of a shape. */
+export declare class RuscShapePatternFill {
+  /** Create a pattern fill: `dotted5Percent` in the theme colors */
+  constructor()
+  /** Set the pattern */
+  setPattern(pattern: string): this
+  /**
+   * Set the color of the pattern: a color name, `#RRGGBB` or
+   * `theme:<color>:<shade>`
+   */
+  setForegroundColor(color: string): this
+  /**
+   * Set the color behind the pattern: a color name, `#RRGGBB` or
+   * `theme:<color>:<shade>`
+   */
+  setBackgroundColor(color: string): this
+}
+
+/** A solid fill of a shape. */
+export declare class RuscShapeSolidFill {
+  /** Create a solid fill in the theme color */
+  constructor()
+  /** Set the fill color: a color name, `#RRGGBB` or `theme:<color>:<shade>` */
+  setColor(color: string): this
+  /** Set the fill transparency in percent, from 0 (opaque) to 100 */
+  setTransparency(transparency: number): this
+}
+
+/** The alignment and direction of shape text. */
+export declare class RuscShapeText {
+  /** Create text options: horizontal text at the top, default alignment */
+  constructor()
+  /** Set the horizontal alignment of the text */
+  setHorizontalAlignment(alignment: string): this
+  /** Set the vertical alignment of the text */
+  setVerticalAlignment(alignment: string): this
+  /** Set the direction of the text */
+  setDirection(direction: string): this
 }
 
 export declare class RuscSparkline {
@@ -612,10 +717,13 @@ export declare class RuscWorksheet {
   hideUnusedRows(enable: boolean): void
   /**
    * Group a range of rows into an outline level; a range inside an existing
-   * group adds a nested level
+   * group adds a nested level. Not available in constant or low memory mode.
    */
   groupRows(firstRow: number, lastRow: number): void
-  /** Group a range of rows into a collapsed outline level */
+  /**
+   * Group a range of rows into a collapsed outline level. Not available in
+   * constant or low memory mode.
+   */
   groupRowsCollapsed(firstRow: number, lastRow: number): void
   /**
    * Group a range of columns into an outline level; a range inside an existing

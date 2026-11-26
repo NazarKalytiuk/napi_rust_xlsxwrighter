@@ -19,6 +19,12 @@ import {
   RuscProtectionOptions,
   RuscRichText,
   RuscShape,
+  RuscShapeFont,
+  RuscShapeFormat,
+  RuscShapeLine,
+  RuscShapePatternFill,
+  RuscShapeSolidFill,
+  RuscShapeText,
   RuscSparkline,
   RuscTable,
   RuscTableColumn,
@@ -187,9 +193,7 @@ export type CalculationMode = 'automatic' | 'manual' | 'partial';
  * - `unlockedCellsWithFormula`: an unlocked cell that contains a formula
  * - `inconsistentColumnFormula`: a table cell whose formula differs from its
  *   column's formula
- *
- * Excel's two-digit text year warning is not available: rust_xlsxwriter
- * 0.102.0 writes its rule with an attribute name Excel doesn't define.
+ * - `twoDigitTextYear`: a date stored as text with a two-digit year
  */
 export type IgnoreErrorType =
   | 'numberStoredAsText'
@@ -199,7 +203,8 @@ export type IgnoreErrorType =
   | 'formulaOmitsCells'
   | 'dataValidationError'
   | 'unlockedCellsWithFormula'
-  | 'inconsistentColumnFormula';
+  | 'inconsistentColumnFormula'
+  | 'twoDigitTextYear';
 
 /**
  * Format class for cell styling with fluent API
@@ -1658,6 +1663,9 @@ export class Worksheet {
   /**
    * Group a range of rows into an outline level. A range inside an existing
    * group adds a nested level; groups nest up to 7 deep.
+   *
+   * Throws on a constant or low memory worksheet: rust_xlsxwriter 0.104.0
+   * writes the rows of those worksheets without their outline level.
    * @param firstRow - First row (0-indexed)
    * @param lastRow - Last row (0-indexed), inclusive
    * @example
@@ -1669,7 +1677,8 @@ export class Worksheet {
   }
 
   /**
-   * Group a range of rows into a collapsed outline level, with the rows hidden
+   * Group a range of rows into a collapsed outline level, with the rows hidden.
+   * Throws on a constant or low memory worksheet, like {@link Worksheet.groupRows}.
    * @param firstRow - First row (0-indexed)
    * @param lastRow - Last row (0-indexed), inclusive
    */
@@ -3784,6 +3793,375 @@ export class Button {
   }
 }
 
+/** Dash style of a {@link ShapeLine}. */
+export type ShapeLineDashType =
+  | 'solid'
+  | 'roundDot'
+  | 'squareDot'
+  | 'dash'
+  | 'dashDot'
+  | 'longDash'
+  | 'longDashDot'
+  | 'longDashDotDot';
+
+/** Pattern of a {@link ShapePatternFill}, as named in Excel's Format Shape pane. */
+export type ShapePatternFillType =
+  | 'dotted5Percent'
+  | 'dotted10Percent'
+  | 'dotted20Percent'
+  | 'dotted25Percent'
+  | 'dotted30Percent'
+  | 'dotted40Percent'
+  | 'dotted50Percent'
+  | 'dotted60Percent'
+  | 'dotted70Percent'
+  | 'dotted75Percent'
+  | 'dotted80Percent'
+  | 'dotted90Percent'
+  | 'diagonalStripesLightDownwards'
+  | 'diagonalStripesLightUpwards'
+  | 'diagonalStripesDarkDownwards'
+  | 'diagonalStripesDarkUpwards'
+  | 'diagonalStripesWideDownwards'
+  | 'diagonalStripesWideUpwards'
+  | 'verticalStripesLight'
+  | 'horizontalStripesLight'
+  | 'verticalStripesNarrow'
+  | 'horizontalStripesNarrow'
+  | 'verticalStripesDark'
+  | 'horizontalStripesDark'
+  | 'stripesBackslashes'
+  | 'stripesForwardSlashes'
+  | 'horizontalStripesAlternating'
+  | 'verticalStripesAlternating'
+  | 'smallConfetti'
+  | 'largeConfetti'
+  | 'zigzag'
+  | 'wave'
+  | 'diagonalBrick'
+  | 'horizontalBrick'
+  | 'weave'
+  | 'plaid'
+  | 'divot'
+  | 'dottedGrid'
+  | 'dottedDiamond'
+  | 'shingle'
+  | 'trellis'
+  | 'sphere'
+  | 'smallGrid'
+  | 'largeGrid'
+  | 'smallCheckerboard'
+  | 'largeCheckerboard'
+  | 'outlinedDiamondGrid'
+  | 'solidDiamondGrid';
+
+/** Horizontal alignment of shape text; `default` leaves it to Excel (left). */
+export type ShapeTextHorizontalAlignment = 'default' | 'left' | 'center' | 'right';
+
+/**
+ * Vertical alignment of shape text. The `…Centered` variants also center the
+ * block of text horizontally, keeping the lines aligned with each other.
+ */
+export type ShapeTextVerticalAlignment =
+  | 'top'
+  | 'middle'
+  | 'bottom'
+  | 'topCentered'
+  | 'middleCentered'
+  | 'bottomCentered';
+
+/**
+ * Direction of shape text: `rotate90` reads top to bottom, `rotate270` bottom
+ * to top, `stacked` puts one letter under the other, and `rotate90EastAsian`
+ * rotates Latin text but keeps East Asian characters upright.
+ */
+export type ShapeTextDirection =
+  | 'horizontal'
+  | 'rotate90'
+  | 'rotate270'
+  | 'stacked'
+  | 'rotate90EastAsian';
+
+/**
+ * Fill and border line of a {@link Shape}. Without a fill or line setting the
+ * shape gets Excel's defaults: a white fill and a thin theme-colored line.
+ *
+ * @example
+ * const format = new ShapeFormat()
+ *   .setSolidFill(new ShapeSolidFill().setColor('yellow'))
+ *   .setLine(new ShapeLine().setColor('black').setWidth(0.75));
+ * Shape.textbox().setFormat(format);
+ */
+export class ShapeFormat {
+  /** Internal native binding */
+  _native: RuscShapeFormat;
+
+  constructor() {
+    this._native = new RuscShapeFormat();
+  }
+
+  /**
+   * Fill the shape with a solid color. The format keeps a copy of `fill`.
+   * @param fill - Solid fill
+   */
+  setSolidFill(fill: ShapeSolidFill): this {
+    this._native.setSolidFill(fill._native);
+    return this;
+  }
+
+  /**
+   * Fill the shape with a pattern. The format keeps a copy of `fill`.
+   * @param fill - Pattern fill
+   */
+  setPatternFill(fill: ShapePatternFill): this {
+    this._native.setPatternFill(fill._native);
+    return this;
+  }
+
+  /** Give the shape no fill, so the cells behind it show through */
+  setNoFill(): this {
+    this._native.setNoFill();
+    return this;
+  }
+
+  /**
+   * Set the border line of the shape. The format keeps a copy of `line`.
+   * @param line - Border line
+   */
+  setLine(line: ShapeLine): this {
+    this._native.setLine(line._native);
+    return this;
+  }
+
+  /** Give the shape no border line */
+  setNoLine(): this {
+    this._native.setNoLine();
+    return this;
+  }
+}
+
+/** Border line of a shape: a solid 0.75 pt line in the theme color by default. */
+export class ShapeLine {
+  /** Internal native binding */
+  _native: RuscShapeLine;
+
+  constructor() {
+    this._native = new RuscShapeLine();
+  }
+
+  /**
+   * Set the line color
+   * @param color - Color name, hex code or theme color
+   */
+  setColor(color: Color): this {
+    this._native.setColor(color);
+    return this;
+  }
+
+  /**
+   * Set the line width. Excel rounds it to the nearest quarter point.
+   * @param width - Width in points, from 0 to 1584
+   */
+  setWidth(width: number): this {
+    this._native.setWidth(width);
+    return this;
+  }
+
+  /**
+   * Set the dash style of the line
+   * @param dashType - Dash style
+   */
+  setDashType(dashType: ShapeLineDashType): this {
+    this._native.setDashType(dashType);
+    return this;
+  }
+
+  /**
+   * Set the line transparency
+   * @param transparency - Integer percentage, from 0 (opaque) to 100
+   */
+  setTransparency(transparency: number): this {
+    this._native.setTransparency(transparency);
+    return this;
+  }
+
+  /**
+   * Hide the line, or show it again
+   * @param hidden - True to hide the line
+   */
+  setHidden(hidden: boolean): this {
+    this._native.setHidden(hidden);
+    return this;
+  }
+}
+
+/** Solid fill of a shape, for {@link ShapeFormat.setSolidFill}. */
+export class ShapeSolidFill {
+  /** Internal native binding */
+  _native: RuscShapeSolidFill;
+
+  constructor() {
+    this._native = new RuscShapeSolidFill();
+  }
+
+  /**
+   * Set the fill color
+   * @param color - Color name, hex code or theme color
+   */
+  setColor(color: Color): this {
+    this._native.setColor(color);
+    return this;
+  }
+
+  /**
+   * Set the fill transparency
+   * @param transparency - Integer percentage, from 0 (opaque) to 100
+   */
+  setTransparency(transparency: number): this {
+    this._native.setTransparency(transparency);
+    return this;
+  }
+}
+
+/** Pattern fill of a shape, for {@link ShapeFormat.setPatternFill}. */
+export class ShapePatternFill {
+  /** Internal native binding */
+  _native: RuscShapePatternFill;
+
+  /** Create a pattern fill: `dotted5Percent` in the theme colors */
+  constructor() {
+    this._native = new RuscShapePatternFill();
+  }
+
+  /**
+   * Set the pattern
+   * @param pattern - Pattern type
+   */
+  setPattern(pattern: ShapePatternFillType): this {
+    this._native.setPattern(pattern);
+    return this;
+  }
+
+  /**
+   * Set the color of the pattern
+   * @param color - Color name, hex code or theme color
+   */
+  setForegroundColor(color: Color): this {
+    this._native.setForegroundColor(color);
+    return this;
+  }
+
+  /**
+   * Set the color behind the pattern (white when only a foreground color is set)
+   * @param color - Color name, hex code or theme color
+   */
+  setBackgroundColor(color: Color): this {
+    this._native.setBackgroundColor(color);
+    return this;
+  }
+}
+
+/**
+ * Font of shape text, for {@link Shape.setFont}: the theme font at 11 pt by
+ * default.
+ *
+ * Strikethrough isn't available: rust_xlsxwriter 0.104.0 doesn't write it for
+ * shape text.
+ */
+export class ShapeFont {
+  /** Internal native binding */
+  _native: RuscShapeFont;
+
+  constructor() {
+    this._native = new RuscShapeFont();
+  }
+
+  /**
+   * Set the font name
+   * @param name - Font name, e.g. 'Arial'
+   */
+  setName(name: string): this {
+    this._native.setName(name);
+    return this;
+  }
+
+  /**
+   * Set the font size
+   * @param size - Size in points, from 1 to 4000 in steps of 0.5
+   */
+  setSize(size: number): this {
+    this._native.setSize(size);
+    return this;
+  }
+
+  /** Make the text bold */
+  setBold(): this {
+    this._native.setBold();
+    return this;
+  }
+
+  /** Make the text italic */
+  setItalic(): this {
+    this._native.setItalic();
+    return this;
+  }
+
+  /** Underline the text with a single line */
+  setUnderline(): this {
+    this._native.setUnderline();
+    return this;
+  }
+
+  /**
+   * Set the text color
+   * @param color - Color name, hex code or theme color
+   */
+  setColor(color: Color): this {
+    this._native.setColor(color);
+    return this;
+  }
+}
+
+/**
+ * Alignment and direction of shape text, for {@link Shape.setTextOptions}: by
+ * default horizontal text at the top, with the default horizontal alignment.
+ */
+export class ShapeText {
+  /** Internal native binding */
+  _native: RuscShapeText;
+
+  constructor() {
+    this._native = new RuscShapeText();
+  }
+
+  /**
+   * Set the horizontal alignment of the text
+   * @param alignment - Horizontal alignment
+   */
+  setHorizontalAlignment(alignment: ShapeTextHorizontalAlignment): this {
+    this._native.setHorizontalAlignment(alignment);
+    return this;
+  }
+
+  /**
+   * Set the vertical alignment of the text
+   * @param alignment - Vertical alignment
+   */
+  setVerticalAlignment(alignment: ShapeTextVerticalAlignment): this {
+    this._native.setVerticalAlignment(alignment);
+    return this;
+  }
+
+  /**
+   * Set the direction of the text
+   * @param direction - Text direction
+   */
+  setDirection(direction: ShapeTextDirection): this {
+    this._native.setDirection(direction);
+    return this;
+  }
+}
+
 /**
  * Shape class for Excel shapes (textboxes)
  *
@@ -3853,6 +4231,41 @@ export class Shape {
    */
   setObjectMovement(option: 'moveAndSize' | 'moveOnly' | 'none' | 'moveAndSizeAfter'): this {
     this._native.setObjectMovement(option);
+    return this;
+  }
+
+  /**
+   * Set the fill and border line of the shape. The shape keeps a copy of
+   * `format`, so later changes to it don't affect this shape.
+   * @param format - Shape format
+   * @example
+   * shape.setFormat(new ShapeFormat().setSolidFill(new ShapeSolidFill().setColor('yellow')));
+   */
+  setFormat(format: ShapeFormat): this {
+    this._native.setFormat(format._native);
+    return this;
+  }
+
+  /**
+   * Set the font of the shape text. The shape keeps a copy of `font`.
+   * @param font - Shape font
+   * @example
+   * shape.setFont(new ShapeFont().setName('Arial').setSize(8).setBold());
+   */
+  setFont(font: ShapeFont): this {
+    this._native.setFont(font._native);
+    return this;
+  }
+
+  /**
+   * Set the alignment and direction of the shape text. The shape keeps a copy
+   * of `options`.
+   * @param options - Text options
+   * @example
+   * shape.setTextOptions(new ShapeText().setHorizontalAlignment('center').setDirection('rotate270'));
+   */
+  setTextOptions(options: ShapeText): this {
+    this._native.setTextOptions(options._native);
     return this;
   }
 }
@@ -4138,6 +4551,12 @@ export {
   RuscDocProperties,
   RuscButton,
   RuscShape,
+  RuscShapeFormat,
+  RuscShapeLine,
+  RuscShapeSolidFill,
+  RuscShapePatternFill,
+  RuscShapeFont,
+  RuscShapeText,
 };
 export type { RuscFormulaData };
 

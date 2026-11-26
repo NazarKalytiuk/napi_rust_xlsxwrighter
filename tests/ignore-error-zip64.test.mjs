@@ -30,6 +30,7 @@ describe('Worksheet.ignoreError and ignoreErrorRange', () => {
     ['dataValidationError', 'listDataValidation'],
     ['unlockedCellsWithFormula', 'unlockedFormula'],
     ['inconsistentColumnFormula', 'calculatedColumn'],
+    ['twoDigitTextYear', 'twoDigitTextYear'],
   ])('turns off %s warnings with the %s attribute', (errorType, attribute) => {
     const workbook = new Workbook();
     const worksheet = workbook.addWorksheet();
@@ -75,14 +76,6 @@ describe('Worksheet.ignoreError and ignoreErrorRange', () => {
 
     expect(() => worksheet.ignoreError(0, 0, 'numberAsText')).toThrow(
       'Invalid ignore error type: numberAsText',
-    );
-  });
-
-  test('rejects the two-digit text year warning that rust_xlsxwriter writes wrongly', () => {
-    const worksheet = new Workbook().addWorksheet();
-
-    expect(() => worksheet.ignoreErrorRange(0, 0, 1, 1, 'twoDigitTextYear')).toThrow(
-      "Unsupported ignore error type: twoDigitTextYear. rust_xlsxwriter 0.102.0 writes it with an attribute name Excel doesn't define",
     );
   });
 });

@@ -22,6 +22,10 @@ import {
   ProtectionOptions,
   RichText,
   Shape,
+  ShapeFont,
+  ShapeFormat,
+  ShapeSolidFill,
+  ShapeText,
   Sparkline,
   Table,
   TableColumn,
@@ -78,7 +82,15 @@ describe('Browser entry', () => {
     data.insertChart(12, 0, chart);
     data.insertImage(12, 8, Image.fromBuffer(await imageBytes()));
     data.insertButton(30, 0, new Button().setCaption('Run'));
-    data.insertShape(30, 4, Shape.textbox().setText('Textbox'));
+    data.insertShape(
+      30,
+      4,
+      Shape.textbox()
+        .setText('Textbox')
+        .setFormat(new ShapeFormat().setSolidFill(new ShapeSolidFill().setColor('yellow')))
+        .setFont(new ShapeFont().setName('Arial').setSize(8).setBold())
+        .setTextOptions(new ShapeText().setDirection('rotate270')),
+    );
 
     const tables = workbook.addWorksheet('Table');
     tables.writeRow(0, 0, ['Item', 'Qty']);
@@ -144,6 +156,14 @@ describe('Browser entry', () => {
     expect(await commands.readXlsxPart(base64, 'xl/worksheets/sheet2.xml')).toContain(
       '<sheetProtection ',
     );
+    const drawing = await commands.readXlsxPart(base64, 'xl/drawings/drawing1.xml');
+    for (const element of [
+      '<a:solidFill><a:srgbClr val="FFFF00"/></a:solidFill>',
+      '<a:rPr lang="en-US" sz="800" b="1">',
+      '<a:bodyPr vert="vert270" ',
+    ]) {
+      expect(drawing).toContain(element);
+    }
   });
 
   test('returns a Buffer that browser APIs accept as a Uint8Array', async () => {

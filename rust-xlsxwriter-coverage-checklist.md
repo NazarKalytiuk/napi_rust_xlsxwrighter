@@ -1,11 +1,11 @@
 # `rust_xlsxwriter` coverage checklist
 
-> Внутрішній трекер повноти `@nazarkalytiuk/rusc-xlsx`. Пінований baseline аудиту — `rust_xlsxwriter 0.102.0` з resolved features `default + constant_memory + zmij`, згенерований з rustdoc JSON (`npm run coverage:sync`).
+> Внутрішній трекер повноти `@nazarkalytiuk/rusc-xlsx`. Пінований baseline аудиту — `rust_xlsxwriter 0.104.0` з resolved features `default + constant_memory + zmij`, згенерований з rustdoc JSON (`npm run coverage:sync`).
 
-- Аудит зафіксовано: **2026-11-14**.
+- Аудит зафіксовано: **2026-11-26**.
 - Пакет: **@nazarkalytiuk/rusc-xlsx 2.6.0** / Cargo **rusc-xlsx 2.6.0**.
-- Inventory SHA-256 (sorted canonical row ids): `83018e65c3d539594dbcd6a1cb4c3257852b81def10a47f71a8592ffd2e1d512`.
-- Міграція з попереднього baseline: **17 added · 4 changed · 2 removed** stable rows.
+- Inventory SHA-256 (sorted canonical row ids): `578aca5c9deb510c0c480d28c4d78b020c731ad750bf44bb7a1e7210323dbf06`.
+- Міграція з попереднього baseline: **130 added · 0 changed · 0 removed** stable rows.
 - Це item-weighted API checklist, а не usage-weighted оцінка популярності функцій.
 - Повний список розбитий на окремі файли за функціональними групами, щоб GitHub/editor не мусив рендерити один файл на 1500+ checkboxes.
 - Статуси, mapping, evidence і gap/note редагуються в group-файлах; inventory, `tests:` call sites, лічильники та цей dashboard генеруються. `npm run coverage:check` перевіряє, що вони актуальні.
@@ -28,15 +28,15 @@
 1. Операція доступна через shipped N-API та/або public facade без прихованого native-only обходу.
 2. TypeScript declaration відповідає фактичному runtime.
 3. Збережено релевантний option space, return/error semantics та observable XLSX behavior.
-4. Є regression test; для складного mapping — direct `rust_xlsxwriter 0.102.0` parity probe або перевірка XLSX/XML.
+4. Є regression test; для складного mapping — direct `rust_xlsxwriter 0.104.0` parity probe або перевірка XLSX/XML.
 5. Оновлено local mapping/evidence у capability line; dashboard counts оновлює `npm run coverage:sync`.
 
 ## Поточний прогрес
 
 | Режим підрахунку | Усього rows/capabilities | N/A | Denominator | Full | Partial | Missing | Full % |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Symbol rows | 1673 | 202 | 1471 | 467 | 274 | 730 | 31.7% |
-| Grouped input capabilities | 1598 | 200 | 1398 | 442 | 242 | 714 | 31.6% |
+| Symbol rows | 1803 | 207 | 1596 | 581 | 276 | 739 | 36.4% |
+| Grouped input capabilities | 1726 | 205 | 1521 | 556 | 244 | 721 | 36.6% |
 
 ## Dashboard і group milestones
 
@@ -49,26 +49,28 @@
 | [ ] | [Умовне форматування](coverage-checklist/05-conditional-format.md) | 181 | 52 | 53 | 76 | 51 | 28.7% |
 | [ ] | [Валідація даних](coverage-checklist/06-data-validation.md) | 39 | 26 | 5 | 8 | 17 | 66.7% |
 | [ ] | [Дата й час](coverage-checklist/07-datetime.md) | 10 | 0 | 5 | 5 | 16 | 0.0% |
-| [ ] | [Помилки](coverage-checklist/08-error.md) | 36 | 0 | 36 | 0 | 2 | 0.0% |
+| [ ] | [Помилки](coverage-checklist/08-error.md) | 38 | 0 | 36 | 2 | 2 | 0.0% |
 | [ ] | [Фільтри](coverage-checklist/09-filter.md) | 22 | 0 | 0 | 22 | 5 | 0.0% |
 | [ ] | [Форматування](coverage-checklist/10-format.md) | 121 | 72 | 34 | 15 | 0 | 59.5% |
 | [x] | [Формули](coverage-checklist/11-formula.md) | 3 | 3 | 0 | 0 | 0 | 100.0% |
 | [ ] | [Зображення](coverage-checklist/12-image.md) | 25 | 16 | 1 | 8 | 0 | 64.0% |
 | [ ] | [Нотатки / коментарі](coverage-checklist/13-note.md) | 13 | 9 | 1 | 3 | 0 | 69.2% |
-| [ ] | [Властивості документа](coverage-checklist/14-properties.md) | 15 | 12 | 0 | 3 | 22 | 80.0% |
-| [x] | [Захист аркуша](coverage-checklist/15-protection.md) | 18 | 18 | 0 | 0 | 0 | 100.0% |
-| N/A | [Серіалізація](coverage-checklist/16-serializer.md) | 0 | 0 | 0 | 0 | 20 | 0.0% |
-| [ ] | [Фігури](coverage-checklist/17-shape.md) | 142 | 7 | 0 | 135 | 7 | 4.9% |
-| [ ] | [Спарклайни](coverage-checklist/18-sparkline.md) | 33 | 23 | 8 | 2 | 0 | 69.7% |
-| [ ] | [Таблиці](coverage-checklist/19-table.md) | 95 | 86 | 5 | 4 | 0 | 90.5% |
-| [ ] | [Гіперпосилання](coverage-checklist/20-url.md) | 4 | 0 | 3 | 1 | 0 | 0.0% |
-| [ ] | [Допоміжні функції](coverage-checklist/21-utility.md) | 12 | 0 | 0 | 12 | 2 | 0.0% |
-| [ ] | [Workbook](coverage-checklist/22-workbook.md) | 34 | 20 | 4 | 10 | 0 | 58.8% |
-| [ ] | [Worksheet](coverage-checklist/23-worksheet.md) | 161 | 42 | 68 | 51 | 43 | 26.1% |
+| [ ] | [Зведені таблиці](coverage-checklist/14-pivot-table.md) | 119 | 0 | 0 | 119 | 5 | 0.0% |
+| [ ] | [Властивості документа](coverage-checklist/15-properties.md) | 15 | 12 | 0 | 3 | 22 | 80.0% |
+| [x] | [Захист аркуша](coverage-checklist/16-protection.md) | 18 | 18 | 0 | 0 | 0 | 100.0% |
+| N/A | [Серіалізація](coverage-checklist/17-serializer.md) | 0 | 0 | 0 | 0 | 20 | 0.0% |
+| [ ] | [Фігури](coverage-checklist/18-shape.md) | 142 | 121 | 1 | 20 | 7 | 85.2% |
+| [ ] | [Спарклайни](coverage-checklist/19-sparkline.md) | 33 | 23 | 8 | 2 | 0 | 69.7% |
+| [ ] | [Таблиці](coverage-checklist/20-table.md) | 95 | 86 | 5 | 4 | 0 | 90.5% |
+| [ ] | [Гіперпосилання](coverage-checklist/21-url.md) | 4 | 0 | 3 | 1 | 0 | 0.0% |
+| [ ] | [Допоміжні функції](coverage-checklist/22-utility.md) | 12 | 0 | 0 | 12 | 2 | 0.0% |
+| [ ] | [Workbook](coverage-checklist/23-workbook.md) | 35 | 20 | 4 | 11 | 0 | 57.1% |
+| [ ] | [Worksheet](coverage-checklist/24-worksheet.md) | 162 | 42 | 69 | 51 | 43 | 25.9% |
 
 ## Cross-cutting backlogs
 
-- [TypeScript/runtime integrity — 8 open mismatches](coverage-checklist/24-typescript-runtime.md)
+- [TypeScript/runtime integrity — 8 open mismatches](coverage-checklist/25-typescript-runtime.md)
+- [`0.102.0` → `0.104.0` migration record — 130 added, 0 changed, 0 removed](coverage-checklist/27-drift-0.102.0-0.104.0.md)
 - [`0.97.1` → `0.102.0` migration record — 17 added, 4 changed, 2 removed](coverage-checklist/26-drift-0.97.1-0.102.0.md)
 - [`0.90.2` → `0.97.1` migration record — 17 added, 11 changed, 3 removed](coverage-checklist/25-drift-0.90.2-0.97.1.md)
 
@@ -81,9 +83,9 @@
 
 ## Audit invariants
 
-- Pinned canonical symbol rows: **1673**.
-- Pinned grouped capabilities: **1598**.
-- Pinned rustdoc inventory: **rust_xlsxwriter 0.102.0**, SHA-256 `83018e65c3d539594dbcd6a1cb4c3257852b81def10a47f71a8592ffd2e1d512`.
-- Historical drift from `0.97.1`: **17 added, 4 changed, 2 removed**.
+- Pinned canonical symbol rows: **1803**.
+- Pinned grouped capabilities: **1726**.
+- Pinned rustdoc inventory: **rust_xlsxwriter 0.104.0**, SHA-256 `578aca5c9deb510c0c480d28c4d78b020c731ad750bf44bb7a1e7210323dbf06`.
+- Historical drift from `0.102.0`: **130 added, 0 changed, 0 removed**.
 - Однакові назви не вважаються доказом parity: статус визначається mapping, semantics і runtime/test evidence.
 - Не позначати `FULL` лише тому, що метод існує або test перевіряє тільки `not.toThrow()`.

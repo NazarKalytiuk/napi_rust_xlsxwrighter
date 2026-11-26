@@ -84,7 +84,11 @@ impl RuscWorkbook {
             wb.worksheets().len() - 1
         };
 
-        Ok(RuscWorksheet { workbook, index })
+        Ok(RuscWorksheet {
+            workbook,
+            index,
+            streams_rows: false,
+        })
     }
 
     /// Add a new worksheet with constant memory mode to the workbook
@@ -118,7 +122,11 @@ impl RuscWorkbook {
             wb.worksheets().len() - 1
         };
 
-        Ok(RuscWorksheet { workbook, index })
+        Ok(RuscWorksheet {
+            workbook,
+            index,
+            streams_rows: true,
+        })
     }
 
     /// Add a new worksheet with low memory mode to the workbook
@@ -149,7 +157,11 @@ impl RuscWorkbook {
             wb.worksheets().len() - 1
         };
 
-        Ok(RuscWorksheet { workbook, index })
+        Ok(RuscWorksheet {
+            workbook,
+            index,
+            streams_rows: true,
+        })
     }
 
     /// Set a custom temporary directory for constant memory mode

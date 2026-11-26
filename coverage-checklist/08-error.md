@@ -2,10 +2,10 @@
 
 [← Coverage dashboard](../rust-xlsxwriter-coverage-checklist.md)
 
-> Pinned baseline: `rust_xlsxwriter 0.102.0`; **38 grouped capabilities**, **72 canonical symbol rows**.
+> Pinned baseline: `rust_xlsxwriter 0.104.0`; **40 grouped capabilities**, **76 canonical symbol rows**.
 
-- Grouped: **0 full · 36 partial · 0 missing · 2 N/A**.
-- Symbol rows: **0 full · 68 partial · 0 missing · 4 N/A**.
+- Grouped: **0 full · 36 partial · 2 missing · 2 N/A**.
+- Symbol rows: **0 full · 68 partial · 4 missing · 4 N/A**.
 - `[x] FULL`; `[ ] PARTIAL`; `[ ] MISSING`; plain `N/A` is outside the compiled/runtime denominator.
 - Before marking `FULL`, satisfy the [shared definition of done](../rust-xlsxwriter-coverage-checklist.md#definition-of-done).
 
@@ -25,6 +25,9 @@
 - [ ] **PARTIAL** `rust_xlsxwriter::error::XlsxError#enum::CustomError#variant` — → `JavaScript Error boundary`, `N-API Error boundary` — evidence: `runtime` — tests: `tests/advanced-styling.test.mjs:57`, `tests/advanced-styling.test.mjs:85`, `tests/advanced-styling.test.mjs:113` — gap: The operation can reject/throw, but XlsxError variants and payloads are flattened into JavaScript Error text rather than preserved structurally. <!-- coverage-capability:rust_xlsxwriter::error::XlsxError#enum::CustomError#variant -->
   - **PARTIAL** `rust_xlsxwriter::error::XlsxError#enum::CustomError#variant` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::CustomError#variant -->
   - **PARTIAL** `rust_xlsxwriter::error::XlsxError#enum::CustomError#variant::0#field` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::CustomError#variant::0#field -->
+- [ ] **MISSING** `rust_xlsxwriter::error::XlsxError#enum::CustomUiError#variant` — note: Not exposed: custom ribbon UI, added upstream in `0.104.0`, has no JavaScript API yet. <!-- coverage-capability:rust_xlsxwriter::error::XlsxError#enum::CustomUiError#variant -->
+  - **MISSING** `rust_xlsxwriter::error::XlsxError#enum::CustomUiError#variant` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::CustomUiError#variant -->
+  - **MISSING** `rust_xlsxwriter::error::XlsxError#enum::CustomUiError#variant::0#field` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::CustomUiError#variant::0#field -->
 - [ ] **PARTIAL** `rust_xlsxwriter::error::XlsxError#enum::DataValidationError#variant` — → `JavaScript Error boundary`, `N-API Error boundary` — evidence: `runtime` — tests: `tests/advanced-styling.test.mjs:57`, `tests/advanced-styling.test.mjs:85`, `tests/advanced-styling.test.mjs:113` — gap: The operation can reject/throw, but XlsxError variants and payloads are flattened into JavaScript Error text rather than preserved structurally. <!-- coverage-capability:rust_xlsxwriter::error::XlsxError#enum::DataValidationError#variant -->
   - **PARTIAL** `rust_xlsxwriter::error::XlsxError#enum::DataValidationError#variant` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::DataValidationError#variant -->
   - **PARTIAL** `rust_xlsxwriter::error::XlsxError#enum::DataValidationError#variant::0#field` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::DataValidationError#variant::0#field -->
@@ -59,6 +62,9 @@
 - [ ] **PARTIAL** `rust_xlsxwriter::error::XlsxError#enum::ParameterError#variant` — → `JavaScript Error boundary`, `N-API Error boundary` — evidence: `runtime` — tests: `tests/advanced-styling.test.mjs:57`, `tests/advanced-styling.test.mjs:85`, `tests/advanced-styling.test.mjs:113` — gap: The operation can reject/throw, but XlsxError variants and payloads are flattened into JavaScript Error text rather than preserved structurally. <!-- coverage-capability:rust_xlsxwriter::error::XlsxError#enum::ParameterError#variant -->
   - **PARTIAL** `rust_xlsxwriter::error::XlsxError#enum::ParameterError#variant` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::ParameterError#variant -->
   - **PARTIAL** `rust_xlsxwriter::error::XlsxError#enum::ParameterError#variant::0#field` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::ParameterError#variant::0#field -->
+- [ ] **MISSING** `rust_xlsxwriter::error::XlsxError#enum::PivotTableError#variant` — note: Not exposed: pivot tables, added upstream in `0.103.0`, have no JavaScript API yet. <!-- coverage-capability:rust_xlsxwriter::error::XlsxError#enum::PivotTableError#variant -->
+  - **MISSING** `rust_xlsxwriter::error::XlsxError#enum::PivotTableError#variant` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::PivotTableError#variant -->
+  - **MISSING** `rust_xlsxwriter::error::XlsxError#enum::PivotTableError#variant::0#field` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::PivotTableError#variant::0#field -->
 - **N/A** `rust_xlsxwriter::error::XlsxError#enum::PolarsError#variant` — gap: Out of the compiled dependency baseline; requires optional feature(s): polars. <!-- coverage-capability:rust_xlsxwriter::error::XlsxError#enum::PolarsError#variant -->
   - **N/A** `rust_xlsxwriter::error::XlsxError#enum::PolarsError#variant` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::PolarsError#variant -->
   - **N/A** `rust_xlsxwriter::error::XlsxError#enum::PolarsError#variant::0#field` <!-- coverage-row:rust_xlsxwriter::error::XlsxError#enum::PolarsError#variant::0#field -->
