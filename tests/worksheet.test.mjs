@@ -290,3 +290,70 @@ describe('Worksheet.writeRow and writeRows with missing and unsupported values',
     expect(() => write(new Workbook().addWorksheet())).toThrow('Expected an array');
   });
 });
+
+/** The XML of a workbook's first worksheet. */
+function sheetXml(workbook) {
+  return readXlsxPart(workbook.saveToBuffer(), 'xl/worksheets/sheet1.xml');
+}
+
+describe('Worksheet view XLSX output', () => {
+  test('hides the screen gridlines and shows them again', () => {
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet();
+
+    worksheet.setScreenGridlines(false);
+    expect(sheetXml(workbook)).toMatch(/<sheetView [^>]*showGridLines="0"/);
+
+    worksheet.setScreenGridlines(true);
+    expect(sheetXml(workbook)).not.toContain('showGridLines');
+  });
+
+  test('shows the screen gridlines by default', () => {
+    const workbook = new Workbook();
+    workbook.addWorksheet();
+    expect(sheetXml(workbook)).not.toContain('showGridLines');
+  });
+
+  test('keeps printed gridlines separate from screen gridlines', () => {
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet();
+
+    worksheet.setScreenGridlines(false);
+    worksheet.setPrintGridlines(true);
+
+    const sheet = sheetXml(workbook);
+    expect(sheet).toMatch(/<sheetView [^>]*showGridLines="0"/);
+    expect(sheet).toContain('<printOptions gridLines="1"/>');
+  });
+
+  test('writes a theme tab color', () => {
+    const workbook = new Workbook();
+    workbook.addWorksheet().setTabColor('theme:5:3');
+    expect(sheetXml(workbook)).toContain(
+      '<sheetPr><tabColor theme="5" tint="0.39997558519241921"/></sheetPr>',
+    );
+  });
+
+  test('rejects an out-of-range theme tab color', () => {
+    expect(() => new Workbook().addWorksheet().setTabColor('theme:4:9')).toThrow(
+      'Invalid color: theme:4:9. Theme colors are',
+    );
+  });
+
+  test.each([
+    [
+      'min color',
+      (worksheet, color) => worksheet.addConditionalFormat2ColorScale(0, 0, 9, 0, color, 'green'),
+    ],
+    [
+      'mid color',
+      (worksheet, color) =>
+        worksheet.addConditionalFormat3ColorScale(0, 0, 9, 0, 'red', color, 'green'),
+    ],
+    ['bar color', (worksheet, color) => worksheet.addConditionalFormatDataBar(0, 0, 9, 0, color)],
+  ])('rejects a theme %s, which conditional formats store as RGB', (label, add) => {
+    expect(() => add(new Workbook().addWorksheet(), 'theme:4:0')).toThrow(
+      `Invalid ${label}: theme:4:0. Theme colors aren't supported here; use a named or #RRGGBB color`,
+    );
+  });
+});

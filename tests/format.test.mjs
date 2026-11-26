@@ -232,11 +232,91 @@ describe('Format XLSX output', () => {
     'mediumDashed',
     'mediumDashDot',
     'mediumDashDotDot',
+    'hair',
   ])('writes %s border on all four sides', (style) => {
     const { border } = styleOf(new Format().setBorder(style).setBorderColor('navy'));
     for (const side of ['left', 'right', 'top', 'bottom']) {
       expect(border).toContain(`<${side} style="${style}"><color rgb="FF000080"/></${side}>`);
     }
+  });
+
+  test('writes hair borders set side by side and on the diagonal', () => {
+    const { border } = styleOf(
+      new Format()
+        .setBorderTop('hair')
+        .setBorderBottom('hair')
+        .setBorderLeft('hair')
+        .setBorderRight('hair')
+        .setBorderDiagonal('hair')
+        .setBorderDiagonalType('both'),
+    );
+    for (const side of ['left', 'right', 'top', 'bottom', 'diagonal']) {
+      expect(border).toContain(`<${side} style="hair"><color auto="1"/></${side}>`);
+    }
+  });
+
+  test.each([
+    ['theme:0:0', '<color theme="0"/>'],
+    ['theme:0:1', '<color theme="0" tint="-4.9989318521683403E-2"/>'],
+    ['theme:1:5', '<color theme="1" tint="4.9989318521683403E-2"/>'],
+    ['theme:2:3', '<color theme="2" tint="-0.499984740745262"/>'],
+    ['theme:4:2', '<color theme="4" tint="0.59999389629810485"/>'],
+    ['theme:9:5', '<color theme="9" tint="-0.499984740745262"/>'],
+  ])('writes font color %s as a theme color', (color, element) => {
+    expect(styleOf(new Format().setFontColor(color)).font).toContain(element);
+  });
+
+  test('writes theme fill and border colors', () => {
+    const solid = styleOf(new Format().setBackgroundColor('theme:4:2'));
+    expect(solid.fill).toContain('<fgColor theme="4" tint="0.59999389629810485"/>');
+
+    const pattern = styleOf(
+      new Format()
+        .setPattern('darkGrid')
+        .setForegroundColor('theme:5:0')
+        .setBackgroundColor('theme:6:1'),
+    );
+    expect(pattern.fill).toContain('<fgColor theme="5"/>');
+    expect(pattern.fill).toContain('<bgColor theme="6" tint="0.79998168889431442"/>');
+
+    const { border } = styleOf(
+      new Format()
+        .setBorder('thin')
+        .setBorderColor('theme:7:0')
+        .setBorderTopColor('theme:8:4')
+        .setBorderDiagonal('thin')
+        .setBorderDiagonalColor('theme:3:0'),
+    );
+    expect(border).toContain('<left style="thin"><color theme="7"/></left>');
+    expect(border).toContain(
+      '<top style="thin"><color theme="8" tint="-0.249977111117893"/></top>',
+    );
+    expect(border).toContain('<diagonal style="thin"><color theme="3"/></diagonal>');
+  });
+
+  test.each([
+    'theme:10:0',
+    'theme:0:6',
+    'theme:4',
+    'theme:4:2:1',
+    'theme:a:0',
+    'theme:-1:0',
+    'theme::',
+  ])('rejects the theme color %s', (color) => {
+    expect(() => new Format().setFontColor(color)).toThrow(
+      `Invalid color: ${color}. Theme colors are 'theme:<color>:<shade>' with a color of 0-9 and a shade of 0-5`,
+    );
+  });
+
+  test.each(['#12345', '#1234567', '#GGGGGG', '#+1+2+3', '12345F'])(
+    'rejects the hex color %s',
+    (color) => {
+      expect(() => new Format().setBackgroundColor(color)).toThrow(`Invalid color: ${color}`);
+    },
+  );
+
+  test('rejects an invalid diagonal border color', () => {
+    expect(() => new Format().setBorderDiagonalColor('nocolor')).toThrow('Invalid color: nocolor');
   });
 
   test('writes shrink-to-fit and hidden protection', () => {

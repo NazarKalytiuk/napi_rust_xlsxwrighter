@@ -13,8 +13,9 @@ Fast, feature-complete Excel XLSX library for Node.js and browsers, powered by [
 - **Data Types**: Strings, numbers, booleans, dates/times
 - **Formatting**:
   - Font styling (bold, italic, underline, strikethrough, size, color, script)
+  - Colors: named, `#RRGGBB`, or theme palette colors such as `'theme:4:2'` (formats and tab colors)
   - Alignment (horizontal, vertical, rotation, indent, wrap, shrink)
-  - Borders (12 styles, individual sides with colors, diagonal)
+  - Borders (13 styles including hair, individual sides with colors, diagonal)
   - Fills (18 patterns, foreground/background colors)
   - Number formats (currency, percentage, dates, custom)
   - Cell protection (locked/unlocked, hidden formulas)
@@ -22,7 +23,7 @@ Fast, feature-complete Excel XLSX library for Node.js and browsers, powered by [
 - **Outlines**: Grouped rows and columns, nested and collapsed
 - **Formatting after writing**: Format cells and ranges (with an outside border) without rewriting their data
 - **Formulas**: Standard, array, and dynamic formulas
-- **Data Validation**: Dropdowns, number ranges, custom rules with messages
+- **Data Validation**: Dropdowns, number ranges, text length, custom rules with messages
 - **Conditional Formatting**:
   - Color scales (2-color, 3-color)
   - Data bars
@@ -39,10 +40,10 @@ Fast, feature-complete Excel XLSX library for Node.js and browsers, powered by [
 - **Tables**: Excel tables with custom columns, total rows, styles (60 styles)
 - **Sparklines**: Line, column, win/lose sparklines with 36 styles
 - **Rich Text**: Multi-format strings within cells
-- **Notes**: Cell comments with custom styling
+- **Notes**: Cell comments with custom styling and fonts
 - **Hyperlinks**: External URLs and internal sheet links
 - **Page Setup**: Margins, orientation, paper size, headers/footers, print area, scaling
-- **View Controls**: Autofilters, freeze panes, zoom, tab colors, hide/show sheets
+- **View Controls**: Autofilters, freeze panes, zoom, tab colors, screen gridlines, hide/show sheets
 
 ### Advanced Features
 - **Named Ranges**: Global and worksheet-scoped named ranges
@@ -249,7 +250,7 @@ workbook.save('output.xlsx');
 - **Features**: `insertNote()`, `addDataValidation()`, `insertChart()`, `insertImage()`, `insertImageFitToCellCentered()`, `addTable()`, `insertButton()`, `insertShape()`
 - **Conditional Formatting**: 14 methods for all rule types
 - **Page Setup**: 26 methods for printing, margins, headers, etc.
-- **View**: `autofilter()`, `setFreezePanes()`, `setZoom()`, `setTabColor()`, `setHiddenZeroes()`, `setHidden()`
+- **View**: `autofilter()`, `setFreezePanes()`, `setZoom()`, `setTabColor()`, `setScreenGridlines()`, `setHiddenZeroes()`, `setHidden()`
 - **Hyperlinks**: `writeUrl()`
 - **Warnings**: `ignoreError()`, `ignoreErrorRange()` turn off Excel warnings such as "number stored as text"
 - **Protection**: `protect()`, `protectWithPassword()`
@@ -269,8 +270,8 @@ workbook.save('output.xlsx');
 - **Image**: Insert with scaling, positioning, alt text, URLs
 - **Table**: Custom columns, total rows, alternative text, 60 styles
 - **Sparkline**: 3 types, markers, colors, 36 styles
-- **DataValidation**: All validation types with custom messages
-- **Note**: Comments with author, size, color, visibility
+- **DataValidation**: Lists, whole and decimal numbers, text length (`allowTextLength()`, `allowTextLengthBetween()`, `allowTextLengthFormula()`), custom formulas, with messages
+- **Note**: Comments with author, size, color, font (`setFontName()`, `setFontSize()`), visibility
 - **Formula**: Standard, array, dynamic with preset results
 - **RichText**: Multi-format text segments
 - **ProtectionOptions**: 16 granular permissions

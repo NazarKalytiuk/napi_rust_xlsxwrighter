@@ -418,4 +418,61 @@ describe('Data validation XLSX output', () => {
     expect(xml).toContain(`type="decimal" operator="${rule}"`);
     expect(xml).toContain('<formula1>2.5</formula1>');
   });
+
+  test.each(RULES)('writes the %s rule for text lengths', (rule) => {
+    const xml = validationXml(new DataValidation().allowTextLength(rule, 40));
+    expect(xml).toContain(`type="textLength" operator="${rule}"`);
+    expect(xml).toContain('<formula1>40</formula1>');
+  });
+
+  test('writes a text length between two lengths', () => {
+    const xml = validationXml(new DataValidation().allowTextLengthBetween(0, 32767));
+    // Between is Excel's default operator, so it isn't written.
+    expect(xml).toMatch(/^<dataValidation type="textLength" allowBlank/);
+    expect(xml).toContain('<formula1>0</formula1><formula2>32767</formula2>');
+  });
+
+  test.each(RULES)('writes the %s rule for text lengths from a formula', (rule) => {
+    const xml = validationXml(new DataValidation().allowTextLengthFormula(rule, '=$B$1'));
+    expect(xml).toContain(`type="textLength" operator="${rule}"`);
+    expect(xml).toContain('<formula1>$B$1</formula1>');
+  });
+
+  test('replaces an earlier rule and keeps later messages', () => {
+    const xml = validationXml(
+      new DataValidation()
+        .allowWholeNumber('equal', 1)
+        .allowTextLength('lessThanOrEqual', 10)
+        .setErrorTitle('Too long'),
+    );
+    expect(xml).toContain('type="textLength" operator="lessThanOrEqual"');
+    expect(xml).toContain('errorTitle="Too long"');
+  });
+
+  test.each([-1, 2.5, Number.NaN, Number.POSITIVE_INFINITY, 2 ** 32])(
+    'rejects the text length %s',
+    (length) => {
+      expect(() => new DataValidation().allowTextLength('equal', length)).toThrow(
+        'Text length must be a non-negative integer',
+      );
+    },
+  );
+
+  test('rejects a negative or fractional text length range', () => {
+    expect(() => new DataValidation().allowTextLengthBetween(-1, 5)).toThrow(
+      'Minimum text length must be a non-negative integer, got -1',
+    );
+    expect(() => new DataValidation().allowTextLengthBetween(1, 5.5)).toThrow(
+      'Maximum text length must be a non-negative integer, got 5.5',
+    );
+  });
+
+  test('rejects an unknown text length rule', () => {
+    expect(() => new DataValidation().allowTextLength('between', 5)).toThrow(
+      'Invalid validation rule: between',
+    );
+    expect(() => new DataValidation().allowTextLengthFormula('between', '=$B$1')).toThrow(
+      'Invalid validation rule: between',
+    );
+  });
 });

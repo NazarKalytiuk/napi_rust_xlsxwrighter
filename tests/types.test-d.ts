@@ -2,8 +2,11 @@
 import { expectTypeOf } from 'vitest';
 import {
   type CellValue,
+  type Color,
+  DataValidation,
   Format,
   Formula,
+  Note,
   RichText,
   Shape,
   Workbook,
@@ -37,6 +40,23 @@ expectTypeOf(new RichText().addSegment('plain')).toEqualTypeOf<RichText>();
 // Shapes only come from factories: `new Shape()` has no native handle.
 expectTypeOf(Shape.textbox()).toEqualTypeOf<Shape>();
 expectTypeOf<typeof Shape>().not.toExtend<abstract new (...args: never) => unknown>();
+
+// Theme colors are colors of cell formats and worksheet tabs, but not of
+// notes or conditional formats, which store colors as RGB.
+expectTypeOf<'theme:4:2'>().toExtend<Color>();
+expectTypeOf(format.setBackgroundColor('theme:4:2').setBorder('hair')).toEqualTypeOf<Format>();
+expectTypeOf(worksheet.setTabColor).toBeCallableWith('theme:5:3');
+// @ts-expect-error -- notes take a named color or a hex code
+new Note('note').setBackgroundColor('theme:4:2');
+// @ts-expect-error -- conditional formats take a named color or a hex code
+worksheet.addConditionalFormatDataBar(0, 0, 9, 0, 'theme:4:0');
+
+// New validation, note and view methods chain like their siblings.
+expectTypeOf(
+  new DataValidation().allowTextLength('lessThanOrEqual', 40),
+).toEqualTypeOf<DataValidation>();
+expectTypeOf(new Note('note').setFontName('Arial').setFontSize(10)).toEqualTypeOf<Note>();
+expectTypeOf(worksheet.setScreenGridlines).returns.toEqualTypeOf<void>();
 
 // String-literal unions reject unknown values.
 // @ts-expect-error -- not a calculation mode

@@ -55,6 +55,12 @@ export declare class RuscDataValidation {
   allowDecimalNumber(rule: string, value: number): void
   /** Allow decimal number validation between two values */
   allowDecimalNumberBetween(min: number, max: number): void
+  /** Allow text whose length (number of characters) matches a rule */
+  allowTextLength(rule: string, length: number): void
+  /** Allow text whose length is between two lengths (inclusive) */
+  allowTextLengthBetween(min: number, max: number): void
+  /** Allow text whose length matches a rule against a formula, e.g. a cell reference */
+  allowTextLengthFormula(rule: string, formula: string): void
   /** Allow list validation with strings */
   allowListStrings(list: Array<string>): void
   /** Allow list validation from a formula/cell range */
@@ -244,6 +250,10 @@ export declare class RuscNote {
   setHeight(height: number): void
   /** Set the background color of the note */
   setBackgroundColor(color: string): void
+  /** Set the font name of the note text (Tahoma by default) */
+  setFontName(fontName: string): void
+  /** Set the font size of the note text in points (8 by default) */
+  setFontSize(fontSize: number): void
   /** Make the note visible by default (normally it's hidden until you hover over the cell) */
   setVisible(visible: boolean): void
   /** Set alt text for accessibility */
@@ -718,6 +728,8 @@ export declare class RuscWorksheet {
   setPrintArea(firstRow: number, firstCol: number, lastRow: number, lastCol: number): void
   /** Set print gridlines */
   setPrintGridlines(enable: boolean): void
+  /** Show or hide the gridlines of the worksheet on screen */
+  setScreenGridlines(enable: boolean): void
   /** Center content horizontally on the page when printing */
   setPrintCenterHorizontally(enable: boolean): void
   /** Center content vertically on the page when printing */

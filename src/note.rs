@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use rust_xlsxwriter::Note;
 
-use crate::utils::parse_color;
+use crate::utils::parse_rgb_color;
 
 #[napi]
 pub struct RuscNote {
@@ -49,10 +49,24 @@ impl RuscNote {
     /// Set the background color of the note
     #[napi]
     pub fn set_background_color(&mut self, color: String) -> Result<()> {
-        let c = parse_color(&color).ok_or_else(|| {
-            Error::new(Status::GenericFailure, format!("Invalid color: {}", color))
-        })?;
-        self.note = self.note.clone().set_background_color(c);
+        self.note = self
+            .note
+            .clone()
+            .set_background_color(parse_rgb_color("color", &color)?);
+        Ok(())
+    }
+
+    /// Set the font name of the note text (Tahoma by default)
+    #[napi]
+    pub fn set_font_name(&mut self, font_name: String) -> Result<()> {
+        self.note = self.note.clone().set_font_name(font_name);
+        Ok(())
+    }
+
+    /// Set the font size of the note text in points (8 by default)
+    #[napi]
+    pub fn set_font_size(&mut self, font_size: f64) -> Result<()> {
+        self.note = self.note.clone().set_font_size(font_size);
         Ok(())
     }
 
